@@ -33,6 +33,27 @@
             <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
                 <views:SettingsView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MeetingToolbarViewModel}">
+                <views:MeetingToolbarView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MeetingShellViewModel}">
+                <views:MeetingShellView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MeetingDashboardViewModel}">
+                <views:MeetingDashboardView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MeetingSessionViewModel}">
+                <views:MeetingSessionView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ScreenShareViewModel}">
+                <views:ScreenShareView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:WhiteboardViewModel}">
+                <views:WhiteboardView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MeetingChatViewModel}">
+                <views:MeetingChatView />
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

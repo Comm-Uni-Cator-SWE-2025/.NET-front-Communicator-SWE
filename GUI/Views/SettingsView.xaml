@@ -12,65 +12,8 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="24,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Back Button -->
-                <Button Grid.Column="0"
-                        Command="{Binding BackCommand}"
-                        Width="36"
-                        Height="36"
-                        Margin="0,0,16,0"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}"
-                                                CornerRadius="8">
-                                            <ContentPresenter HorizontalAlignment="Center"
-                                                              VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <TextBlock Text="&#xE72B;" 
-                               FontFamily="Segoe MDL2 Assets" 
-                               FontSize="16"
-                               Foreground="{DynamicResource IconBrush}"/>
-                </Button>
-
-                <!-- Title -->
-                <TextBlock Grid.Column="1"
-                           Text="Settings"
-                           FontSize="24"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextPrimaryBrush}"
-                           VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
-
         <!-- Content -->
-        <ScrollViewer Grid.Row="1"
+        <ScrollViewer Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       Padding="32,24">
             <StackPanel MaxWidth="700" HorizontalAlignment="Left">
@@ -201,27 +144,6 @@
                                    Foreground="{DynamicResource TextTertiaryBrush}"
                                    TextWrapping="Wrap"
                                    LineHeight="20"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Preferences Section -->
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="24"
-                        Effect="{DynamicResource CardShadow}">
-                    <StackPanel>
-                        <TextBlock Text="Preferences"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                   Margin="0,0,0,20"/>
-
-                        <TextBlock Text="Additional preferences will be available soon"
-                                   FontSize="14"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   FontStyle="Italic"/>
                     </StackPanel>
                 </Border>
 

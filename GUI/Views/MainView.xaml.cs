@@ -1,10 +1,10 @@
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Controls.Primitives;
 using GUI.Models;
 using GUI.ViewModels;
 
@@ -28,6 +28,25 @@ public partial class MainView : Window
         SourceInitialized += OnSourceInitialized;
         StateChanged += (_, _) => UpdateWindowStateVisuals();
         Loaded += (_, _) => UpdateWindowStateVisuals();
+    }
+
+    private void OnAvatarButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+        {
+            return;
+        }
+
+        if (button.ContextMenu == null)
+        {
+            return;
+        }
+
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.Placement = PlacementMode.Bottom;
+        button.ContextMenu.DataContext = button.DataContext;
+        button.ContextMenu.IsOpen = true;
+        e.Handled = true;
     }
 
     private void OnToastRequested(ToastMessage toast)
@@ -95,14 +114,14 @@ public partial class MainView : Window
             return;
         }
 
-    bool isMaximized = WindowState == WindowState.Maximized;
+        bool isMaximized = WindowState == WindowState.Maximized;
 
-    ChromeBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(12);
-    ChromeBorder.BorderThickness = isMaximized ? new Thickness(0) : new Thickness(1);
-    ContentHost.Margin = new Thickness(0);
+        ChromeBorder.CornerRadius = isMaximized  ? new CornerRadius(0) : new CornerRadius(12);
+        ChromeBorder.BorderThickness = isMaximized ? new Thickness(0) : new Thickness(1);
+        ContentHost.Margin = new Thickness(0);
 
-    MaximizeButton.Content = isMaximized ? "\uE923" : "\uE922";
-    MaximizeButton.ToolTip = isMaximized ? "Restore" : "Maximize";
+        MaximizeButton.Content = isMaximized ? "\uE923" : "\uE922";
+        MaximizeButton.ToolTip = isMaximized ? "Restore" : "Maximize";
     }
 
     private void ApplyWindowChromePreferences()

@@ -26,6 +26,7 @@ namespace GUI.ViewModels
 
         public ICommand JoinMeetingCommand { get; }
         public ICommand CreateMeetingCommand { get; }
+        public ICommand OpenMeetingCommand { get; }
 
         public HomePageViewModel(UserProfile user)
         {
@@ -33,6 +34,7 @@ namespace GUI.ViewModels
             _meetingLink = string.Empty;
             JoinMeetingCommand = new RelayCommand(JoinMeeting, CanJoinMeeting);
             CreateMeetingCommand = new RelayCommand(CreateMeeting, CanCreateMeeting);
+            OpenMeetingCommand = new RelayCommand(OpenMeeting);
         }
 
         private void JoinMeeting(object? obj)
@@ -43,7 +45,6 @@ namespace GUI.ViewModels
                 return;
             }
 
-            // TODO: Implement Join Meeting logic
             App.ToastService.ShowInfo("Join meeting functionality will be implemented soon");
         }
 
@@ -68,6 +69,11 @@ namespace GUI.ViewModels
         private bool CanCreateMeeting(object? obj)
         {
             return string.Equals(_user.Role, "lecturer", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void OpenMeeting(object? obj)
+        {
+            App.NavigationService.NavigateTo(new MeetingShellViewModel(_user));
         }
     }
 }

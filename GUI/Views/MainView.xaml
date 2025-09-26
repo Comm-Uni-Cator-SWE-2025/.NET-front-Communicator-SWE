@@ -161,6 +161,7 @@
                             Width="32"
                             Height="32"
                             Margin="0,0,4,0"
+                            Visibility="{Binding ShowBackButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Content="&#xE72A;"
                             Style="{StaticResource CaptionButtonStyle}"
@@ -169,29 +170,54 @@
                             Width="32"
                             Height="32"
                             Margin="0,0,16,0"
+                            Visibility="{Binding ShowForwardButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True" />
                     
-                    <TextBlock Text="Comm-Uni-Cate" 
-                               FontSize="16" 
-                               FontWeight="SemiBold" 
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                    <Grid VerticalAlignment="Center">
+                        <ContentControl Content="{Binding MeetingToolbar}"
+                                         VerticalAlignment="Center"
+                                         Focusable="False"
+                                         IsTabStop="False"
+                                         shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                         Visibility="{Binding IsMeetingActive, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Text="Comm-Uni-Cate"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMeetingActive}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" Height="48">
-                    <Button x:Name="AvatarButton"
-                            Style="{StaticResource CircleButtonStyle}"
-                            Content="&#xE77B;"
-                            ToolTip="Profile"
-                            Margin="0,0,12,0"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+            <Button x:Name="AvatarButton"
+                Style="{StaticResource CircleButtonStyle}"
+                Content="&#xE77B;"
+                ToolTip="Profile"
+                Margin="0,0,12,0"
+                Click="OnAvatarButtonClick"
+                shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button.ContextMenu>
                             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                 <MenuItem Header="{Binding CurrentUserName}" IsEnabled="False"/>
                                 <MenuItem Header="{Binding CurrentUserEmail}" IsEnabled="False"/>
                                 <Separator />
-                                <MenuItem Header="Settings" Command="{Binding NavigateToSettingsCommand}"/>
-                                <MenuItem Header="Logout" Command="{Binding LogoutCommand}"/>
+                                <MenuItem Header="Settings"
+                                          Command="{Binding NavigateToSettingsCommand}"
+                                          IsEnabled="{Binding IsLoggedIn}"/>
+                                <MenuItem Header="Logout"
+                                          Command="{Binding LogoutCommand}"
+                                          IsEnabled="{Binding IsLoggedIn}"/>
                             </ContextMenu>
                         </Button.ContextMenu>
                     </Button>

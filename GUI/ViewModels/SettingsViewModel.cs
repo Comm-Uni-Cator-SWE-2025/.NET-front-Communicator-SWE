@@ -9,7 +9,6 @@ namespace GUI.ViewModels
     /// <summary>
     /// ViewModel for the Settings Page
     /// Manages user preferences including theme selection
-    /// Follows MVVM pattern with INotifyPropertyChanged
     /// </summary>
     public class SettingsViewModel : ObservableObject
     {
@@ -36,21 +35,16 @@ namespace GUI.ViewModels
                     
                     // Apply theme change
                     _themeService.SetTheme(value ? AppTheme.Dark : AppTheme.Light);
-                    App.ToastService.ShowSuccess($"{CurrentThemeText} theme applied successfully");
                 }
             }
         }
 
         public string CurrentThemeText => _isDarkMode ? "Dark" : "Light";
 
-        // Commands
-        public ICommand BackCommand { get; }
-
-        public SettingsViewModel(UserProfile user, IThemeService themeService, ICommand backCommand)
+        public SettingsViewModel(UserProfile user, IThemeService themeService)
         {
             _user = user;
             _themeService = themeService;
-            BackCommand = backCommand;
 
             // Initialize theme toggle based on current theme
             _isDarkMode = _themeService.CurrentTheme == AppTheme.Dark;

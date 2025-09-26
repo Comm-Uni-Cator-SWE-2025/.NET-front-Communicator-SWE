@@ -1,6 +1,7 @@
-using GUI.Core;
+using System;
 using System.Windows.Input;
 using Controller;
+using GUI.Core;
 
 namespace GUI.ViewModels
 {
@@ -26,8 +27,27 @@ namespace GUI.ViewModels
             {
                 _currentView = value;
                 OnPropertyChanged();
+                UpdateTopBarState(_currentView);
+                UpdateNavigationScope(_currentView);
             }
         }
+
+        private MeetingToolbarViewModel? _meetingToolbar;
+        public MeetingToolbarViewModel? MeetingToolbar
+        {
+            get { return _meetingToolbar; }
+            private set
+            {
+                if (SetProperty(ref _meetingToolbar, value))
+                {
+                    OnPropertyChanged(nameof(IsMeetingActive));
+                }
+            }
+        }
+
+    public bool IsMeetingActive => MeetingToolbar != null;
+    public bool ShowBackButton => IsMeetingActive || App.NavigationService.CanGoBack;
+    public bool ShowForwardButton => IsMeetingActive;
 
         private string? _currentUserName;
         public string? CurrentUserName
@@ -73,22 +93,27 @@ namespace GUI.ViewModels
             }
         }
 
+        private INavigationScope? _navigationScope;
+        private readonly RelayCommand _goBackCommand;
+        private readonly RelayCommand _goForwardCommand;
+
         public ICommand LogoutCommand { get; }
         public ICommand NavigateToSettingsCommand { get; }
         public ICommand GoBackCommand { get; }
         public ICommand GoForwardCommand { get; }
 
-        public bool CanGoBack => App.NavigationService.CanGoBack;
-        public bool CanGoForward => App.NavigationService.CanGoForward;
+    public bool CanGoBack => _navigationScope != null ? _navigationScope.CanNavigateBack : App.NavigationService.CanGoBack;
+    public bool CanGoForward => _navigationScope != null ? _navigationScope.CanNavigateForward : App.NavigationService.CanGoForward;
 
         public MainViewModel()
         {
             _authViewModel = CreateAuthViewModel();
-            CurrentView = _authViewModel;
             LogoutCommand = new RelayCommand(Logout);
             NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
-            GoBackCommand = new RelayCommand(_ => GoBack(), _ => CanGoBack);
-            GoForwardCommand = new RelayCommand(_ => GoForward(), _ => CanGoForward);
+            _goBackCommand = new RelayCommand(_ => GoBack(), _ => CanGoBack);
+            _goForwardCommand = new RelayCommand(_ => GoForward(), _ => CanGoForward);
+            GoBackCommand = _goBackCommand;
+            GoForwardCommand = _goForwardCommand;
 
             // Subscribe to navigation changes
             App.NavigationService.NavigationChanged += (s, e) =>
@@ -96,7 +121,13 @@ namespace GUI.ViewModels
                 CurrentView = App.NavigationService.CurrentView;
                 OnPropertyChanged(nameof(CanGoBack));
                 OnPropertyChanged(nameof(CanGoForward));
+                OnPropertyChanged(nameof(ShowBackButton));
+                OnPropertyChanged(nameof(ShowForwardButton));
+                _goBackCommand.RaiseCanExecuteChanged();
+                _goForwardCommand.RaiseCanExecuteChanged();
             };
+
+            CurrentView = _authViewModel;
         }
 
         private AuthViewModel CreateAuthViewModel()
@@ -127,20 +158,43 @@ namespace GUI.ViewModels
         {
             if (CurrentUser != null)
             {
-                var backCommand = new RelayCommand(_ => GoBack());
-                var settingsViewModel = new SettingsViewModel(CurrentUser, App.ThemeService, backCommand);
+                var settingsViewModel = new SettingsViewModel(CurrentUser, App.ThemeService);
                 App.NavigationService.NavigateTo(settingsViewModel);
             }
         }
 
         private void GoBack()
         {
-            App.NavigationService.GoBack();
+            if (_navigationScope != null)
+            {
+                if (_navigationScope.CanNavigateBack)
+                {
+                    _navigationScope.NavigateBack();
+                }
+                return;
+            }
+
+            if (App.NavigationService.CanGoBack)
+            {
+                App.NavigationService.GoBack();
+            }
         }
 
         private void GoForward()
         {
-            App.NavigationService.GoForward();
+            if (_navigationScope != null)
+            {
+                if (_navigationScope.CanNavigateForward)
+                {
+                    _navigationScope.NavigateForward();
+                }
+                return;
+            }
+
+            if (App.NavigationService.CanGoForward)
+            {
+                App.NavigationService.GoForward();
+            }
         }
 
         private void Logout(object? obj)
@@ -158,6 +212,46 @@ namespace GUI.ViewModels
             App.NavigationService.ClearHistory();
             _authViewModel = CreateAuthViewModel();
             CurrentView = _authViewModel;
+        }
+
+        private void UpdateNavigationScope(object? viewModel)
+        {
+            if (_navigationScope != null)
+            {
+                _navigationScope.NavigationStateChanged -= OnNavigationScopeStateChanged;
+                if (_navigationScope is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+
+            _navigationScope = viewModel as INavigationScope;
+
+            if (_navigationScope != null)
+            {
+                _navigationScope.NavigationStateChanged += OnNavigationScopeStateChanged;
+            }
+
+            OnNavigationScopeStateChanged(this, EventArgs.Empty);
+        }
+
+        private void OnNavigationScopeStateChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(CanGoBack));
+            OnPropertyChanged(nameof(CanGoForward));
+            OnPropertyChanged(nameof(ShowBackButton));
+            OnPropertyChanged(nameof(ShowForwardButton));
+            _goBackCommand.RaiseCanExecuteChanged();
+            _goForwardCommand.RaiseCanExecuteChanged();
+        }
+
+        private void UpdateTopBarState(object? viewModel)
+        {
+            MeetingToolbar = viewModel is MeetingShellViewModel meetingShell
+                ? meetingShell.Toolbar
+                : null;
+            OnPropertyChanged(nameof(ShowBackButton));
+            OnPropertyChanged(nameof(ShowForwardButton));
         }
     }
 }

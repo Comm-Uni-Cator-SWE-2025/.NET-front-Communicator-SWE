@@ -18,7 +18,6 @@
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            Margin="0,0,0,8" />
                 <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource ModernTextBoxStyle}"
                          Margin="0,0,0,20"
                          Height="44"
                          HorizontalAlignment="Stretch" />
@@ -28,7 +27,6 @@
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            Margin="0,0,0,8" />
                 <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource ModernTextBoxStyle}"
                          Margin="0,0,0,20"
                          Height="44"
                          HorizontalAlignment="Stretch" />
@@ -38,7 +36,6 @@
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            Margin="0,0,0,8" />
                 <PasswordBox x:Name="PasswordBox"
-                             Style="{StaticResource ModernPasswordBoxStyle}"
                              Margin="0,0,0,20"
                              Height="44"
                              PasswordChanged="PasswordBox_PasswordChanged" />
@@ -48,7 +45,6 @@
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            Margin="0,0,0,8" />
                 <PasswordBox x:Name="ConfirmPasswordBox"
-                             Style="{StaticResource ModernPasswordBoxStyle}"
                              Margin="0,0,0,28"
                              Height="44"
                              PasswordChanged="ConfirmPasswordBox_PasswordChanged" />
