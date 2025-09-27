@@ -4,7 +4,7 @@ using GUI.Core;
 using GUI.Models;
 using GUI.Services;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Common
 {
     public class ToastContainerViewModel : ObservableObject
     {

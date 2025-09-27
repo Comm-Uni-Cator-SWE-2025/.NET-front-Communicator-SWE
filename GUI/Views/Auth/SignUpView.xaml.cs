@@ -1,7 +1,7 @@
 using System.Windows.Controls;
-using GUI.ViewModels;
+using GUI.ViewModels.Auth;
 
-namespace GUI.Views
+namespace GUI.Views.Auth
 {
     public partial class SignUpView : UserControl
     {

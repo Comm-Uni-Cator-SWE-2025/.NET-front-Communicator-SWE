@@ -3,7 +3,7 @@ using System;
 using System.Windows.Input;
 using Controller;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Auth
 {
     public class AuthViewModel : ObservableObject
     {

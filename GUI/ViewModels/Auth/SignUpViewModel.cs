@@ -1,7 +1,7 @@
 using GUI.Core;
 using System.Windows.Input;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Auth
 {
     public class SignUpViewModel : ObservableObject
     {

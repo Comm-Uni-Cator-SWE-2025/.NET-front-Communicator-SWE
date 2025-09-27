@@ -4,7 +4,7 @@ using GUI.Core;
 using GUI.Models;
 using GUI.Services;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Settings
 {
     /// <summary>
     /// ViewModel for the Settings Page

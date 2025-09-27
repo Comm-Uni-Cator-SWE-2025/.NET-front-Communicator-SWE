@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace GUI.Views
+namespace GUI.Views.Auth
 {
     public partial class AuthView : UserControl
     {

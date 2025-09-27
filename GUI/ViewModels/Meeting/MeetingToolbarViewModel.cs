@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using GUI.Core;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Meeting
 {
     public class MeetingToolbarViewModel : ObservableObject
     {

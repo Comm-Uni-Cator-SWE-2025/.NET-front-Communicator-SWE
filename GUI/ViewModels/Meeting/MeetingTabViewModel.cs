@@ -1,6 +1,6 @@
 using GUI.Core;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Meeting
 {
     public class MeetingTabViewModel : ObservableObject
     {

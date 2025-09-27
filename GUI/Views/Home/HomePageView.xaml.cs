@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace GUI.Views
+namespace GUI.Views.Home
 {
     public partial class HomePageView : UserControl
     {

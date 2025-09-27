@@ -3,7 +3,7 @@ using Controller;
 using GUI.Core;
 using System.Windows.Input;
 
-namespace GUI.ViewModels
+namespace GUI.ViewModels.Home
 {
     public class HomePageViewModel : ObservableObject
     {

@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace GUI.Views;
+namespace GUI.Views.Meeting;
 
 public partial class ScreenShareView : UserControl
 {
