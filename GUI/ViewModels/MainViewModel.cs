@@ -2,6 +2,11 @@ using System;
 using System.Windows.Input;
 using Controller;
 using GUI.Core;
+using GUI.ViewModels.Auth;
+using GUI.ViewModels.Common;
+using GUI.ViewModels.Home;
+using GUI.ViewModels.Meeting;
+using GUI.ViewModels.Settings;
 
 namespace GUI.ViewModels
 {

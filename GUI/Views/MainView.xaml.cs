@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Controls.Primitives;
 using GUI.Models;
 using GUI.ViewModels;
+using GUI.ViewModels.Common;
 
 namespace GUI.Views;
 
