@@ -6,6 +6,9 @@ using GUI.ViewModels.Meeting;
 
 namespace GUI.ViewModels.Home
 {
+    /// <summary>
+    /// Provides welcome content and meeting shortcuts displayed after authentication.
+    /// </summary>
     public class HomePageViewModel : ObservableObject
     {
         private readonly UserProfile _user;
@@ -29,6 +32,9 @@ namespace GUI.ViewModels.Home
         public ICommand CreateMeetingCommand { get; }
         public ICommand OpenMeetingCommand { get; }
 
+        /// <summary>
+        /// Initializes the home page with the authenticated user's profile and commands.
+        /// </summary>
         public HomePageViewModel(UserProfile user)
         {
             _user = user;
@@ -38,6 +44,9 @@ namespace GUI.ViewModels.Home
             OpenMeetingCommand = new RelayCommand(OpenMeeting);
         }
 
+        /// <summary>
+        /// Placeholder for joining a meeting via link with basic input validation.
+        /// </summary>
         private void JoinMeeting(object? obj)
         {
             if (string.IsNullOrWhiteSpace(MeetingLink))
@@ -49,11 +58,17 @@ namespace GUI.ViewModels.Home
             App.ToastService.ShowInfo("Join meeting functionality will be implemented soon");
         }
 
+        /// <summary>
+        /// Ensures a meeting link was supplied before enabling the join command.
+        /// </summary>
         private bool CanJoinMeeting(object? obj)
         {
             return !string.IsNullOrWhiteSpace(MeetingLink);
         }
 
+        /// <summary>
+        /// Placeholder for meeting creation with role-based restriction messaging.
+        /// </summary>
         private void CreateMeeting(object? obj)
         {
             // TODO: Implement Create Meeting logic
@@ -67,11 +82,17 @@ namespace GUI.ViewModels.Home
             }
         }
 
+        /// <summary>
+        /// Lecturer-only guard for the create meeting command.
+        /// </summary>
         private bool CanCreateMeeting(object? obj)
         {
             return string.Equals(_user.Role, "lecturer", StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Initiates the meeting workspace by navigating to the meeting shell.
+        /// </summary>
         private void OpenMeeting(object? obj)
         {
             App.NavigationService.NavigateTo(new MeetingShellViewModel(_user));

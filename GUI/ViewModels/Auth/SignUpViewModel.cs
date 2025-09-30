@@ -3,6 +3,9 @@ using System.Windows.Input;
 
 namespace GUI.ViewModels.Auth
 {
+    /// <summary>
+    /// Manages the registration form, validating user input and creating accounts via the controller.
+    /// </summary>
     public class SignUpViewModel : ObservableObject
     {
         private string _displayName;
@@ -54,6 +57,9 @@ namespace GUI.ViewModels.Auth
 
         private readonly AuthViewModel _authViewModel;
 
+        /// <summary>
+        /// Creates the sign-up view model and initializes commands for submission and navigation.
+        /// </summary>
         public SignUpViewModel(AuthViewModel authViewModel)
         {
             _authViewModel = authViewModel;
@@ -65,6 +71,9 @@ namespace GUI.ViewModels.Auth
             GoToLoginCommand = new RelayCommand(GoToLogin);
         }
 
+        /// <summary>
+        /// Validates input and attempts to register a new account, surfacing toast feedback along the way.
+        /// </summary>
         private void SignUp(object? obj)
         {
             // Validate display name
@@ -130,6 +139,9 @@ namespace GUI.ViewModels.Auth
             }
         }
 
+        /// <summary>
+        /// Switches to the login form via the parent auth view model.
+        /// </summary>
         private void GoToLogin(object? obj)
         {
             _authViewModel.SwitchViewCommand.Execute(null);

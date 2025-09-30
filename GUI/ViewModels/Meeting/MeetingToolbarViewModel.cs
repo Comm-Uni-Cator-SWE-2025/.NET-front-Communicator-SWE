@@ -6,10 +6,16 @@ using GUI.Core;
 
 namespace GUI.ViewModels.Meeting
 {
+    /// <summary>
+    /// Represents the meeting tab strip, tracking available tabs and the currently selected one.
+    /// </summary>
     public class MeetingToolbarViewModel : ObservableObject
     {
         private MeetingTabViewModel? _selectedTab;
 
+        /// <summary>
+        /// Initializes the toolbar with a predefined set of tabs.
+        /// </summary>
         public MeetingToolbarViewModel(IEnumerable<MeetingTabViewModel> tabs)
         {
             if (tabs == null)
@@ -35,6 +41,9 @@ namespace GUI.ViewModels.Meeting
             }
         }
 
+        /// <summary>
+        /// Raised whenever the selected tab changes so the shell can update navigation stacks.
+        /// </summary>
         public event EventHandler<MeetingTabViewModel?>? SelectedTabChanged;
     }
 }

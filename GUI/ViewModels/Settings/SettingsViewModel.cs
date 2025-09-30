@@ -50,6 +50,9 @@ namespace GUI.ViewModels.Settings
             _isDarkMode = _themeService.CurrentTheme == AppTheme.Dark;
         }
 
+        /// <summary>
+        /// Normalizes the role string for display purposes.
+        /// </summary>
         private string FormatRole(string role)
         {
             if (string.IsNullOrEmpty(role))

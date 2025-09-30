@@ -3,6 +3,9 @@ using System.Windows.Input;
 
 namespace GUI.ViewModels.Auth
 {
+    /// <summary>
+    /// Handles login flow, including validation and signaling the parent auth view model when login succeeds.
+    /// </summary>
     public class LoginViewModel : ObservableObject
     {
         private string _email;
@@ -32,6 +35,9 @@ namespace GUI.ViewModels.Auth
 
         private readonly AuthViewModel _authViewModel;
 
+        /// <summary>
+        /// Creates the login view model and initializes commands.
+        /// </summary>
         public LoginViewModel(AuthViewModel authViewModel)
         {
             _authViewModel = authViewModel;
@@ -41,6 +47,9 @@ namespace GUI.ViewModels.Auth
             GoToSignUpCommand = new RelayCommand(GoToSignUp);
         }
 
+        /// <summary>
+        /// Attempts to authenticate the user and produces toast feedback for success or failure.
+        /// </summary>
         private void Login(object? obj)
         {
             // Validate inputs
@@ -72,6 +81,9 @@ namespace GUI.ViewModels.Auth
             }
         }
 
+        /// <summary>
+        /// Instructs the auth view model to show the sign-up view.
+        /// </summary>
         private void GoToSignUp(object? obj)
         {
             _authViewModel.SwitchViewCommand.Execute(null);

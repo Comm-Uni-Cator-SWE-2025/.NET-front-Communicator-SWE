@@ -11,8 +11,14 @@ using GUI.ViewModels.Common;
 
 namespace GUI.Views;
 
+/// <summary>
+/// Primary application window that hosts navigation, toast notifications, and custom chrome behaviors.
+/// </summary>
 public partial class MainView : Window
 {
+    /// <summary>
+    /// Initializes the window, wires up toast handling, and configures chrome behavior.
+    /// </summary>
     public MainView()
     {
         InitializeComponent();
@@ -31,6 +37,9 @@ public partial class MainView : Window
         Loaded += (_, _) => UpdateWindowStateVisuals();
     }
 
+    /// <summary>
+    /// Displays the profile context menu anchored to the avatar button.
+    /// </summary>
     private void OnAvatarButtonClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button button)
@@ -50,6 +59,9 @@ public partial class MainView : Window
         e.Handled = true;
     }
 
+    /// <summary>
+    /// Renders toast notifications and tracks their lifetime within the visual tree.
+    /// </summary>
     private void OnToastRequested(ToastMessage toast)
     {
         Dispatcher.Invoke(() =>
@@ -64,11 +76,17 @@ public partial class MainView : Window
         });
     }
 
+    /// <summary>
+    /// Applies custom chrome preferences when the native window handle becomes available.
+    /// </summary>
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         ApplyWindowChromePreferences();
     }
 
+    /// <summary>
+    /// Enables dragging and double-click maximize behavior on the custom title bar.
+    /// </summary>
     private void OnTitleBarMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2 && ResizeMode == ResizeMode.CanResize)
@@ -87,27 +105,42 @@ public partial class MainView : Window
         }
     }
 
+    /// <summary>
+    /// Minimizes the window when the minimize caption button is clicked.
+    /// </summary>
     private void OnMinimizeClick(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
     }
 
+    /// <summary>
+    /// Toggles between maximized and restored states from the maximize caption button.
+    /// </summary>
     private void OnMaximizeClick(object sender, RoutedEventArgs e)
     {
         ToggleWindowState();
     }
 
+    /// <summary>
+    /// Closes the window when the close caption button is clicked.
+    /// </summary>
     private void OnCloseClick(object sender, RoutedEventArgs e)
     {
         Close();
     }
 
+    /// <summary>
+    /// Switches window state and refreshes visuals to match the new state.
+    /// </summary>
     private void ToggleWindowState()
     {
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         UpdateWindowStateVisuals();
     }
 
+    /// <summary>
+    /// Updates chrome visuals (corner radius, borders, title bar icons) to match the current window state.
+    /// </summary>
     private void UpdateWindowStateVisuals()
     {
         if (ChromeBorder == null || MaximizeButton == null || ContentHost == null)
@@ -125,6 +158,9 @@ public partial class MainView : Window
         MaximizeButton.ToolTip = isMaximized ? "Restore" : "Maximize";
     }
 
+    /// <summary>
+    /// Requests rounded corner preference from the Desktop Window Manager when available.
+    /// </summary>
     private void ApplyWindowChromePreferences()
     {
         var handle = new WindowInteropHelper(this).Handle;

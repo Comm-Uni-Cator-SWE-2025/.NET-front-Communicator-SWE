@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace GUI.Services
 {
+    /// <summary>
+    /// Stack-based navigation service that tracks back and forward history for shell-wide view model transitions.
+    /// </summary>
     public class NavigationService : INavigationService
     {
         private readonly Stack<object> _backStack = new();
@@ -11,9 +14,13 @@ namespace GUI.Services
 
         public event EventHandler? NavigationChanged;
 
+        /// <inheritdoc />
         public bool CanGoBack => _backStack.Count > 0;
+
+        /// <inheritdoc />
         public bool CanGoForward => _forwardStack.Count > 0;
 
+        /// <inheritdoc />
         public object? CurrentView
         {
             get => _currentView;
@@ -24,6 +31,7 @@ namespace GUI.Services
             }
         }
 
+        /// <inheritdoc />
         public void NavigateTo(object viewModel)
         {
             if (_currentView != null)
@@ -35,6 +43,7 @@ namespace GUI.Services
             CurrentView = viewModel;
         }
 
+        /// <inheritdoc />
         public void GoBack()
         {
             if (!CanGoBack) return;
@@ -47,6 +56,7 @@ namespace GUI.Services
             CurrentView = _backStack.Pop();
         }
 
+        /// <inheritdoc />
         public void GoForward()
         {
             if (!CanGoForward) return;
@@ -59,6 +69,7 @@ namespace GUI.Services
             CurrentView = _forwardStack.Pop();
         }
 
+        /// <inheritdoc />
         public void ClearHistory()
         {
             _backStack.Clear();

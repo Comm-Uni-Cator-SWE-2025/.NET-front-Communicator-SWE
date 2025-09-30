@@ -10,6 +10,9 @@ using GUI.ViewModels.Settings;
 
 namespace GUI.ViewModels
 {
+    /// <summary>
+    /// Shell view model that coordinates authentication, navigation, meeting toolbar state, and toast presentation.
+    /// </summary>
     public class MainViewModel : ObservableObject
     {
         private AuthViewModel? _authViewModel;
@@ -110,6 +113,9 @@ namespace GUI.ViewModels
     public bool CanGoBack => _navigationScope != null ? _navigationScope.CanNavigateBack : App.NavigationService.CanGoBack;
     public bool CanGoForward => _navigationScope != null ? _navigationScope.CanNavigateForward : App.NavigationService.CanGoForward;
 
+        /// <summary>
+        /// Initializes commands, creates the initial authentication view, and subscribes to navigation events.
+        /// </summary>
         public MainViewModel()
         {
             _authViewModel = CreateAuthViewModel();
@@ -135,6 +141,9 @@ namespace GUI.ViewModels
             CurrentView = _authViewModel;
         }
 
+        /// <summary>
+        /// Creates the authentication view model and hooks the post-login callback.
+        /// </summary>
         private AuthViewModel CreateAuthViewModel()
         {
             var authViewModel = new AuthViewModel();
@@ -142,6 +151,9 @@ namespace GUI.ViewModels
             return authViewModel;
         }
 
+        /// <summary>
+        /// Handles successful login by capturing user details and navigating to the home page.
+        /// </summary>
         private void OnLoggedIn(UserProfile user)
         {
             if (_authViewModel != null)
@@ -159,6 +171,9 @@ namespace GUI.ViewModels
             App.NavigationService.NavigateTo(new HomePageViewModel(user));
         }
 
+        /// <summary>
+        /// Navigates to the settings page when a user is authenticated.
+        /// </summary>
         private void NavigateToSettings(object? obj)
         {
             if (CurrentUser != null)
@@ -168,6 +183,9 @@ namespace GUI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Executes back navigation against the active scope or the global navigation service.
+        /// </summary>
         private void GoBack()
         {
             if (_navigationScope != null)
@@ -185,6 +203,9 @@ namespace GUI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Executes forward navigation against the active scope or the global navigation service.
+        /// </summary>
         private void GoForward()
         {
             if (_navigationScope != null)
@@ -202,6 +223,9 @@ namespace GUI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Clears shell state and returns to the authentication view.
+        /// </summary>
         private void Logout(object? obj)
         {
             IsLoggedIn = false;
@@ -219,6 +243,9 @@ namespace GUI.ViewModels
             CurrentView = _authViewModel;
         }
 
+        /// <summary>
+        /// Updates the current navigation scope, wiring/unwiring events as necessary.
+        /// </summary>
         private void UpdateNavigationScope(object? viewModel)
         {
             if (_navigationScope != null)
@@ -240,6 +267,9 @@ namespace GUI.ViewModels
             OnNavigationScopeStateChanged(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// Refreshes navigation-related properties and command states when scope navigation changes.
+        /// </summary>
         private void OnNavigationScopeStateChanged(object? sender, EventArgs e)
         {
             OnPropertyChanged(nameof(CanGoBack));
@@ -250,6 +280,9 @@ namespace GUI.ViewModels
             _goForwardCommand.RaiseCanExecuteChanged();
         }
 
+        /// <summary>
+        /// Determines whether the meeting toolbar should be surfaced based on the active view model.
+        /// </summary>
         private void UpdateTopBarState(object? viewModel)
         {
             MeetingToolbar = viewModel is MeetingShellViewModel meetingShell

@@ -5,6 +5,9 @@ using Controller;
 
 namespace GUI.ViewModels.Meeting
 {
+    /// <summary>
+    /// Coordinates meeting sub-tabs, maintains an internal navigation stack, and exposes toolbar state to the shell.
+    /// </summary>
     public class MeetingShellViewModel : ObservableObject, INavigationScope, IDisposable
     {
         private readonly MeetingToolbarViewModel _toolbarViewModel;
@@ -14,6 +17,9 @@ namespace GUI.ViewModels.Meeting
         private bool _suppressSelectionNotifications;
         private object? _currentPage;
 
+        /// <summary>
+        /// Builds meeting tabs for the supplied user and initializes navigation state.
+        /// </summary>
         public MeetingShellViewModel(UserProfile user)
         {
             if (user == null)
@@ -39,6 +45,9 @@ namespace GUI.ViewModels.Meeting
             private set => SetProperty(ref _currentPage, value);
         }
 
+        /// <summary>
+        /// Tracks toolbar selection changes and updates history stacks appropriately.
+        /// </summary>
         private void OnSelectedTabChanged(object? sender, MeetingTabViewModel? tab)
         {
             if (_suppressSelectionNotifications || tab == null || tab == _currentTab)
@@ -55,6 +64,9 @@ namespace GUI.ViewModels.Meeting
             ActivateTab(tab);
         }
 
+        /// <summary>
+        /// Creates the default set of meeting tabs for the logged-in user.
+        /// </summary>
         private static IEnumerable<MeetingTabViewModel> CreateTabs(UserProfile user)
         {
             yield return new MeetingTabViewModel("Dashboard", new MeetingDashboardViewModel(user));
@@ -68,6 +80,7 @@ namespace GUI.ViewModels.Meeting
 
         public bool CanNavigateForward => _forwardStack.Count > 0;
 
+        /// <inheritdoc />
         public void NavigateBack()
         {
             if (!CanNavigateBack || _currentTab == null)
@@ -80,6 +93,7 @@ namespace GUI.ViewModels.Meeting
             ActivateTabFromHistory(target);
         }
 
+        /// <inheritdoc />
         public void NavigateForward()
         {
             if (!CanNavigateForward || _currentTab == null)
@@ -99,6 +113,9 @@ namespace GUI.ViewModels.Meeting
             NavigationStateChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// Activates the supplied tab and updates the current page binding.
+        /// </summary>
         private void ActivateTab(MeetingTabViewModel tab)
         {
             _currentTab = tab;
@@ -106,6 +123,9 @@ namespace GUI.ViewModels.Meeting
             RaiseNavigationStateChanged();
         }
 
+        /// <summary>
+        /// Restores a tab from history without re-adding it to navigation stacks.
+        /// </summary>
         private void ActivateTabFromHistory(MeetingTabViewModel tab)
         {
             _suppressSelectionNotifications = true;
@@ -114,6 +134,9 @@ namespace GUI.ViewModels.Meeting
             ActivateTab(tab);
         }
 
+        /// <summary>
+        /// Cleans up event subscriptions and history stacks.
+        /// </summary>
         public void Dispose()
         {
             _toolbarViewModel.SelectedTabChanged -= OnSelectedTabChanged;

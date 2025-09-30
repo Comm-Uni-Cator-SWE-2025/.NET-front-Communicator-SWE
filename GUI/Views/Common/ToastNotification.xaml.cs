@@ -7,16 +7,25 @@ using GUI.Models;
 
 namespace GUI.Views
 {
+    /// <summary>
+    /// Visual container for toast messages, handling styling, animations, and lifetime management.
+    /// </summary>
     public partial class ToastNotification : UserControl
     {
         private DispatcherTimer? _timer;
         public event EventHandler? CloseRequested;
 
+        /// <summary>
+        /// Initializes UI elements wired from XAML markup.
+        /// </summary>
         public ToastNotification()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Applies toast metadata, selects styles/icons, and starts the auto-dismiss timer when required.
+        /// </summary>
         public void SetToast(ToastMessage toast)
         {
             DataContext = toast;
@@ -58,11 +67,17 @@ namespace GUI.Views
             }
         }
 
+        /// <summary>
+        /// Begins the entrance animation once the control is visible.
+        /// </summary>
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             AnimateIn();
         }
 
+        /// <summary>
+        /// Slides and fades the toast into view.
+        /// </summary>
         private void AnimateIn()
         {
             var slideIn = new DoubleAnimation
@@ -87,6 +102,9 @@ namespace GUI.Views
             BeginAnimation(OpacityProperty, fadeIn);
         }
 
+        /// <summary>
+        /// Slides and fades the toast out, notifying listeners when complete.
+        /// </summary>
         private void AnimateOut()
         {
             var slideOut = new DoubleAnimation
@@ -112,6 +130,9 @@ namespace GUI.Views
             BeginAnimation(OpacityProperty, fadeOut);
         }
 
+        /// <summary>
+        /// Immediately dismisses the toast when the close button is clicked.
+        /// </summary>
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             _timer?.Stop();
