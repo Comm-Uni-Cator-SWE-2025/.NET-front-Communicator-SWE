@@ -48,8 +48,8 @@
             <DataTemplate DataType="{x:Type meetingVm:MeetingDashboardViewModel}">
                 <meetingViews:MeetingDashboardView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type meetingVm:MeetingSessionViewModel}">
-                <meetingViews:MeetingSessionView />
+            <DataTemplate DataType="{x:Type meetingVm:VideoSessionViewModel}">
+                <meetingViews:VideoSessionView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type meetingVm:ScreenShareViewModel}">
                 <meetingViews:ScreenShareView />

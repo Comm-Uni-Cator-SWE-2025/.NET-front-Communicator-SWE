@@ -6,12 +6,12 @@ namespace GUI.ViewModels.Meeting
     /// <summary>
     /// Represents the primary meeting session surface, exposing the current user context.
     /// </summary>
-    public class MeetingSessionViewModel : ObservableObject
+    public class VideoSessionViewModel : ObservableObject
     {
         /// <summary>
         /// Initializes the session view model with the supplied user context.
         /// </summary>
-        public MeetingSessionViewModel(UserProfile user)
+        public VideoSessionViewModel(UserProfile user)
         {
             Title = "Meeting";
             CurrentUser = user;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Input;
 using GUI.Core;
 using Controller;
 
@@ -16,6 +17,10 @@ namespace GUI.ViewModels.Meeting
         private MeetingTabViewModel? _currentTab;
         private bool _suppressSelectionNotifications;
         private object? _currentPage;
+        private bool _isMuted;
+        private bool _isCameraOn = true;
+        private bool _isHandRaised;
+        private bool _isScreenSharing;
 
         /// <summary>
         /// Builds meeting tabs for the supplied user and initializes navigation state.
@@ -34,6 +39,11 @@ namespace GUI.ViewModels.Meeting
             {
                 CurrentPage = _currentTab.ContentViewModel;
             }
+            ToggleMuteCommand = new RelayCommand(_ => ToggleMute());
+            ToggleCameraCommand = new RelayCommand(_ => ToggleCamera());
+            ToggleHandCommand = new RelayCommand(_ => ToggleHandRaised());
+            ToggleScreenShareCommand = new RelayCommand(_ => ToggleScreenShare());
+            LeaveMeetingCommand = new RelayCommand(_ => LeaveMeeting());
             RaiseNavigationStateChanged();
         }
 
@@ -70,7 +80,7 @@ namespace GUI.ViewModels.Meeting
         private static IEnumerable<MeetingTabViewModel> CreateTabs(UserProfile user)
         {
             yield return new MeetingTabViewModel("Dashboard", new MeetingDashboardViewModel(user));
-            yield return new MeetingTabViewModel("Meeting", new MeetingSessionViewModel(user));
+            yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));
             yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(user));
             yield return new MeetingTabViewModel("Whiteboard", new WhiteboardViewModel(user));
             yield return new MeetingTabViewModel("Chat", new MeetingChatViewModel(user));
@@ -79,6 +89,36 @@ namespace GUI.ViewModels.Meeting
         public bool CanNavigateBack => _backStack.Count > 0;
 
         public bool CanNavigateForward => _forwardStack.Count > 0;
+
+        public bool IsMuted
+        {
+            get => _isMuted;
+            private set => SetProperty(ref _isMuted, value);
+        }
+
+        public bool IsCameraOn
+        {
+            get => _isCameraOn;
+            private set => SetProperty(ref _isCameraOn, value);
+        }
+
+        public bool IsHandRaised
+        {
+            get => _isHandRaised;
+            private set => SetProperty(ref _isHandRaised, value);
+        }
+
+        public bool IsScreenSharing
+        {
+            get => _isScreenSharing;
+            private set => SetProperty(ref _isScreenSharing, value);
+        }
+
+        public ICommand ToggleMuteCommand { get; }
+        public ICommand ToggleCameraCommand { get; }
+        public ICommand ToggleHandCommand { get; }
+        public ICommand ToggleScreenShareCommand { get; }
+        public ICommand LeaveMeetingCommand { get; }
 
         /// <inheritdoc />
         public void NavigateBack()
@@ -121,6 +161,35 @@ namespace GUI.ViewModels.Meeting
             _currentTab = tab;
             CurrentPage = tab.ContentViewModel;
             RaiseNavigationStateChanged();
+        }
+
+        private void ToggleMute()
+        {
+            IsMuted = !IsMuted;
+            App.ToastService.ShowInfo(IsMuted ? "Microphone muted." : "Microphone unmuted.");
+        }
+
+        private void ToggleCamera()
+        {
+            IsCameraOn = !IsCameraOn;
+            App.ToastService.ShowInfo(IsCameraOn ? "Camera enabled." : "Camera disabled.");
+        }
+
+        private void ToggleHandRaised()
+        {
+            IsHandRaised = !IsHandRaised;
+            App.ToastService.ShowInfo(IsHandRaised ? "Hand raised." : "Hand lowered.");
+        }
+
+        private void ToggleScreenShare()
+        {
+            IsScreenSharing = !IsScreenSharing;
+            App.ToastService.ShowInfo(IsScreenSharing ? "Screen sharing on." : "Screen sharing off.");
+        }
+
+        private void LeaveMeeting()
+        {
+            App.ToastService.ShowWarning("Leave meeting flow is not implemented yet.");
         }
 
         /// <summary>

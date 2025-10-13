@@ -5,12 +5,12 @@ namespace GUI.Views.Meeting;
 /// <summary>
 /// Provides the main meeting content area where participants interact.
 /// </summary>
-public partial class MeetingSessionView : UserControl
+public partial class VideoSessionView : UserControl
 {
     /// <summary>
     /// Initializes session UI from its XAML definition.
     /// </summary>
-    public MeetingSessionView()
+    public VideoSessionView()
     {
         InitializeComponent();
     }
