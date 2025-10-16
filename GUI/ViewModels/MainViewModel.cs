@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 using Controller;
-using GUI.Core;
+using UX.Core;
 using GUI.ViewModels.Auth;
 using GUI.ViewModels.Common;
 using GUI.ViewModels.Home;
@@ -293,3 +293,4 @@ namespace GUI.ViewModels
         }
     }
 }
+

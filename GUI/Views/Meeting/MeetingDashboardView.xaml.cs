@@ -15,3 +15,4 @@ public partial class MeetingDashboardView : UserControl
         InitializeComponent();
     }
 }
+

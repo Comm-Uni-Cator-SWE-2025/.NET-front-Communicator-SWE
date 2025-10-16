@@ -1,4 +1,4 @@
-using GUI.Core;
+using UX.Core;
 using System.Windows.Input;
 
 namespace GUI.ViewModels.Auth
@@ -90,3 +90,4 @@ namespace GUI.ViewModels.Auth
         }
     }
 }
+

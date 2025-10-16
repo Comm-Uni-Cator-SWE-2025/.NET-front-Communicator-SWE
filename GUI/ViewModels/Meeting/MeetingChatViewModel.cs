@@ -1,5 +1,5 @@
 using Controller;
-using GUI.Core;
+using UX.Core;
 
 namespace GUI.ViewModels.Meeting
 {
@@ -21,3 +21,4 @@ namespace GUI.ViewModels.Meeting
         public UserProfile CurrentUser { get; }
     }
 }
+

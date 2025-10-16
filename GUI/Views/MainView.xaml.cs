@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Controls.Primitives;
-using GUI.Models;
+using UX.Core.Models;
 using GUI.ViewModels;
 using GUI.ViewModels.Common;
 
@@ -201,3 +201,4 @@ public partial class MainView : Window
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, DwmWindowAttribute attribute, ref DwmWindowCornerPreference pvAttribute, uint cbAttribute);
 }
+

@@ -1,6 +1,6 @@
 using System;
 using Controller;
-using GUI.Core;
+using UX.Core;
 using System.Windows.Input;
 using GUI.ViewModels.Meeting;
 
@@ -99,3 +99,4 @@ namespace GUI.ViewModels.Home
         }
     }
 }
+

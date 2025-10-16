@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows;
-using GUI.Core;
-using GUI.Models;
-using GUI.Services;
+using UX.Core;
+using UX.Core.Models;
+using UX.Core.Services;
 
 namespace GUI.ViewModels.Common
 {
@@ -47,3 +47,4 @@ namespace GUI.ViewModels.Common
         }
     }
 }
+

@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using GUI.Models;
+using UX.Core.Models;
 
 namespace GUI.Views
 {
@@ -140,3 +140,5 @@ namespace GUI.Views
         }
     }
 }
+
+

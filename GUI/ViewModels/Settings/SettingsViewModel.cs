@@ -1,8 +1,8 @@
 using System.Windows.Input;
 using Controller;
-using GUI.Core;
-using GUI.Models;
-using GUI.Services;
+using UX.Core;
+using UX.Core.Models;
+using UX.Core.Services;
 
 namespace GUI.ViewModels.Settings
 {
@@ -63,3 +63,4 @@ namespace GUI.ViewModels.Settings
         }
     }
 }
+

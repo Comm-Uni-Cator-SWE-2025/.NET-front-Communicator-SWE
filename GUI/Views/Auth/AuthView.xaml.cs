@@ -16,3 +16,4 @@ namespace GUI.Views.Auth
         }
     }
 }
+

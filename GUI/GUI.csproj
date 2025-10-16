@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Controller\Controller.csproj" />
+    <ProjectReference Include="..\UX.Core\UX.Core.csproj" />
   </ItemGroup>
 
 </Project>

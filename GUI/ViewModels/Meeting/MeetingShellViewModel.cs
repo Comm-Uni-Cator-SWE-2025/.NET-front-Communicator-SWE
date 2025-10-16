@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
-using GUI.Core;
+using UX.Core;
 using Controller;
 
 namespace GUI.ViewModels.Meeting
@@ -214,3 +214,4 @@ namespace GUI.ViewModels.Meeting
         }
     }
 }
+

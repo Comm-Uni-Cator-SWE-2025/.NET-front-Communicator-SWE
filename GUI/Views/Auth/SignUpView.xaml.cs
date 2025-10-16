@@ -39,3 +39,4 @@ namespace GUI.Views.Auth
         }
     }
 }
+

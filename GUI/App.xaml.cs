@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Threading;
 using Controller;
-using GUI.Services;
+using UX.Core.Services;  // NavigationService still in GUI
 using GUI.ViewModels;
 using GUI.Views;
 
@@ -12,9 +12,9 @@ public partial class App : Application
 {
     // Singleton Services following Dependency Injection pattern
     public static IController? Controller { get; private set; }
-    public static IToastService ToastService { get; private set; } = new ToastService();
-    public static IThemeService ThemeService { get; private set; } = new ThemeService();
-    public static INavigationService NavigationService { get; private set; } = new NavigationService();
+    public static UX.Core.Services.IToastService ToastService { get; private set; } = new UX.Core.Services.ToastService();
+    public static UX.Core.Services.IThemeService ThemeService { get; private set; } = new UX.Core.Services.ThemeService();
+    public static UX.Core.Services.INavigationService NavigationService { get; private set; } = new GUI.Services.NavigationService();
 
     public App()
     {
@@ -61,3 +61,4 @@ public partial class App : Application
         MessageBox.Show(exception.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }
+

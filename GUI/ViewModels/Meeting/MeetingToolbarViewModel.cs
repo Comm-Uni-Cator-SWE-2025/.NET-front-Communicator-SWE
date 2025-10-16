@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using GUI.Core;
+using UX.Core;
 
 namespace GUI.ViewModels.Meeting
 {
@@ -47,3 +47,4 @@ namespace GUI.ViewModels.Meeting
         public event EventHandler<MeetingTabViewModel?>? SelectedTabChanged;
     }
 }
+
