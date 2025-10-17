@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UX.Core", "UX.Core\UX.Core.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UX.Core.Tests", "UX.Core.Tests\UX.Core.Tests.csproj", "{F6CAA95E-C7A4-4A93-BFBA-C6A71173914C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Controller.UI", "Controller.UI\Controller.UI.csproj", "{A0517714-C4AF-4FEF-A007-32713F68265E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{F6CAA95E-C7A4-4A93-BFBA-C6A71173914C}.Release|x64.Build.0 = Release|Any CPU
 		{F6CAA95E-C7A4-4A93-BFBA-C6A71173914C}.Release|x86.ActiveCfg = Release|Any CPU
 		{F6CAA95E-C7A4-4A93-BFBA-C6A71173914C}.Release|x86.Build.0 = Release|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Debug|x64.Build.0 = Debug|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Debug|x86.Build.0 = Debug|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Release|x64.ActiveCfg = Release|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Release|x64.Build.0 = Release|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Release|x86.ActiveCfg = Release|Any CPU
+		{A0517714-C4AF-4FEF-A007-32713F68265E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
