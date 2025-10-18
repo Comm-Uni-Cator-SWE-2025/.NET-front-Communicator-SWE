@@ -1,8 +1,9 @@
 using System;
 using System.Windows.Input;
 using Controller;
+using Microsoft.Extensions.DependencyInjection;
 using UX.Core;
-using GUI.ViewModels.Auth;
+using UX.Core.Services;
 using GUI.ViewModels.Common;
 using GUI.ViewModels.Home;
 using GUI.ViewModels.Meeting;
@@ -12,10 +13,16 @@ namespace GUI.ViewModels
 {
     /// <summary>
     /// Shell view model that coordinates authentication, navigation, meeting toolbar state, and toast presentation.
+    /// Refactored to use Dependency Injection for better testability and maintainability.
     /// </summary>
     public class MainViewModel : ObservableObject
     {
-        private AuthViewModel? _authViewModel;
+        private Controller.UI.ViewModels.AuthViewModel? _authViewModel;
+        private readonly INavigationService _navigationService;
+        private readonly IThemeService _themeService;
+        private readonly IToastService _toastService;
+        private readonly IController _controller;
+
         private bool _isLoggedIn;
         public bool IsLoggedIn
         {
@@ -54,7 +61,7 @@ namespace GUI.ViewModels
         }
 
     public bool IsMeetingActive => MeetingToolbar != null;
-    public bool ShowBackButton => IsMeetingActive || App.NavigationService.CanGoBack;
+    public bool ShowBackButton => IsMeetingActive || _navigationService.CanGoBack;
     public bool ShowForwardButton => IsMeetingActive;
 
         private string? _currentUserName;
@@ -110,14 +117,24 @@ namespace GUI.ViewModels
         public ICommand GoBackCommand { get; }
         public ICommand GoForwardCommand { get; }
 
-    public bool CanGoBack => _navigationScope != null ? _navigationScope.CanNavigateBack : App.NavigationService.CanGoBack;
-    public bool CanGoForward => _navigationScope != null ? _navigationScope.CanNavigateForward : App.NavigationService.CanGoForward;
+    public bool CanGoBack => _navigationScope != null ? _navigationScope.CanNavigateBack : _navigationService.CanGoBack;
+    public bool CanGoForward => _navigationScope != null ? _navigationScope.CanNavigateForward : _navigationService.CanGoForward;
 
         /// <summary>
         /// Initializes commands, creates the initial authentication view, and subscribes to navigation events.
+        /// Services are injected via constructor for better testability.
         /// </summary>
-        public MainViewModel()
+        public MainViewModel(
+            INavigationService navigationService,
+            IThemeService themeService,
+            IToastService toastService,
+            IController controller)
         {
+            _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+            _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
+            _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
+            _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+
             _authViewModel = CreateAuthViewModel();
             LogoutCommand = new RelayCommand(Logout);
             NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
@@ -127,9 +144,9 @@ namespace GUI.ViewModels
             GoForwardCommand = _goForwardCommand;
 
             // Subscribe to navigation changes
-            App.NavigationService.NavigationChanged += (s, e) =>
+            _navigationService.NavigationChanged += (s, e) =>
             {
-                CurrentView = App.NavigationService.CurrentView;
+                CurrentView = _navigationService.CurrentView;
                 OnPropertyChanged(nameof(CanGoBack));
                 OnPropertyChanged(nameof(CanGoForward));
                 OnPropertyChanged(nameof(ShowBackButton));
@@ -144,9 +161,9 @@ namespace GUI.ViewModels
         /// <summary>
         /// Creates the authentication view model and hooks the post-login callback.
         /// </summary>
-        private AuthViewModel CreateAuthViewModel()
+        private Controller.UI.ViewModels.AuthViewModel CreateAuthViewModel()
         {
-            var authViewModel = new AuthViewModel();
+            var authViewModel = App.Services.GetRequiredService<Controller.UI.ViewModels.AuthViewModel>();
             authViewModel.LoggedIn += OnLoggedIn;
             return authViewModel;
         }
@@ -167,8 +184,8 @@ namespace GUI.ViewModels
             CurrentUser = user;
             
             // Clear navigation history and navigate to home
-            App.NavigationService.ClearHistory();
-            App.NavigationService.NavigateTo(new HomePageViewModel(user));
+            _navigationService.ClearHistory();
+            _navigationService.NavigateTo(new HomePageViewModel(user, _toastService, _navigationService));
         }
 
         /// <summary>
@@ -178,8 +195,8 @@ namespace GUI.ViewModels
         {
             if (CurrentUser != null)
             {
-                var settingsViewModel = new SettingsViewModel(CurrentUser, App.ThemeService);
-                App.NavigationService.NavigateTo(settingsViewModel);
+                var settingsViewModel = new SettingsViewModel(CurrentUser, _themeService);
+                _navigationService.NavigateTo(settingsViewModel);
             }
         }
 
@@ -197,9 +214,9 @@ namespace GUI.ViewModels
                 return;
             }
 
-            if (App.NavigationService.CanGoBack)
+            if (_navigationService.CanGoBack)
             {
-                App.NavigationService.GoBack();
+                _navigationService.GoBack();
             }
         }
 
@@ -217,9 +234,9 @@ namespace GUI.ViewModels
                 return;
             }
 
-            if (App.NavigationService.CanGoForward)
+            if (_navigationService.CanGoForward)
             {
-                App.NavigationService.GoForward();
+                _navigationService.GoForward();
             }
         }
 
@@ -238,7 +255,7 @@ namespace GUI.ViewModels
             }
 
             // Clear navigation history and return to auth
-            App.NavigationService.ClearHistory();
+            _navigationService.ClearHistory();
             _authViewModel = CreateAuthViewModel();
             CurrentView = _authViewModel;
         }

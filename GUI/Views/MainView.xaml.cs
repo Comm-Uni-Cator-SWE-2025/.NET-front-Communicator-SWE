@@ -5,7 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Controls.Primitives;
+using Microsoft.Extensions.DependencyInjection;
 using UX.Core.Models;
+using UX.Core.Services;
 using GUI.ViewModels;
 using GUI.ViewModels.Common;
 
@@ -16,21 +18,26 @@ namespace GUI.Views;
 /// </summary>
 public partial class MainView : Window
 {
+    private readonly IToastService _toastService;
+
     /// <summary>
     /// Initializes the window, wires up toast handling, and configures chrome behavior.
     /// </summary>
     public MainView()
     {
         InitializeComponent();
+
+        // Get ToastService from DI
+        _toastService = App.Services.GetRequiredService<IToastService>();
         
         // Initialize Toast Container
         if (DataContext is MainViewModel mainViewModel)
         {
-            mainViewModel.ToastContainerViewModel = new ToastContainerViewModel(App.ToastService);
+            mainViewModel.ToastContainerViewModel = new ToastContainerViewModel(_toastService);
         }
         
         // Subscribe to toast service events
-        App.ToastService.ToastRequested += OnToastRequested;
+        _toastService.ToastRequested += OnToastRequested;
         
         SourceInitialized += OnSourceInitialized;
         StateChanged += (_, _) => UpdateWindowStateVisuals();

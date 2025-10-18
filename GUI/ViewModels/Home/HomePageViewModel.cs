@@ -1,6 +1,7 @@
 using System;
 using Controller;
 using UX.Core;
+using UX.Core.Services;
 using System.Windows.Input;
 using GUI.ViewModels.Meeting;
 
@@ -12,6 +13,8 @@ namespace GUI.ViewModels.Home
     public class HomePageViewModel : ObservableObject
     {
         private readonly UserProfile _user;
+        private readonly IToastService _toastService;
+        private readonly INavigationService _navigationService;
 
         public string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy");
         public string WelcomeMessage => _user.DisplayName;
@@ -34,10 +37,14 @@ namespace GUI.ViewModels.Home
 
         /// <summary>
         /// Initializes the home page with the authenticated user's profile and commands.
+        /// NOTE: Currently creates MeetingShellViewModel directly - will be refactored to use DI in future iteration.
         /// </summary>
-        public HomePageViewModel(UserProfile user)
+        public HomePageViewModel(UserProfile user, IToastService toastService, INavigationService navigationService)
         {
-            _user = user;
+            _user = user ?? throw new ArgumentNullException(nameof(user));
+            _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
+            _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+
             _meetingLink = string.Empty;
             JoinMeetingCommand = new RelayCommand(JoinMeeting, CanJoinMeeting);
             CreateMeetingCommand = new RelayCommand(CreateMeeting, CanCreateMeeting);
@@ -51,11 +58,11 @@ namespace GUI.ViewModels.Home
         {
             if (string.IsNullOrWhiteSpace(MeetingLink))
             {
-                App.ToastService.ShowWarning("Please enter a meeting link to join");
+                _toastService.ShowWarning("Please enter a meeting link to join");
                 return;
             }
 
-            App.ToastService.ShowInfo("Join meeting functionality will be implemented soon");
+            _toastService.ShowInfo("Join meeting functionality will be implemented soon");
         }
 
         /// <summary>
@@ -74,11 +81,11 @@ namespace GUI.ViewModels.Home
             // TODO: Implement Create Meeting logic
             if (string.Equals(_user.Role, "lecturer", StringComparison.OrdinalIgnoreCase))
             {
-                App.ToastService.ShowInfo("Create meeting functionality will be implemented soon");
+                _toastService.ShowInfo("Create meeting functionality will be implemented soon");
             }
             else
             {
-                App.ToastService.ShowWarning("Only lecturers can create meetings");
+                _toastService.ShowWarning("Only lecturers can create meetings");
             }
         }
 
@@ -95,7 +102,7 @@ namespace GUI.ViewModels.Home
         /// </summary>
         private void OpenMeeting(object? obj)
         {
-            App.NavigationService.NavigateTo(new MeetingShellViewModel(_user));
+            _navigationService.NavigateTo(new MeetingShellViewModel(_user));
         }
     }
 }

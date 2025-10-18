@@ -1,11 +1,11 @@
 <Application x:Class="GUI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:authVm="clr-namespace:GUI.ViewModels.Auth"
+             xmlns:controllerAuthVm="clr-namespace:Controller.UI.ViewModels;assembly=Controller.UI"
+             xmlns:controllerAuthViews="clr-namespace:Controller.UI.Views;assembly=Controller.UI"
              xmlns:homeVm="clr-namespace:GUI.ViewModels.Home"
              xmlns:meetingVm="clr-namespace:GUI.ViewModels.Meeting"
              xmlns:settingsVm="clr-namespace:GUI.ViewModels.Settings"
-             xmlns:authViews="clr-namespace:GUI.Views.Auth"
              xmlns:homeViews="clr-namespace:GUI.Views.Home"
              xmlns:meetingViews="clr-namespace:GUI.Views.Meeting"
              xmlns:settingsViews="clr-namespace:GUI.Views.Settings"
@@ -23,16 +23,18 @@
             <!-- Converters -->
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             
-            <!-- Data Templates for Views -->
-            <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
-                <authViews:AuthView />
+            <!-- Data Templates for Controller.UI Auth Views (owned by Controller team) -->
+            <DataTemplate DataType="{x:Type controllerAuthVm:AuthViewModel}">
+                <controllerAuthViews:AuthView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type authVm:LoginViewModel}">
-                <authViews:LoginView />
+            <DataTemplate DataType="{x:Type controllerAuthVm:LoginViewModel}">
+                <controllerAuthViews:LoginView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type authVm:SignUpViewModel}">
-                <authViews:SignUpView />
+            <DataTemplate DataType="{x:Type controllerAuthVm:SignUpViewModel}">
+                <controllerAuthViews:SignUpView />
             </DataTemplate>
+            
+            <!-- Data Templates for GUI Views -->
             <DataTemplate DataType="{x:Type homeVm:HomePageViewModel}">
                 <homeViews:HomePageView />
             </DataTemplate>

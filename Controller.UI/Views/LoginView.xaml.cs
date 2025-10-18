@@ -1,10 +1,9 @@
 using System.Windows.Controls;
-using Controller.UI.ViewModels;
 
 namespace Controller.UI.Views
 {
     /// <summary>
-    /// Presents the login form and synchronizes secure password entry with its view model.
+    /// Presents the login form using attached behavior for password binding (pure MVVM).
     /// </summary>
     public partial class LoginView : UserControl
     {
@@ -14,17 +13,6 @@ namespace Controller.UI.Views
         public LoginView()
         {
             InitializeComponent();
-        }
-
-        /// <summary>
-        /// Mirrors the masked password input into the bound <see cref="LoginViewModel"/>.
-        /// </summary>
-        private void PasswordBox_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)
-        {
-            if (DataContext is LoginViewModel viewModel)
-            {
-                viewModel.Password = ((PasswordBox)sender).Password;
-            }
         }
     }
 }

@@ -2,7 +2,9 @@ using System;
 using System.Windows;
 using System.Windows.Threading;
 using Controller;
-using UX.Core.Services;  // NavigationService still in GUI
+using Microsoft.Extensions.DependencyInjection;
+using UX.Core;
+using UX.Core.Services;
 using GUI.ViewModels;
 using GUI.Views;
 
@@ -10,11 +12,8 @@ namespace GUI;
 
 public partial class App : Application
 {
-    // Singleton Services following Dependency Injection pattern
-    public static IController? Controller { get; private set; }
-    public static UX.Core.Services.IToastService ToastService { get; private set; } = new UX.Core.Services.ToastService();
-    public static UX.Core.Services.IThemeService ThemeService { get; private set; } = new UX.Core.Services.ThemeService();
-    public static UX.Core.Services.INavigationService NavigationService { get; private set; } = new GUI.Services.NavigationService();
+    // Dependency Injection Service Provider
+    public static IServiceProvider Services { get; private set; } = null!;
 
     public App()
     {
@@ -26,19 +25,42 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Initialize services
-        Controller = new MockController();
-        
-        // Load saved theme preference
-        ThemeService.LoadSavedTheme();
+        // Configure Dependency Injection
+        var services = new ServiceCollection();
+        ConfigureServices(services);
+        Services = services.BuildServiceProvider();
 
-        // Create and show main window
+        // Load saved theme preference
+        var themeService = Services.GetRequiredService<IThemeService>();
+        themeService.LoadSavedTheme();
+
+        // Create and show main window with DI
+        var mainViewModel = Services.GetRequiredService<MainViewModel>();
         var mainView = new MainView
         {
-            DataContext = new MainViewModel()
+            DataContext = mainViewModel
         };
 
         mainView.Show();
+    }
+
+    /// <summary>
+    /// Configures all application services for dependency injection.
+    /// </summary>
+    private void ConfigureServices(IServiceCollection services)
+    {
+        // Register UX.Core services (Toast, Theme)
+        services.AddUXCoreServices();
+
+        // Register GUI-specific services
+        services.AddSingleton<INavigationService, Services.NavigationService>();
+
+        // Register Controller services
+        services.AddSingleton<IController, MockController>();
+
+        // Register ViewModels
+        services.AddTransient<MainViewModel>();
+        services.AddTransient<Controller.UI.ViewModels.AuthViewModel>();
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

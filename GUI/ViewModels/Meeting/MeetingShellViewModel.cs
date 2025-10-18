@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using UX.Core;
+using UX.Core.Services;
 using Controller;
 
 namespace GUI.ViewModels.Meeting
@@ -12,6 +14,7 @@ namespace GUI.ViewModels.Meeting
     public class MeetingShellViewModel : ObservableObject, INavigationScope, IDisposable
     {
         private readonly MeetingToolbarViewModel _toolbarViewModel;
+        private readonly IToastService _toastService;
         private readonly Stack<MeetingTabViewModel> _backStack = new();
         private readonly Stack<MeetingTabViewModel> _forwardStack = new();
         private MeetingTabViewModel? _currentTab;
@@ -24,6 +27,7 @@ namespace GUI.ViewModels.Meeting
 
         /// <summary>
         /// Builds meeting tabs for the supplied user and initializes navigation state.
+        /// NOTE: Gets ToastService from DI container temporarily until this ViewModel receives full DI support.
         /// </summary>
         public MeetingShellViewModel(UserProfile user)
         {
@@ -31,6 +35,9 @@ namespace GUI.ViewModels.Meeting
             {
                 throw new ArgumentNullException(nameof(user));
             }
+
+            // Get ToastService from DI container
+            _toastService = App.Services.GetRequiredService<IToastService>();
 
             _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(user));
             _toolbarViewModel.SelectedTabChanged += OnSelectedTabChanged;
@@ -166,30 +173,30 @@ namespace GUI.ViewModels.Meeting
         private void ToggleMute()
         {
             IsMuted = !IsMuted;
-            App.ToastService.ShowInfo(IsMuted ? "Microphone muted." : "Microphone unmuted.");
+            _toastService.ShowInfo(IsMuted ? "Microphone muted." : "Microphone unmuted.");
         }
 
         private void ToggleCamera()
         {
             IsCameraOn = !IsCameraOn;
-            App.ToastService.ShowInfo(IsCameraOn ? "Camera enabled." : "Camera disabled.");
+            _toastService.ShowInfo(IsCameraOn ? "Camera enabled." : "Camera disabled.");
         }
 
         private void ToggleHandRaised()
         {
             IsHandRaised = !IsHandRaised;
-            App.ToastService.ShowInfo(IsHandRaised ? "Hand raised." : "Hand lowered.");
+            _toastService.ShowInfo(IsHandRaised ? "Hand raised." : "Hand lowered.");
         }
 
         private void ToggleScreenShare()
         {
             IsScreenSharing = !IsScreenSharing;
-            App.ToastService.ShowInfo(IsScreenSharing ? "Screen sharing on." : "Screen sharing off.");
+            _toastService.ShowInfo(IsScreenSharing ? "Screen sharing on." : "Screen sharing off.");
         }
 
         private void LeaveMeeting()
         {
-            App.ToastService.ShowWarning("Leave meeting flow is not implemented yet.");
+            _toastService.ShowWarning("Leave meeting flow is not implemented yet.");
         }
 
         /// <summary>
