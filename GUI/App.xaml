@@ -1,8 +1,8 @@
 <Application x:Class="GUI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controllerAuthVm="clr-namespace:Controller.UI.ViewModels;assembly=Controller.UI"
-             xmlns:controllerAuthViews="clr-namespace:Controller.UI.Views;assembly=Controller.UI"
+             xmlns:authVm="clr-namespace:GUI.ViewModels.Auth"
+             xmlns:authViews="clr-namespace:GUI.Views.Auth"
              xmlns:homeVm="clr-namespace:GUI.ViewModels.Home"
              xmlns:meetingVm="clr-namespace:GUI.ViewModels.Meeting"
              xmlns:settingsVm="clr-namespace:GUI.ViewModels.Settings"
@@ -23,15 +23,9 @@
             <!-- Converters -->
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             
-            <!-- Data Templates for Controller.UI Auth Views (owned by Controller team) -->
-            <DataTemplate DataType="{x:Type controllerAuthVm:AuthViewModel}">
-                <controllerAuthViews:AuthView />
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type controllerAuthVm:LoginViewModel}">
-                <controllerAuthViews:LoginView />
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type controllerAuthVm:SignUpViewModel}">
-                <controllerAuthViews:SignUpView />
+            <!-- Data Template for Auth View (Google OAuth only) -->
+            <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
+                <authViews:AuthView />
             </DataTemplate>
             
             <!-- Data Templates for GUI Views -->

@@ -4,42 +4,33 @@ namespace Controller
 {
     public class MockController : IController
     {
-        private readonly AuthService _authService;
         private UserProfile? _currentUser;
 
         public MockController()
         {
-            _authService = new AuthService();
-            SeedUsers();
         }
 
-        private void SeedUsers()
+        /// <summary>
+        /// Mock Google OAuth login - generates user from authorization code.
+        /// </summary>
+        public bool LoginWithGoogle(string authorizationCode)
         {
-            _authService.Register("lecturer@iitpkd.ac.in", "password", "Lecturer");
-            _authService.Register("student@smail.iitpkd.ac.in", "password", "Student");
-        }
+            // Simulate network delay
+            System.Threading.Thread.Sleep(500);
 
-        public bool Login(string email, string password)
-        {
-            var user = _authService.Login(email, password);
-            if (user == null)
+            if (string.IsNullOrWhiteSpace(authorizationCode))
             {
                 return false;
             }
 
-            _currentUser = user;
-            return true;
-        }
+            var googleUser = new UserProfile(
+                email: $"user{Math.Abs(authorizationCode.GetHashCode()) % 1000}@iitpkd.ac.in",
+                displayName: $"User {Math.Abs(authorizationCode.GetHashCode()) % 1000}",
+                passwordHash: "GOOGLE_OAUTH_NO_PASSWORD",
+                userRole: "User"
+            );
 
-        public bool SignUp(string displayName, string email, string password)
-        {
-            var user = _authService.Register(email, password, displayName);
-            if (user == null)
-            {
-                return false;
-            }
-
-            _currentUser = user;
+            _currentUser = googleUser;
             return true;
         }
 

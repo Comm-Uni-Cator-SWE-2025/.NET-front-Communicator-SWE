@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection;
 using UX.Core;
 using UX.Core.Services;
 using Controller;
@@ -27,17 +26,16 @@ namespace GUI.ViewModels.Meeting
 
         /// <summary>
         /// Builds meeting tabs for the supplied user and initializes navigation state.
-        /// NOTE: Gets ToastService from DI container temporarily until this ViewModel receives full DI support.
+        /// Services are now injected via constructor for better testability.
         /// </summary>
-        public MeetingShellViewModel(UserProfile user)
+        public MeetingShellViewModel(UserProfile user, IToastService toastService)
         {
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
 
-            // Get ToastService from DI container
-            _toastService = App.Services.GetRequiredService<IToastService>();
+            _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
 
             _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(user));
             _toolbarViewModel.SelectedTabChanged += OnSelectedTabChanged;

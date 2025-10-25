@@ -20,10 +20,7 @@ UX.Core is a shared class library that provides common UI/UX infrastructure for 
 - **ToastMessage**: Model for toast notifications
 - **AppTheme**: Theme enumeration (Light, Dark)
 
-### 4. Behaviors
-- **PasswordBoxBehavior**: Attached behavior for binding PasswordBox.Password property in MVVM
-
-### 5. UI Resources
+### 4. UI Resources
 - **Themes**: LightTheme.xaml, DarkTheme.xaml (color palettes)
 - **Styles**: ControlStyles.xaml (Button, TextBox, PasswordBox, Toggle styles)
 - **Converters**: BooleanToVisibilityConverter for XAML bindings

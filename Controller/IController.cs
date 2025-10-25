@@ -4,7 +4,12 @@ namespace Controller
     {
         void AddUser(ClientNode deviceNode, ClientNode clientNode);
         UserProfile? GetUser();
-        bool Login(string email, string password);
-        bool SignUp(string displayName, string email, string password);
+        
+        /// <summary>
+        /// Authenticates user via Google OAuth flow.
+        /// </summary>
+        /// <param name="authorizationCode">Authorization code from Google OAuth redirect</param>
+        /// <returns>True if authentication successful, false otherwise</returns>
+        bool LoginWithGoogle(string authorizationCode);
     }
 }

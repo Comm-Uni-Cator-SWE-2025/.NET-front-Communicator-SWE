@@ -60,7 +60,32 @@ public partial class App : Application
 
         // Register ViewModels
         services.AddTransient<MainViewModel>();
-        services.AddTransient<Controller.UI.ViewModels.AuthViewModel>();
+        services.AddTransient<GUI.ViewModels.Auth.AuthViewModel>();
+        services.AddTransient<GUI.ViewModels.Home.HomePageViewModel>();
+        services.AddTransient<GUI.ViewModels.Settings.SettingsViewModel>();
+        services.AddTransient<GUI.ViewModels.Meeting.MeetingShellViewModel>();
+
+        // Register ViewModel Factories
+        // Factory for creating AuthViewModel instances (used in MainViewModel)
+        services.AddTransient<Func<GUI.ViewModels.Auth.AuthViewModel>>(sp => 
+            () => sp.GetRequiredService<GUI.ViewModels.Auth.AuthViewModel>());
+
+        // Factory for creating HomePageViewModel with UserProfile parameter
+        services.AddTransient<Func<UserProfile, GUI.ViewModels.Home.HomePageViewModel>>(sp =>
+        {
+            var toastService = sp.GetRequiredService<IToastService>();
+            var navigationService = sp.GetRequiredService<INavigationService>();
+            var meetingShellFactory = sp.GetRequiredService<Func<UserProfile, GUI.ViewModels.Meeting.MeetingShellViewModel>>();
+            return (user) => new GUI.ViewModels.Home.HomePageViewModel(user, toastService, navigationService, meetingShellFactory);
+        });
+
+        // Factory for creating SettingsViewModel with UserProfile parameter
+        services.AddTransient<Func<UserProfile, GUI.ViewModels.Settings.SettingsViewModel>>(sp =>
+            (user) => ActivatorUtilities.CreateInstance<GUI.ViewModels.Settings.SettingsViewModel>(sp, user));
+
+        // Factory for creating MeetingShellViewModel with UserProfile parameter
+        services.AddTransient<Func<UserProfile, GUI.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
+            (user) => ActivatorUtilities.CreateInstance<GUI.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

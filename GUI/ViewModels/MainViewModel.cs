@@ -1,7 +1,6 @@
 using System;
 using System.Windows.Input;
 using Controller;
-using Microsoft.Extensions.DependencyInjection;
 using UX.Core;
 using UX.Core.Services;
 using GUI.ViewModels.Common;
@@ -17,11 +16,14 @@ namespace GUI.ViewModels
     /// </summary>
     public class MainViewModel : ObservableObject
     {
-        private Controller.UI.ViewModels.AuthViewModel? _authViewModel;
+        private GUI.ViewModels.Auth.AuthViewModel? _authViewModel;
         private readonly INavigationService _navigationService;
         private readonly IThemeService _themeService;
         private readonly IToastService _toastService;
         private readonly IController _controller;
+        private readonly Func<GUI.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
+        private readonly Func<UserProfile, HomePageViewModel> _homePageViewModelFactory;
+        private readonly Func<UserProfile, SettingsViewModel> _settingsViewModelFactory;
 
         private bool _isLoggedIn;
         public bool IsLoggedIn
@@ -128,12 +130,18 @@ namespace GUI.ViewModels
             INavigationService navigationService,
             IThemeService themeService,
             IToastService toastService,
-            IController controller)
+            IController controller,
+            Func<GUI.ViewModels.Auth.AuthViewModel> authViewModelFactory,
+            Func<UserProfile, HomePageViewModel> homePageViewModelFactory,
+            Func<UserProfile, SettingsViewModel> settingsViewModelFactory)
         {
             _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
             _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
             _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+            _authViewModelFactory = authViewModelFactory ?? throw new ArgumentNullException(nameof(authViewModelFactory));
+            _homePageViewModelFactory = homePageViewModelFactory ?? throw new ArgumentNullException(nameof(homePageViewModelFactory));
+            _settingsViewModelFactory = settingsViewModelFactory ?? throw new ArgumentNullException(nameof(settingsViewModelFactory));
 
             _authViewModel = CreateAuthViewModel();
             LogoutCommand = new RelayCommand(Logout);
@@ -160,16 +168,18 @@ namespace GUI.ViewModels
 
         /// <summary>
         /// Creates the authentication view model and hooks the post-login callback.
+        /// Uses injected factory instead of service locator pattern.
         /// </summary>
-        private Controller.UI.ViewModels.AuthViewModel CreateAuthViewModel()
+        private GUI.ViewModels.Auth.AuthViewModel CreateAuthViewModel()
         {
-            var authViewModel = App.Services.GetRequiredService<Controller.UI.ViewModels.AuthViewModel>();
+            var authViewModel = _authViewModelFactory();
             authViewModel.LoggedIn += OnLoggedIn;
             return authViewModel;
         }
 
         /// <summary>
         /// Handles successful login by capturing user details and navigating to the home page.
+        /// Uses injected factory to create HomePageViewModel.
         /// </summary>
         private void OnLoggedIn(UserProfile user)
         {
@@ -185,18 +195,18 @@ namespace GUI.ViewModels
             
             // Clear navigation history and navigate to home
             _navigationService.ClearHistory();
-            _navigationService.NavigateTo(new HomePageViewModel(user, _toastService, _navigationService));
+            _navigationService.NavigateTo(_homePageViewModelFactory(user));
         }
 
         /// <summary>
         /// Navigates to the settings page when a user is authenticated.
+        /// Uses injected factory to create SettingsViewModel.
         /// </summary>
         private void NavigateToSettings(object? obj)
         {
             if (CurrentUser != null)
             {
-                var settingsViewModel = new SettingsViewModel(CurrentUser, _themeService);
-                _navigationService.NavigateTo(settingsViewModel);
+                _navigationService.NavigateTo(_settingsViewModelFactory(CurrentUser));
             }
         }
 

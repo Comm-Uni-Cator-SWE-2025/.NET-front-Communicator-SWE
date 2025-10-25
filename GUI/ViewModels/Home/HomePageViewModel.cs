@@ -15,6 +15,7 @@ namespace GUI.ViewModels.Home
         private readonly UserProfile _user;
         private readonly IToastService _toastService;
         private readonly INavigationService _navigationService;
+        private readonly Func<UserProfile, MeetingShellViewModel> _meetingShellViewModelFactory;
 
         public string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy");
         public string WelcomeMessage => _user.DisplayName;
@@ -37,13 +38,18 @@ namespace GUI.ViewModels.Home
 
         /// <summary>
         /// Initializes the home page with the authenticated user's profile and commands.
-        /// NOTE: Currently creates MeetingShellViewModel directly - will be refactored to use DI in future iteration.
+        /// Uses injected factory to create MeetingShellViewModel.
         /// </summary>
-        public HomePageViewModel(UserProfile user, IToastService toastService, INavigationService navigationService)
+        public HomePageViewModel(
+            UserProfile user, 
+            IToastService toastService, 
+            INavigationService navigationService,
+            Func<UserProfile, MeetingShellViewModel> meetingShellViewModelFactory)
         {
             _user = user ?? throw new ArgumentNullException(nameof(user));
             _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
             _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+            _meetingShellViewModelFactory = meetingShellViewModelFactory ?? throw new ArgumentNullException(nameof(meetingShellViewModelFactory));
 
             _meetingLink = string.Empty;
             JoinMeetingCommand = new RelayCommand(JoinMeeting, CanJoinMeeting);
@@ -74,35 +80,30 @@ namespace GUI.ViewModels.Home
         }
 
         /// <summary>
-        /// Placeholder for meeting creation with role-based restriction messaging.
+        /// Placeholder for meeting creation.
+        /// No role restrictions - all users can create meetings.
         /// </summary>
         private void CreateMeeting(object? obj)
         {
             // TODO: Implement Create Meeting logic
-            if (string.Equals(_user.Role, "lecturer", StringComparison.OrdinalIgnoreCase))
-            {
-                _toastService.ShowInfo("Create meeting functionality will be implemented soon");
-            }
-            else
-            {
-                _toastService.ShowWarning("Only lecturers can create meetings");
-            }
+            _toastService.ShowInfo("Create meeting functionality will be implemented soon");
         }
 
         /// <summary>
-        /// Lecturer-only guard for the create meeting command.
+        /// All users can create meetings - always enabled.
         /// </summary>
         private bool CanCreateMeeting(object? obj)
         {
-            return string.Equals(_user.Role, "lecturer", StringComparison.OrdinalIgnoreCase);
+            return true;
         }
 
         /// <summary>
         /// Initiates the meeting workspace by navigating to the meeting shell.
+        /// Uses injected factory to create MeetingShellViewModel with all dependencies.
         /// </summary>
         private void OpenMeeting(object? obj)
         {
-            _navigationService.NavigateTo(new MeetingShellViewModel(_user));
+            _navigationService.NavigateTo(_meetingShellViewModelFactory(_user));
         }
     }
 }
