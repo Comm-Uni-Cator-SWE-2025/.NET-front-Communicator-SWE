@@ -14,6 +14,7 @@ namespace GUI.ViewModels.Meeting
     {
         private readonly MeetingToolbarViewModel _toolbarViewModel;
         private readonly IToastService _toastService;
+        private readonly UserProfile _user;
         private readonly Stack<MeetingTabViewModel> _backStack = new();
         private readonly Stack<MeetingTabViewModel> _forwardStack = new();
         private MeetingTabViewModel? _currentTab;
@@ -23,6 +24,10 @@ namespace GUI.ViewModels.Meeting
         private bool _isCameraOn = true;
         private bool _isHandRaised;
         private bool _isScreenSharing;
+        
+        // Side Panel Support
+        private object? _sidePanelContent;
+        private bool _isSidePanelOpen;
 
         /// <summary>
         /// Builds meeting tabs for the supplied user and initializes navigation state.
@@ -35,6 +40,7 @@ namespace GUI.ViewModels.Meeting
                 throw new ArgumentNullException(nameof(user));
             }
 
+            _user = user;
             _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
 
             _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(user));
@@ -49,6 +55,8 @@ namespace GUI.ViewModels.Meeting
             ToggleHandCommand = new RelayCommand(_ => ToggleHandRaised());
             ToggleScreenShareCommand = new RelayCommand(_ => ToggleScreenShare());
             LeaveMeetingCommand = new RelayCommand(_ => LeaveMeeting());
+            ToggleChatPanelCommand = new RelayCommand(_ => ToggleChatPanel());
+            CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
             RaiseNavigationStateChanged();
         }
 
@@ -118,12 +126,26 @@ namespace GUI.ViewModels.Meeting
             get => _isScreenSharing;
             private set => SetProperty(ref _isScreenSharing, value);
         }
+        
+        public object? SidePanelContent
+        {
+            get => _sidePanelContent;
+            private set => SetProperty(ref _sidePanelContent, value);
+        }
+        
+        public bool IsSidePanelOpen
+        {
+            get => _isSidePanelOpen;
+            private set => SetProperty(ref _isSidePanelOpen, value);
+        }
 
         public ICommand ToggleMuteCommand { get; }
         public ICommand ToggleCameraCommand { get; }
         public ICommand ToggleHandCommand { get; }
         public ICommand ToggleScreenShareCommand { get; }
         public ICommand LeaveMeetingCommand { get; }
+        public ICommand ToggleChatPanelCommand { get; }
+        public ICommand CloseSidePanelCommand { get; }
 
         /// <inheritdoc />
         public void NavigateBack()
@@ -195,6 +217,37 @@ namespace GUI.ViewModels.Meeting
         private void LeaveMeeting()
         {
             _toastService.ShowWarning("Leave meeting flow is not implemented yet.");
+        }
+        
+        /// <summary>
+        /// Toggles the chat side panel open/closed.
+        /// </summary>
+        private void ToggleChatPanel()
+        {
+            if (IsSidePanelOpen)
+            {
+                // If panel is open, close it
+                CloseSidePanel();
+            }
+            else
+            {
+                // Open chat panel with the current user
+                var chatViewModel = new MeetingChatViewModel(_user);
+                
+                SidePanelContent = chatViewModel;
+                IsSidePanelOpen = true;
+                _toastService.ShowInfo("Chat panel opened.");
+            }
+        }
+        
+        /// <summary>
+        /// Closes the side panel.
+        /// </summary>
+        private void CloseSidePanel()
+        {
+            IsSidePanelOpen = false;
+            SidePanelContent = null;
+            _toastService.ShowInfo("Side panel closed.");
         }
 
         /// <summary>

@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Controller;
 using UX.Core;
 using UX.Core.Services;
+using GUI.Services;
 using GUI.ViewModels.Common;
 using GUI.ViewModels.Home;
 using GUI.ViewModels.Meeting;
@@ -12,29 +13,19 @@ namespace GUI.ViewModels
 {
     /// <summary>
     /// Shell view model that coordinates authentication, navigation, meeting toolbar state, and toast presentation.
-    /// Refactored to use Dependency Injection for better testability and maintainability.
+    /// Refactored to use Dependency Injection and AuthenticationService for better separation of concerns.
     /// </summary>
     public class MainViewModel : ObservableObject
     {
         private GUI.ViewModels.Auth.AuthViewModel? _authViewModel;
         private readonly INavigationService _navigationService;
-        private readonly IThemeService _themeService;
-        private readonly IToastService _toastService;
-        private readonly IController _controller;
+        private readonly IAuthenticationService _authenticationService;
         private readonly Func<GUI.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
         private readonly Func<UserProfile, HomePageViewModel> _homePageViewModelFactory;
         private readonly Func<UserProfile, SettingsViewModel> _settingsViewModelFactory;
 
-        private bool _isLoggedIn;
-        public bool IsLoggedIn
-        {
-            get { return _isLoggedIn; }
-            set
-            {
-                _isLoggedIn = value;
-                OnPropertyChanged();
-            }
-        }
+        // Simplified: IsLoggedIn now comes from AuthenticationService
+        public bool IsLoggedIn => _authenticationService.IsAuthenticated;
 
         private object? _currentView;
         public object? CurrentView
@@ -66,49 +57,11 @@ namespace GUI.ViewModels
     public bool ShowBackButton => IsMeetingActive || _navigationService.CanGoBack;
     public bool ShowForwardButton => IsMeetingActive;
 
-        private string? _currentUserName;
-        public string? CurrentUserName
-        {
-            get { return _currentUserName; }
-            set
-            {
-                _currentUserName = value;
-                OnPropertyChanged();
-            }
-        }
+        // Simplified: User info now comes from AuthenticationService
+        public string? CurrentUserName => _authenticationService.CurrentUser?.DisplayName;
+        public string? CurrentUserEmail => _authenticationService.CurrentUser?.Email;
 
-        private string? _currentUserEmail;
-        public string? CurrentUserEmail
-        {
-            get { return _currentUserEmail; }
-            set
-            {
-                _currentUserEmail = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private UserProfile? _currentUser;
-        private UserProfile? CurrentUser
-        {
-            get { return _currentUser; }
-            set
-            {
-                _currentUser = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private ToastContainerViewModel? _toastContainerViewModel;
-        public ToastContainerViewModel? ToastContainerViewModel
-        {
-            get { return _toastContainerViewModel; }
-            set
-            {
-                _toastContainerViewModel = value;
-                OnPropertyChanged();
-            }
-        }
+        public ToastContainerViewModel ToastContainerViewModel { get; }
 
         private INavigationScope? _navigationScope;
         private readonly RelayCommand _goBackCommand;
@@ -128,17 +81,15 @@ namespace GUI.ViewModels
         /// </summary>
         public MainViewModel(
             INavigationService navigationService,
-            IThemeService themeService,
-            IToastService toastService,
-            IController controller,
+            IAuthenticationService authenticationService,
+            ToastContainerViewModel toastContainerViewModel,
             Func<GUI.ViewModels.Auth.AuthViewModel> authViewModelFactory,
             Func<UserProfile, HomePageViewModel> homePageViewModelFactory,
             Func<UserProfile, SettingsViewModel> settingsViewModelFactory)
         {
             _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
-            _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
-            _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
-            _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+            _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
+            ToastContainerViewModel = toastContainerViewModel ?? throw new ArgumentNullException(nameof(toastContainerViewModel));
             _authViewModelFactory = authViewModelFactory ?? throw new ArgumentNullException(nameof(authViewModelFactory));
             _homePageViewModelFactory = homePageViewModelFactory ?? throw new ArgumentNullException(nameof(homePageViewModelFactory));
             _settingsViewModelFactory = settingsViewModelFactory ?? throw new ArgumentNullException(nameof(settingsViewModelFactory));
@@ -178,8 +129,8 @@ namespace GUI.ViewModels
         }
 
         /// <summary>
-        /// Handles successful login by capturing user details and navigating to the home page.
-        /// Uses injected factory to create HomePageViewModel.
+        /// Handles successful login by completing authentication and navigating to the home page.
+        /// Uses AuthenticationService to manage user state.
         /// </summary>
         private void OnLoggedIn(UserProfile user)
         {
@@ -188,10 +139,13 @@ namespace GUI.ViewModels
                 _authViewModel.LoggedIn -= OnLoggedIn;
             }
 
-            IsLoggedIn = true;
-            CurrentUserName = user.DisplayName;
-            CurrentUserEmail = user.Email;
-            CurrentUser = user;
+            // Complete login via authentication service
+            _authenticationService.CompleteLogin(user);
+            
+            // Notify UI that user properties changed
+            OnPropertyChanged(nameof(IsLoggedIn));
+            OnPropertyChanged(nameof(CurrentUserName));
+            OnPropertyChanged(nameof(CurrentUserEmail));
             
             // Clear navigation history and navigate to home
             _navigationService.ClearHistory();
@@ -204,9 +158,10 @@ namespace GUI.ViewModels
         /// </summary>
         private void NavigateToSettings(object? obj)
         {
-            if (CurrentUser != null)
+            var currentUser = _authenticationService.CurrentUser;
+            if (currentUser != null)
             {
-                _navigationService.NavigateTo(_settingsViewModelFactory(CurrentUser));
+                _navigationService.NavigateTo(_settingsViewModelFactory(currentUser));
             }
         }
 
@@ -252,17 +207,23 @@ namespace GUI.ViewModels
 
         /// <summary>
         /// Clears shell state and returns to the authentication view.
+        /// Uses AuthenticationService to clear user session.
         /// </summary>
         private void Logout(object? obj)
         {
-            IsLoggedIn = false;
-            CurrentUserName = null;
-            CurrentUserEmail = null;
-            CurrentUser = null;
+            // Cleanup auth view model
             if (_authViewModel != null)
             {
                 _authViewModel.LoggedIn -= OnLoggedIn;
             }
+
+            // Logout via authentication service
+            _authenticationService.Logout();
+            
+            // Notify UI that user properties changed
+            OnPropertyChanged(nameof(IsLoggedIn));
+            OnPropertyChanged(nameof(CurrentUserName));
+            OnPropertyChanged(nameof(CurrentUserEmail));
 
             // Clear navigation history and return to auth
             _navigationService.ClearHistory();

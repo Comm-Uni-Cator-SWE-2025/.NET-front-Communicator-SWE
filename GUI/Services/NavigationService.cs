@@ -40,7 +40,10 @@ namespace GUI.Services
                 _backStack.Push(_currentView);
             }
 
+            // Clear forward stack and dispose ViewModels
+            DisposeStack(_forwardStack);
             _forwardStack.Clear();
+            
             CurrentView = viewModel;
         }
 
@@ -73,8 +76,24 @@ namespace GUI.Services
         /// <inheritdoc />
         public void ClearHistory()
         {
+            DisposeStack(_backStack);
+            DisposeStack(_forwardStack);
             _backStack.Clear();
             _forwardStack.Clear();
+        }
+        
+        /// <summary>
+        /// Disposes all IDisposable ViewModels in a stack without clearing it.
+        /// </summary>
+        private static void DisposeStack(Stack<object> stack)
+        {
+            foreach (var viewModel in stack)
+            {
+                if (viewModel is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
         }
     }
 }

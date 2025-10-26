@@ -7,6 +7,7 @@ using UX.Core;
 using UX.Core.Services;
 using GUI.ViewModels;
 using GUI.Views;
+using GUI.Services;
 
 namespace GUI;
 
@@ -54,6 +55,7 @@ public partial class App : Application
 
         // Register GUI-specific services
         services.AddSingleton<INavigationService, Services.NavigationService>();
+        services.AddSingleton<IAuthenticationService, Services.AuthenticationService>();
 
         // Register Controller services
         services.AddSingleton<IController, MockController>();
@@ -64,28 +66,25 @@ public partial class App : Application
         services.AddTransient<GUI.ViewModels.Home.HomePageViewModel>();
         services.AddTransient<GUI.ViewModels.Settings.SettingsViewModel>();
         services.AddTransient<GUI.ViewModels.Meeting.MeetingShellViewModel>();
+        
+        // Register ToastContainerViewModel as Singleton (single toast container for app)
+        services.AddSingleton<GUI.ViewModels.Common.ToastContainerViewModel>();
 
         // Register ViewModel Factories
         // Factory for creating AuthViewModel instances (used in MainViewModel)
         services.AddTransient<Func<GUI.ViewModels.Auth.AuthViewModel>>(sp => 
             () => sp.GetRequiredService<GUI.ViewModels.Auth.AuthViewModel>());
 
-        // Factory for creating HomePageViewModel with UserProfile parameter
+        // Factory for creating ViewModels with UserProfile parameter
+        // Using ActivatorUtilities.CreateInstance for automatic dependency resolution
         services.AddTransient<Func<UserProfile, GUI.ViewModels.Home.HomePageViewModel>>(sp =>
-        {
-            var toastService = sp.GetRequiredService<IToastService>();
-            var navigationService = sp.GetRequiredService<INavigationService>();
-            var meetingShellFactory = sp.GetRequiredService<Func<UserProfile, GUI.ViewModels.Meeting.MeetingShellViewModel>>();
-            return (user) => new GUI.ViewModels.Home.HomePageViewModel(user, toastService, navigationService, meetingShellFactory);
-        });
+            user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Home.HomePageViewModel>(sp, user));
 
-        // Factory for creating SettingsViewModel with UserProfile parameter
         services.AddTransient<Func<UserProfile, GUI.ViewModels.Settings.SettingsViewModel>>(sp =>
-            (user) => ActivatorUtilities.CreateInstance<GUI.ViewModels.Settings.SettingsViewModel>(sp, user));
+            user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        // Factory for creating MeetingShellViewModel with UserProfile parameter
         services.AddTransient<Func<UserProfile, GUI.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
-            (user) => ActivatorUtilities.CreateInstance<GUI.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
+            user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

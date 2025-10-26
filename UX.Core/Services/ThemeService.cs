@@ -124,7 +124,8 @@ public class ThemeService : IThemeService
     private string GetSettingsFilePath()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appFolder = Path.Combine(appDataPath, "UX.Core");
+        // Use the actual application name instead of library name
+        var appFolder = Path.Combine(appDataPath, "Comm-Uni-Cate");
         return Path.Combine(appFolder, SettingsFileName);
     }
 }

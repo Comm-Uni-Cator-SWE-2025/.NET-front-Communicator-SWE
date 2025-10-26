@@ -30,12 +30,6 @@ public partial class MainView : Window
         // Get ToastService from DI
         _toastService = App.Services.GetRequiredService<IToastService>();
         
-        // Initialize Toast Container
-        if (DataContext is MainViewModel mainViewModel)
-        {
-            mainViewModel.ToastContainerViewModel = new ToastContainerViewModel(_toastService);
-        }
-        
         // Subscribe to toast service events
         _toastService.ToastRequested += OnToastRequested;
         
