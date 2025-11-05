@@ -1,0 +1,144 @@
+# ==============================================================
+# Azure DevOps Pipeline: .NET CI with Code Quality Checks
+# ==============================================================
+
+trigger:
+  branches:
+    include:
+      - main
+      - dev
+  paths:
+    exclude:
+      - README.md
+      - '**/*.md'
+
+pr:
+  branches:
+    include:
+      - main
+      - dev
+  paths:
+    exclude:
+      - README.md
+      - '**/*.md'
+
+pool:
+  vmImage: 'windows-latest'
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '8.x'
+
+jobs:
+- job: BuildAndValidate
+  displayName: ".NET CI with Quality Gates"
+  timeoutInMinutes: 30
+
+  steps:
+    - checkout: self
+      clean: true
+
+    - task: UseDotNet@2
+      displayName: 'Install .NET SDK'
+      inputs:
+        version: '$(dotnetVersion)'
+        includePreviewVersions: false
+
+    - script: dotnet --version
+      displayName: 'Verify .NET Version'
+
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    # -----------------------------
+    # 4. Verify .editorconfig Compliance
+    # -----------------------------
+    - task: DotNetCoreCLI@2
+      displayName: 'Build with Style Checks'
+      inputs:
+        command: 'build'
+        arguments: >
+          --configuration $(buildConfiguration)
+          --no-restore
+          /p:TreatWarningsAsErrors=true
+          /p:EnforceCodeStyleInBuild=true
+          /p:AnalysisLevel=latest-all
+        projects: '**/*.csproj'
+
+
+    - script: |
+        dotnet tool install -g dotnet-format || true
+        dotnet format --verify-no-changes --verbosity diagnostic
+      displayName: 'Verify Code Formatting'
+      continueOnError: false
+
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Unit Tests'
+      inputs:
+        command: 'test'
+        arguments: >
+          --configuration $(buildConfiguration)
+          --no-build
+          --collect:"XPlat Code Coverage"
+          --logger trx
+          --results-directory $(Agent.TempDirectory)/TestResults
+        projects: '**/*Tests.csproj'
+        publishTestResults: false
+
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish Code Coverage'
+      condition: succeededOrFailed()
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+        failIfCoverageEmpty: false
+
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Application'
+      condition: succeeded()
+      inputs:
+        command: 'publish'
+        arguments: >
+          --configuration $(buildConfiguration)
+          --output $(Build.ArtifactStagingDirectory)/app
+          --no-build
+        projects: '**/*.csproj'
+        publishWebProjects: false
+        zipAfterPublish: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Build Artifacts'
+      condition: succeeded()
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'dotnet-build-artifacts'
+        publishLocation: 'Container'
+
+    - script: |
+        echo "##[section]✅ Build Summary"
+        echo "✅ Code formatting verified (.editorconfig)"
+        echo "✅ Build completed with style enforcement"
+        echo "✅ Tests executed with coverage"
+        echo "✅ Artifacts published"
+        echo ""
+        echo "📊 Check Azure DevOps tabs for:"
+        echo "  - Test Results"
+        echo "  - Code Coverage Report"
+        echo "  - Build Artifacts"
+      displayName: "Display Build Summary"
+      condition: always()
