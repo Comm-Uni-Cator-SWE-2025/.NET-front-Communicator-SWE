@@ -44,6 +44,27 @@ public class CanvasViewModel : INotifyPropertyChanged
     private List<Point> _trackedPoints = new(); // this is for tracking mouse movements
     public bool _isTracking = false;
 
+    // --- NEW ---
+    private bool _isMovingShape = false;
+    /// <summary>
+    /// Public getter to allow the View to check if a move is in progress.
+    /// </summary>
+    public bool IsMovingShape => _isMovingShape;
+    /// <summary>
+    /// Stores the mouse position where a shape move began.
+    /// </summary>
+    private Point _moveStartPoint;
+    /// <summary>
+    /// Stores the state of a shape *before* a move begins.
+    /// This is used to create the 'PrevShape' for the undo action.
+    /// </summary>
+    private IShape? _originalShapeForMove;
+    /// <summary>
+    /// Stores the bounds of the canvas to constrain shape movement.
+    /// </summary>
+    public Rectangle CanvasBounds { get; set; }
+    // --- END NEW ---
+
     // --- MAJOR CHANGE ---
     // Changed from ObservableCollection<IShape> to a Dictionary.
     // The dictionary stores the shape and its visibility, as you requested.
@@ -52,22 +73,85 @@ public class CanvasViewModel : INotifyPropertyChanged
     // --- MAJOR CHANGE ---
     // The StateManager now works with CanvasActions.
     private readonly StateManager _stateManager = new();
-    public Color CurrentColor { get; set; } = Color.Red;
+    // --- NEW ---
+    /// <summary>
+    /// Stores the state of a shape *before* a modification (like a color
+    /// change or slider drag) begins. This is used to create the 'PrevShape'
+    /// for the undo action.
+    /// </summary>
+    private IShape? _originalShapeForUndo = null;
+    // --- END NEW ---
+    // --- MODIFIED ---
+    private Color _currentColor = Color.Red;
+    public Color CurrentColor
+    {
+        get => _currentColor;
+        set
+        {
+            if (_currentColor == value) { return; }
+            _currentColor = value;
+            OnPropertyChanged();
+
+            // --- NEW MODIFY LOGIC FOR COLOR ---
+            if (SelectedShape != null && SelectedShape.Color != value)
+            {
+                // Store the original shape if this is the first change in a sequence.
+                _originalShapeForUndo ??= SelectedShape;
+
+                // Create the new shape
+                IShape newShape = SelectedShape.WithUpdates(value, null);
+
+                // Update the dictionary
+                _shapes[newShape.ShapeId] = (newShape, true);
+
+                // --- FIX 1: THE FEEDBACK LOOP ---
+                // Do not call the public 'SelectedShape' setter.
+                // Update the *backing field* directly to prevent the feedback loop
+                // and notify the UI that the selection *property* has changed
+                // (even though it's technically the same object ID).
+                _selectedShape = newShape;
+                OnPropertyChanged(nameof(SelectedShape));
+                // --- END FIX 1 ---
+            }
+            // --- END NEW ---
+        }
+    }
     public string CurrentUserId { get; set; } = "user_default"; // <-- ADD THIS (mock ID for now)
-    private double _currentThickness = 2.0; // Default value
+    // --- MODIFIED ---
+    private double _currentThickness = 2.0;
     public double CurrentThickness
     {
         get => _currentThickness;
         set
         {
-            if (_currentThickness != value)
+            if (_currentThickness == value) { return; }
+            _currentThickness = value;
+            OnPropertyChanged();
+
+            // --- NEW MODIFY LOGIC FOR THICKNESS ---
+            if (SelectedShape != null && SelectedShape.Thickness != value)
             {
-                _currentThickness = value;
-                OnPropertyChanged(); // <-- This notifies the UI (the slider)
+                // Store the original shape if this is the first change in a sequence.
+                _originalShapeForUndo ??= SelectedShape;
+
+                // Create the new shape
+                IShape newShape = SelectedShape.WithUpdates(null, value);
+
+                // Update the dictionary
+                _shapes[newShape.ShapeId] = (newShape, true);
+
+
+                // --- FIX 1: THE FEEDBACK LOOP ---
+                // Do not call the public 'SelectedShape' setter.
+                // Update the *backing field* directly.
+                _selectedShape = newShape;
+                OnPropertyChanged(nameof(SelectedShape));
+                // --- END FIX 1 ---
             }
+            // --- END NEW ---
         }
     }
-    // --- ADDED ---
+    // --- END MODIFIED ---
     private IShape? _selectedShape;
     public IShape? SelectedShape
     {
@@ -76,8 +160,32 @@ public class CanvasViewModel : INotifyPropertyChanged
         {
             if (_selectedShape != value)
             {
+                // --- NEW ---
+                // If we are deselecting a shape, commit any pending modification.
+                if (_selectedShape != null)
+                {
+                    CommitModification();
+                }
+                // --- END NEW ---
                 _selectedShape = value;
                 OnPropertyChanged(); // Notify the View to update the selection box
+                                     // --- FIX 2: UPDATE UI CONTROLS ---
+                                     // When a new shape is selected, update the UI controls (slider/color) to match it.
+                if (_selectedShape != null)
+                {
+                    // Set backing fields *directly* to prevent feedback loop
+                    if (_currentColor != _selectedShape.Color)
+                    {
+                        _currentColor = _selectedShape.Color;
+                        OnPropertyChanged(nameof(CurrentColor));
+                    }
+                    if (_currentThickness != _selectedShape.Thickness)
+                    {
+                        _currentThickness = _selectedShape.Thickness;
+                        OnPropertyChanged(nameof(CurrentThickness));
+                    }
+                }
+                // --- END FIX 2 ---
             }
         }
     }
@@ -91,37 +199,88 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// View can render it once without a full RenderAll().
     /// </summary>
     public IShape? LastCreatedShape { get; private set; }
+
+    // --- NEW METHOD ---
+    /// <summary>
+    /// Commits any pending modification to the undo/redo stack.
+    /// This is called when a modification gesture (like a color click
+    /// or slider drag) is completed.
+    /// </summary>
+    public void CommitModification()
+    {
+        // If we have a stored "before" shape and a "current" shape,
+        // and they are different, create a Modify action.
+        if (_originalShapeForUndo != null && SelectedShape != null &&
+            _originalShapeForUndo.ShapeId == SelectedShape.ShapeId)
+        {
+            // Check if anything actually changed
+            if (_originalShapeForUndo.Color != SelectedShape.Color ||
+                _originalShapeForUndo.Thickness != SelectedShape.Thickness)
+            {
+                var action = new CanvasAction(CanvasActionType.Modify, _originalShapeForUndo, SelectedShape);
+                _stateManager.AddAction(action);
+            }
+        }
+
+        // Always clear the "before" shape after committing.
+        _originalShapeForUndo = null;
+    }
+    // --- END NEW ---
+
     public void SelectShapeAt(Point point)
     {
+        // --- NEW ---
+        // Commit any pending modification before selecting a new shape.
+        CommitModification();
+        // --- END NEW ---
+
         SelectedShape = null;
 
-        // --- MODIFIED ---
-        // Iterate over the dictionary values in reverse (top-most shapes drawn last)
-        // Only check shapes that are currently visible.
-        foreach ((IShape shape, bool isVisible) item in _shapes.Values.Reverse())
+        // --- FIX 3: Corrected loop syntax ---
+        // The dictionary's value is a tuple: (IShape Shape, bool IsVisible)
+        foreach ((IShape Shape, bool IsVisible) item in _shapes.Values.Reverse())
         {
-            if (item.isVisible && item.shape.IsHit(point))
+            if (item.IsVisible && item.Shape.IsHit(point))
             {
-                SelectedShape = item.shape;
+                SelectedShape = item.Shape;
                 return;
             }
         }
-        // --- END MODIFIED ---
+        // --- END FIX 3 ---
     }
     public void StartTracking(Point point)
     {
+        // --- NEW ---
+        // Commit any pending modification before drawing.
+        CommitModification();
+        // --- END NEW ---
+
         LastCreatedShape = null;
         // --- MODIFIED ---
         if (CurrentMode == DrawingMode.Select)
         {
-            // Handle selection, don't start tracking
+            // Handle selection and potential move
             _isTracking = false;
-            SelectShapeAt(point);
+            SelectShapeAt(point); // This selects the shape
+
+            // Check if the click was ON the newly selected shape
+            if (SelectedShape != null && SelectedShape.IsHit(point))
+            {
+                // Start a move operation
+                _isMovingShape = true;
+                _moveStartPoint = point;
+                _originalShapeForMove = SelectedShape; // Store pre-move state
+            }
+            else
+            {
+                _isMovingShape = false;
+            }
             return;
         }
 
         // --- If not Select, proceed with drawing ---
         _isTracking = true;
+        _isMovingShape = false; // --- ADDED ---
         SelectedShape = null; // Deselect any shape when drawing
         // --- END MODIFIED ---
         if (CurrentMode == DrawingMode.FreeHand)
@@ -138,7 +297,24 @@ public class CanvasViewModel : INotifyPropertyChanged
     }
     public void TrackPoint(Point point)
     {
-        if (_isTracking && _trackedPoints.Count > 0)
+        // --- NEW: Handle shape moving ---
+        if (_isMovingShape && SelectedShape != null && _originalShapeForMove != null)
+        {
+            // Calculate delta from the *start* of the move
+            Point offset = new Point(point.X - _moveStartPoint.X, point.Y - _moveStartPoint.Y);
+
+            // Get a new, moved shape from the *original* shape
+            IShape movedShape = _originalShapeForMove.WithMove(offset, CanvasBounds);
+
+            // Update the dictionary
+            _shapes[movedShape.ShapeId] = (movedShape, true);
+
+            // Update the backing field and notify
+            _selectedShape = movedShape;
+            OnPropertyChanged(nameof(SelectedShape));
+        }
+        // --- END NEW ---
+        else if (_isTracking && _trackedPoints.Count > 0)
         {
             if (CurrentMode == DrawingMode.FreeHand)
             {
@@ -153,6 +329,26 @@ public class CanvasViewModel : INotifyPropertyChanged
 
     public void StopTracking()
     {
+        // --- NEW: Handle end of shape move ---
+        if (_isMovingShape)
+        {
+            _isMovingShape = false;
+
+            // Check if a move actually happened
+            if (_originalShapeForMove != null && SelectedShape != null &&
+                _originalShapeForMove.ShapeId == SelectedShape.ShapeId &&
+                !_originalShapeForMove.Points.SequenceEqual(SelectedShape.Points))
+            {
+                // Create the Modify action
+                var action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, SelectedShape);
+                _stateManager.AddAction(action);
+            }
+
+            _originalShapeForMove = null;
+            return; // --- ADDED: Stop processing
+        }
+        // --- END NEW ---
+
         // --- MODIFIED ---
         if (CurrentMode == DrawingMode.Select || !_isTracking)
         {
@@ -169,7 +365,7 @@ public class CanvasViewModel : INotifyPropertyChanged
 
         if (CurrentMode == DrawingMode.FreeHand)
         {
-            if (_trackedPoints.Count == 0)
+            if (_trackedPoints.Count < 2) // --- ADDED: Prevent single-point "shapes"
             {
                 return;
             }
@@ -262,6 +458,10 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// </summary>
     public void DeleteSelectedShape()
     {
+        // --- NEW ---
+        // Commit any pending modification before drawing.
+        CommitModification();
+        // --- END NEW ---
         if (SelectedShape == null) { return; }
 
         string shapeId = SelectedShape.ShapeId;
@@ -283,6 +483,10 @@ public class CanvasViewModel : INotifyPropertyChanged
     // --- END NEW METHOD ---
     public void Undo()
     {
+        // --- NEW ---
+        // Commit any pending modification before drawing.
+        CommitModification();
+        // --- END NEW ---
         SelectedShape = null;
         // --- MAJOR CHANGE ---
         // Get the action that was just undone
@@ -308,6 +512,32 @@ public class CanvasViewModel : INotifyPropertyChanged
                     _shapes[undoneAction.PrevShape.ShapeId] = (_shapes[undoneAction.PrevShape.ShapeId].Shape, true);
                 }
             }
+            // --- NEW ---
+            // --- FIX 4: YOUR SAFETY CHECK ---
+            else if (undoneAction.ActionType == CanvasActionType.Modify && undoneAction.PrevShape != null && undoneAction.NewShape != null)
+            {
+                string shapeId = undoneAction.PrevShape.ShapeId;
+                if (_shapes.ContainsKey(shapeId))
+                {
+                    // This is your requested safety check:
+                    // Only undo if the *current* shape on canvas is the one from the action's "NewShape".
+                    if (_shapes[shapeId].Shape == undoneAction.NewShape)
+                    {
+                        _shapes[shapeId] = (undoneAction.PrevShape, true);
+                        SelectedShape = undoneAction.PrevShape;
+                    }
+                    else
+                    {
+                        // The check failed. This means the shape changed *again* after this action.
+                        // We can't safely undo. For now, we do nothing.
+                        // We must also move the state manager back to where it was,
+                        // otherwise we have a "desync"
+                        _stateManager.Redo(); // Undo the undo
+                    }
+                }
+            }
+            // --- END FIX 4 ---
+            // --- END NEW ---
         }
         // --- END MAJOR CHANGE ---
     }
@@ -341,6 +571,28 @@ public class CanvasViewModel : INotifyPropertyChanged
                 }
             }
             // --- END MODIFIED ---
+            // --- FIX 4 (Redo Safety Check) ---
+            else if (redoneAction.ActionType == CanvasActionType.Modify && redoneAction.NewShape != null && redoneAction.PrevShape != null)
+            {
+                string shapeId = redoneAction.NewShape.ShapeId;
+                if (_shapes.ContainsKey(shapeId))
+                {
+                    // Safety check for Redo:
+                    // Only redo if the *current* shape is the one from the action's "PrevShape".
+                    if (_shapes[shapeId].Shape == redoneAction.PrevShape)
+                    {
+                        _shapes[shapeId] = (redoneAction.NewShape, true);
+                        SelectedShape = redoneAction.NewShape;
+                    }
+                    else
+                    {
+                        // The check failed.
+                        _stateManager.Undo(); // Undo the redo
+                    }
+                }
+            }
+            // --- END FIX 4 ---
+
         }
         // --- END MAJOR CHANGE ---
     }
