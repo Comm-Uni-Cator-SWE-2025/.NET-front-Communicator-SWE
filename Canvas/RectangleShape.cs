@@ -23,10 +23,78 @@ public class RectangleShape : IShape
         UserId = userId;
     }
 
+    // --- NEW ---
+    /// <summary>
+    /// Private constructor for cloning.
+    /// </summary>
+    private RectangleShape(string shapeId, List<Point> points, Color color, double thickness, string userId)
+    {
+        ShapeId = shapeId;
+        Points.AddRange(points);
+        Color = color;
+        Thickness = thickness;
+        UserId = userId;
+    }
+
+    public IShape WithUpdates(Color? newColor, double? newThickness)
+    {
+        return new RectangleShape(
+            this.ShapeId,
+            this.Points,
+            newColor ?? this.Color,
+            newThickness ?? this.Thickness,
+            this.UserId
+        );
+    }
+    // --- END NEW ---
+    // --- NEW ---
+    public IShape WithMove(Point offset, Rectangle canvasBounds)
+    {
+        Rectangle oldBounds = GetBoundingBox();
+
+        // Calculate target new position
+        int newLeft = oldBounds.Left + offset.X;
+        int newTop = oldBounds.Top + offset.Y;
+
+        // Clamp the offset based on canvas bounds
+        if (newLeft < canvasBounds.Left)
+        {
+            offset.X = canvasBounds.Left - oldBounds.Left;
+        }
+        if (newTop < canvasBounds.Top)
+        {
+            offset.Y = canvasBounds.Top - oldBounds.Top;
+        }
+        if (newLeft + oldBounds.Width > canvasBounds.Right)
+        {
+            offset.X = canvasBounds.Right - oldBounds.Right;
+        }
+        if (newTop + oldBounds.Height > canvasBounds.Bottom)
+        {
+            offset.Y = canvasBounds.Bottom - oldBounds.Bottom;
+        }
+
+        // Create new points list with clamped offset
+        List<Point> newPoints = new List<Point>();
+        foreach (Point p in this.Points)
+        {
+            newPoints.Add(new Point(p.X + offset.X, p.Y + offset.Y));
+        }
+
+        // Return a new shape with the same ID but new points
+        return new RectangleShape(
+            this.ShapeId,
+            newPoints,
+            this.Color,
+            this.Thickness,
+            this.UserId
+        );
+    }
+    // --- END NEW ---
     // --- ADDED ---
     private Rectangle GetBoundsInternal()
     {
-        if (Points.Count < 2) return new Rectangle(0, 0, 0, 0);
+        if (Points.Count < 2) { return new Rectangle(0, 0, 0, 0); }
 
         int minX = Math.Min(Points[0].X, Points[1].X);
         int minY = Math.Min(Points[0].Y, Points[1].Y);
@@ -43,7 +111,7 @@ public class RectangleShape : IShape
 
     public bool IsHit(Point clickPoint)
     {
-        if (Points.Count < 2) return false;
+        if (Points.Count < 2) { return false; }
 
         Rectangle bounds = GetBoundsInternal();
         double tolerance = (Thickness / 2.0) + 2.0;
