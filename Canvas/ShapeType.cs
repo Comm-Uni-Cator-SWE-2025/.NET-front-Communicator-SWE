@@ -4,16 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CanvasDataModel
-{
-    public enum ShapeType
-    {
-        FreeHand = 0,
-        Rectangle = 1,
-        Square = 2,
-        Triangle = 3,
-        StraightLine = 4,
-        EllipseShape = 5
-    }
+namespace CanvasDataModel;
 
+public enum ShapeType
+{
+    FreeHand = 0,
+    Rectangle = 1,
+    Square = 2,
+    Triangle = 3,
+    StraightLine = 4,
+    EllipseShape = 5
 }

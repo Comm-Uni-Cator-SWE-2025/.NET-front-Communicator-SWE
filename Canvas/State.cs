@@ -2,23 +2,22 @@
 using System.Text;
 
 
-namespace CanvasDataModel
+namespace CanvasDataModel;
+
+public class State
 {
-    public class State
+    private ObservableCollection<IShape> _shapes;
+
+    public List<IShape> Shapes { get; }
+
+    public State(List<IShape> shapes)
     {
-        private ObservableCollection<IShape> shapes;
+        // copy so we freeze this moment
+        Shapes = new List<IShape>(shapes);
+    }
 
-        public List<IShape> Shapes { get; }
-
-        public State(List<IShape> shapes)
-        {
-            // copy so we freeze this moment
-            Shapes = new List<IShape>(shapes);
-        }
-
-        public State(ObservableCollection<IShape> shapes)
-        {
-            Shapes = new List<IShape>(shapes);
-        }
+    public State(ObservableCollection<IShape> shapes)
+    {
+        Shapes = new List<IShape>(shapes);
     }
 }
