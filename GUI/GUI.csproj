@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Controller\Controller.csproj" />
     <ProjectReference Include="..\UX.Core\UX.Core.csproj" />
+    <ProjectReference Include="..\UX.Icons\UX.Icons.csproj" />
   </ItemGroup>
 
   <ItemGroup>
