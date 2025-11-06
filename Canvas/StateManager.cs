@@ -1,32 +1,41 @@
-﻿using System.Text;
+﻿namespace CanvasDataModel;
 
-
-namespace CanvasDataModel;
-
-public class StateNode
+/// <summary>
+/// Internal node for the doubly-linked list, now holding a CanvasAction.
+/// </summary>
+public class ActionNode
 {
-    public State State { get; }
-    public StateNode? Prev { get; set; }
-    public StateNode? Next { get; set; }
+    public CanvasAction Action { get; }
+    public ActionNode? Prev { get; set; }
+    public ActionNode? Next { get; set; }
 
-    public StateNode(State state)
+    public ActionNode(CanvasAction action)
     {
-        State = state;
+        Action = action;
     }
 }
 
+/// <summary>
+/// Manages the undo/redo stack using a list of actions (Command Pattern).
+/// </summary>
 public class StateManager
 {
-    private StateNode? _current;
+    private ActionNode? _current;
 
     public StateManager()
     {
-        // Start with a null/empty state (clear canvas)
-        AddState(new State(new List<IShape>()));
+        // --- MODIFIED ---
+        // Start with an 'Initial' action node, representing the empty canvas.
+        _current = new ActionNode(new CanvasAction(CanvasActionType.Initial, null, null));
+        // --- END MODIFIED ---
     }
-    public void AddState(State state)
+
+    /// <summary>
+    /// Adds a new action to the manager, cutting off the old redo chain.
+    /// </summary>
+    public void AddAction(CanvasAction action)
     {
-        var node = new StateNode(state);
+        var node = new ActionNode(action);
 
         if (_current != null)
         {
@@ -39,25 +48,35 @@ public class StateManager
         _current = node;
     }
 
-    public State? Undo()
+    /// <summary>
+    /// Moves the state backward, returning the action that was *undone*.
+    /// </summary>
+    public CanvasAction? Undo()
     {
         if (_current?.Prev != null)
         {
+            CanvasAction actionToUndo = _current.Action;
             _current = _current.Prev;
-            return _current.State;
+            return actionToUndo; // Return the action that was just reversed
         }
-        return null;
+        return null; // At the beginning
     }
 
-    public State? Redo()
+    /// <summary>
+    /// Moves the state forward, returning the action that was *redone*.
+    /// </summary>
+    public CanvasAction? Redo()
     {
         if (_current?.Next != null)
         {
             _current = _current.Next;
-            return _current.State;
+            return _current.Action; // Return the action that was just re-applied
         }
-        return null;
+        return null; // At the end
     }
 
-    public State? Current => _current?.State;
+    /// <summary>
+    /// Gets the current action on the stack.
+    /// </summary>
+    public CanvasAction? CurrentAction => _current?.Action;
 }
