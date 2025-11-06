@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -30,7 +30,9 @@ public class ThemeService : IThemeService
     public void SetTheme(AppTheme theme)
     {
         if (_currentTheme == theme)
+        {
             return;
+        }
 
         _currentTheme = theme;
 
@@ -40,9 +42,9 @@ public class ThemeService : IThemeService
         {
             var newTheme = new ResourceDictionary { Source = themeUri };
 
-            var existingTheme = Application.Current.Resources.MergedDictionaries
-                .FirstOrDefault(d => d.Source != null && 
-                                    (d.Source.OriginalString.Contains("LightTheme.xaml") || 
+            ResourceDictionary? existingTheme = Application.Current.Resources.MergedDictionaries
+                .FirstOrDefault(d => d.Source != null &&
+                                    (d.Source.OriginalString.Contains("LightTheme.xaml") ||
                                      d.Source.OriginalString.Contains("DarkTheme.xaml")));
 
             if (existingTheme != null)
@@ -69,19 +71,19 @@ public class ThemeService : IThemeService
     {
         try
         {
-            var settingsPath = GetSettingsFilePath();
-            
+            string settingsPath = GetSettingsFilePath();
+
             if (File.Exists(settingsPath))
             {
-                var content = File.ReadAllText(settingsPath);
-                var lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                
-                foreach (var line in lines)
+                string content = File.ReadAllText(settingsPath);
+                string[] lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string line in lines)
                 {
                     if (line.StartsWith($"{ThemePreferenceKey}="))
                     {
-                        var value = line.Substring(ThemePreferenceKey.Length + 1);
-                        if (Enum.TryParse<AppTheme>(value, out var savedTheme))
+                        string value = line.Substring(ThemePreferenceKey.Length + 1);
+                        if (Enum.TryParse<AppTheme>(value, out AppTheme savedTheme))
                         {
                             SetTheme(savedTheme);
                             return;
@@ -105,9 +107,9 @@ public class ThemeService : IThemeService
     {
         try
         {
-            var settingsPath = GetSettingsFilePath();
-            var directory = Path.GetDirectoryName(settingsPath);
-            
+            string settingsPath = GetSettingsFilePath();
+            string? directory = Path.GetDirectoryName(settingsPath);
+
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -123,9 +125,9 @@ public class ThemeService : IThemeService
 
     private string GetSettingsFilePath()
     {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         // Use the actual application name instead of library name
-        var appFolder = Path.Combine(appDataPath, "Comm-Uni-Cate");
+        string appFolder = Path.Combine(appDataPath, "Comm-Uni-Cate");
         return Path.Combine(appFolder, SettingsFileName);
     }
 }

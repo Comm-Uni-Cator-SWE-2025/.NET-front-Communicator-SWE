@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UX.Core.Models;
 
 namespace UX.Core.Services;

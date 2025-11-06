@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -15,9 +15,9 @@ public class Icon : Control
     static Icon()
     {
         DefaultStyleKeyProperty.OverrideMetadata(typeof(Icon), new FrameworkPropertyMetadata(typeof(Icon)));
-        
+
         // Set default font family
-        FontFamilyProperty.OverrideMetadata(typeof(Icon), 
+        FontFamilyProperty.OverrideMetadata(typeof(Icon),
             new FrameworkPropertyMetadata(new FontFamily("/UX.Icons;component/Assets/Fonts/#tabler-icons")));
     }
 
@@ -86,7 +86,7 @@ public class Icon : Control
         }
 
         // Get the Unicode value for the icon name
-        var unicode = IconCodes.GetUnicode(IconName);
+        string? unicode = IconCodes.GetUnicode(IconName);
         Glyph = unicode ?? string.Empty;
     }
 }

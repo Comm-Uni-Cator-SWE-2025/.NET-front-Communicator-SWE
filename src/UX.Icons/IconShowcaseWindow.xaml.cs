@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -11,7 +11,7 @@ public partial class IconShowcaseWindow : Window
 {
     private ObservableCollection<IconGroup> _allIconGroups = new();
     private ObservableCollection<IconGroup> _filteredIconGroups = new();
-    
+
     public IconShowcaseWindow()
     {
         InitializeComponent();
@@ -22,32 +22,31 @@ public partial class IconShowcaseWindow : Window
     private void LoadIcons()
     {
         var allIcons = IconCodes.GetAllIconNames().OrderBy(name => name).ToList();
-        
-        var groups = allIcons
+
+        IEnumerable<IconGroup> groups = allIcons
             .GroupBy(name => char.ToUpper(name[0]))
             .OrderBy(g => g.Key)
-            .Select(g => new IconGroup
-            {
+            .Select(g => new IconGroup {
                 Letter = g.Key.ToString(),
                 Icons = new ObservableCollection<string>(g.ToList()),
                 Count = g.Count()
             });
-        
+
         _allIconGroups = new ObservableCollection<IconGroup>(groups);
         _filteredIconGroups = new ObservableCollection<IconGroup>(_allIconGroups);
-        
-        var totalCount = allIcons.Count;
+
+        int totalCount = allIcons.Count;
         TotalCountText.Text = $"({totalCount:N0} icons)";
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var searchText = SearchBox.Text?.ToLower() ?? string.Empty;
-        
+        string searchText = SearchBox.Text?.ToLower() ?? string.Empty;
+
         if (string.IsNullOrWhiteSpace(searchText))
         {
             _filteredIconGroups.Clear();
-            foreach (var group in _allIconGroups)
+            foreach (IconGroup group in _allIconGroups)
             {
                 _filteredIconGroups.Add(group);
             }
@@ -55,17 +54,16 @@ public partial class IconShowcaseWindow : Window
         else
         {
             _filteredIconGroups.Clear();
-            
-            foreach (var group in _allIconGroups)
+
+            foreach (IconGroup group in _allIconGroups)
             {
                 var filteredIcons = group.Icons
                     .Where(icon => icon.Contains(searchText))
                     .ToList();
-                
+
                 if (filteredIcons.Any())
                 {
-                    _filteredIconGroups.Add(new IconGroup
-                    {
+                    _filteredIconGroups.Add(new IconGroup {
                         Letter = group.Letter,
                         Icons = new ObservableCollection<string>(filteredIcons),
                         Count = filteredIcons.Count
@@ -73,8 +71,8 @@ public partial class IconShowcaseWindow : Window
                 }
             }
         }
-        
-        var visibleCount = _filteredIconGroups.Sum(g => g.Count);
+
+        int visibleCount = _filteredIconGroups.Sum(g => g.Count);
         TotalCountText.Text = $"({visibleCount:N0} icons)";
     }
 
@@ -82,26 +80,24 @@ public partial class IconShowcaseWindow : Window
     {
         if (sender is Border border && border.DataContext is string iconName)
         {
-            var xamlCode = $"<icons:Icon IconName=\"{iconName}\" IconSize=\"24\" />";
+            string xamlCode = $"<icons:Icon IconName=\"{iconName}\" IconSize=\"24\" />";
             Clipboard.SetText(xamlCode);
-            
+
             // Find the "Copied!" TextBlock in the border's content
             if (border.Child is Grid grid)
             {
-                foreach (var child in grid.Children)
+                foreach (object? child in grid.Children)
                 {
                     if (child is TextBlock tb && tb.Name == "CopiedText")
                     {
                         // Show the "Copied!" message
                         tb.Visibility = Visibility.Visible;
-                        
+
                         // Hide it after 1.5 seconds
-                        var timer = new System.Windows.Threading.DispatcherTimer
-                        {
+                        var timer = new System.Windows.Threading.DispatcherTimer {
                             Interval = TimeSpan.FromSeconds(1.5)
                         };
-                        timer.Tick += (s, args) =>
-                        {
+                        timer.Tick += (s, args) => {
                             tb.Visibility = Visibility.Collapsed;
                             timer.Stop();
                         };
@@ -123,8 +119,7 @@ public class IconGroup : INotifyPropertyChanged
     public string Letter
     {
         get => _letter;
-        set
-        {
+        set {
             _letter = value;
             OnPropertyChanged(nameof(Letter));
         }
@@ -133,8 +128,7 @@ public class IconGroup : INotifyPropertyChanged
     public ObservableCollection<string> Icons
     {
         get => _icons;
-        set
-        {
+        set {
             _icons = value;
             OnPropertyChanged(nameof(Icons));
         }
@@ -143,8 +137,7 @@ public class IconGroup : INotifyPropertyChanged
     public int Count
     {
         get => _count;
-        set
-        {
+        set {
             _count = value;
             OnPropertyChanged(nameof(Count));
         }

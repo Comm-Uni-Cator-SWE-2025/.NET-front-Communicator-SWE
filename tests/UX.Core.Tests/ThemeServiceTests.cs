@@ -1,4 +1,4 @@
-using UX.Core.Models;
+﻿using UX.Core.Models;
 using UX.Core.Services;
 
 namespace UX.Core.Tests;
@@ -17,7 +17,7 @@ public class ThemeServiceTests
     public void SetTheme_DoesNotRaiseEvent_WhenThemeIsSame()
     {
         var service = new ThemeService();
-        var eventRaised = false;
+        bool eventRaised = false;
 
         service.ThemeChanged += (sender, theme) => eventRaised = true;
 

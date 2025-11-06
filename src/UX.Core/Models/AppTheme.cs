@@ -1,4 +1,4 @@
-namespace UX.Core.Models;
+﻿namespace UX.Core.Models;
 
 /// <summary>
 /// Represents the available application themes.

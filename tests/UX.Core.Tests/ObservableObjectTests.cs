@@ -1,4 +1,4 @@
-using UX.Core;
+﻿using UX.Core;
 
 namespace UX.Core.Tests;
 
@@ -26,11 +26,10 @@ public class ObservableObjectTests
     public void SetProperty_WhenValueChanges_RaisesPropertyChanged()
     {
         var viewModel = new TestViewModel();
-        var propertyChangedRaised = false;
+        bool propertyChangedRaised = false;
         string? changedPropertyName = null;
 
-        viewModel.PropertyChanged += (sender, args) =>
-        {
+        viewModel.PropertyChanged += (sender, args) => {
             propertyChangedRaised = true;
             changedPropertyName = args.PropertyName;
         };
@@ -46,10 +45,9 @@ public class ObservableObjectTests
     public void SetProperty_WhenValueDoesNotChange_DoesNotRaisePropertyChanged()
     {
         var viewModel = new TestViewModel { Name = "John" };
-        var propertyChangedRaised = false;
+        bool propertyChangedRaised = false;
 
-        viewModel.PropertyChanged += (sender, args) =>
-        {
+        viewModel.PropertyChanged += (sender, args) => {
             propertyChangedRaised = true;
         };
 
@@ -61,9 +59,9 @@ public class ObservableObjectTests
     [Fact]
     public void SetProperty_ReturnsTrue_WhenValueChanges()
     {
-        var viewModel = new TestViewModel();
-
-        viewModel.Age = 10;
+        var viewModel = new TestViewModel {
+            Age = 10
+        };
 
         Assert.Equal(10, viewModel.Age);
     }
@@ -72,7 +70,7 @@ public class ObservableObjectTests
     public void SetProperty_ReturnsFalse_WhenValueDoesNotChange()
     {
         var viewModel = new TestViewModel { Age = 10 };
-        var propertyChangedRaised = false;
+        bool propertyChangedRaised = false;
 
         viewModel.PropertyChanged += (sender, args) => propertyChangedRaised = true;
 
@@ -85,11 +83,10 @@ public class ObservableObjectTests
     public void OnPropertyChanged_RaisesPropertyChangedEvent()
     {
         var viewModel = new TestViewModel();
-        var propertyChangedRaised = false;
+        bool propertyChangedRaised = false;
         string? changedPropertyName = null;
 
-        viewModel.PropertyChanged += (sender, args) =>
-        {
+        viewModel.PropertyChanged += (sender, args) => {
             propertyChangedRaised = true;
             changedPropertyName = args.PropertyName;
         };

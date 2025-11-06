@@ -1,7 +1,20 @@
-using System;
+﻿using System;
 using Controller;
 
 namespace GUI.Services;
+
+/// <summary>
+/// Event arguments for user authentication events.
+/// </summary>
+public class UserProfileEventArgs : EventArgs
+{
+    public UserProfile UserProfile { get; }
+
+    public UserProfileEventArgs(UserProfile userProfile)
+    {
+        UserProfile = userProfile;
+    }
+}
 
 /// <summary>
 /// Manages user authentication state and login/logout operations.
@@ -12,28 +25,28 @@ public interface IAuthenticationService
     /// <summary>
     /// Raised when a user successfully authenticates.
     /// </summary>
-    event Action<UserProfile>? UserLoggedIn;
-    
+    event EventHandler<UserProfileEventArgs>? UserLoggedIn;
+
     /// <summary>
     /// Raised when a user logs out.
     /// </summary>
-    event Action? UserLoggedOut;
-    
+    event EventHandler? UserLoggedOut;
+
     /// <summary>
     /// The currently authenticated user, or null if not logged in.
     /// </summary>
     UserProfile? CurrentUser { get; }
-    
+
     /// <summary>
     /// Indicates whether a user is currently authenticated.
     /// </summary>
     bool IsAuthenticated { get; }
-    
+
     /// <summary>
     /// Completes the authentication process with the provided user profile.
     /// </summary>
     void CompleteLogin(UserProfile user);
-    
+
     /// <summary>
     /// Clears the current user session.
     /// </summary>

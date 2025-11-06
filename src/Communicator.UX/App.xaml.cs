@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Threading;
 using Controller;
+using GUI.Services;
+using GUI.ViewModels;
+using GUI.Views;
 using Microsoft.Extensions.DependencyInjection;
 using UX.Core;
 using UX.Core.Services;
-using GUI.ViewModels;
-using GUI.Views;
-using GUI.Services;
 
 namespace GUI;
 
@@ -32,13 +32,12 @@ public partial class App : Application
         Services = services.BuildServiceProvider();
 
         // Load saved theme preference
-        var themeService = Services.GetRequiredService<IThemeService>();
+        IThemeService themeService = Services.GetRequiredService<IThemeService>();
         themeService.LoadSavedTheme();
 
         // Create and show main window with DI
-        var mainViewModel = Services.GetRequiredService<MainViewModel>();
-        var mainView = new MainView
-        {
+        MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
+        var mainView = new MainView {
             DataContext = mainViewModel
         };
 
@@ -48,7 +47,7 @@ public partial class App : Application
     /// <summary>
     /// Configures all application services for dependency injection.
     /// </summary>
-    private void ConfigureServices(IServiceCollection services)
+    private static void ConfigureServices(IServiceCollection services)
     {
         // Register UX.Core services (Toast, Theme)
         services.AddUXCoreServices();
@@ -66,13 +65,13 @@ public partial class App : Application
         services.AddTransient<GUI.ViewModels.Home.HomePageViewModel>();
         services.AddTransient<GUI.ViewModels.Settings.SettingsViewModel>();
         services.AddTransient<GUI.ViewModels.Meeting.MeetingShellViewModel>();
-        
+
         // Register ToastContainerViewModel as Singleton (single toast container for app)
         services.AddSingleton<GUI.ViewModels.Common.ToastContainerViewModel>();
 
         // Register ViewModel Factories
         // Factory for creating AuthViewModel instances (used in MainViewModel)
-        services.AddTransient<Func<GUI.ViewModels.Auth.AuthViewModel>>(sp => 
+        services.AddTransient<Func<GUI.ViewModels.Auth.AuthViewModel>>(sp =>
             () => sp.GetRequiredService<GUI.ViewModels.Auth.AuthViewModel>());
 
         // Factory for creating ViewModels with UserProfile parameter

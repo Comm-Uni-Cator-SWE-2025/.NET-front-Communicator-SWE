@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Input;
 
 namespace UX.Core;
@@ -25,15 +25,24 @@ public sealed class RelayCommand : ICommand
     /// <summary>
     /// Evaluates the provided canExecute predicate, defaulting to true when none was supplied.
     /// </summary>
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
+    public bool CanExecute(object? parameter)
+    {
+        return _canExecute?.Invoke(parameter) ?? true;
+    }
 
     /// <summary>
     /// Runs the execute delegate with the supplied parameter.
     /// </summary>
-    public void Execute(object? parameter) => _execute(parameter);
+    public void Execute(object? parameter)
+    {
+        _execute(parameter);
+    }
 
     /// <summary>
     /// Notifies command sources (e.g., buttons) to re-query CanExecute.
     /// </summary>
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    public void RaiseCanExecuteChanged()
+    {
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    }
 }

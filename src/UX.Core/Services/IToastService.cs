@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UX.Core.Models;
 
 namespace UX.Core.Services;
@@ -12,7 +12,7 @@ public interface IToastService
     /// Raised whenever a toast should be displayed; subscribers decide how to render the message.
     /// </summary>
     event Action<ToastMessage>? ToastRequested;
-    
+
     /// <summary>
     /// Shows a success toast conveying a positive outcome.
     /// </summary>

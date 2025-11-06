@@ -1,12 +1,11 @@
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
-namespace GUI.Views.Auth
+namespace GUI.Views.Auth;
+
+public partial class AuthView : UserControl
 {
-    public partial class AuthView : UserControl
+    public AuthView()
     {
-        public AuthView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UX.Core\UX.Core.csproj" />
+    <ProjectReference Include="..\..\src\UX.Core\UX.Core.csproj" />
   </ItemGroup>
 
 </Project>

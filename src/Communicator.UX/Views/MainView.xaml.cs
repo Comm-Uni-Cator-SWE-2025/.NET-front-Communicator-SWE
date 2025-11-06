@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Controls.Primitives;
+using GUI.ViewModels;
+using GUI.ViewModels.Common;
 using Microsoft.Extensions.DependencyInjection;
 using UX.Core.Models;
 using UX.Core.Services;
-using GUI.ViewModels;
-using GUI.ViewModels.Common;
 
 namespace GUI.Views;
 
@@ -29,10 +29,12 @@ public partial class MainView : Window
 
         // Get ToastService from DI
         _toastService = App.Services.GetRequiredService<IToastService>();
-        
+
         // Subscribe to toast service events
+
         _toastService.ToastRequested += OnToastRequested;
-        
+
+
         SourceInitialized += OnSourceInitialized;
         StateChanged += (_, _) => UpdateWindowStateVisuals();
         Loaded += (_, _) => UpdateWindowStateVisuals();
@@ -65,12 +67,10 @@ public partial class MainView : Window
     /// </summary>
     private void OnToastRequested(ToastMessage toast)
     {
-        Dispatcher.Invoke(() =>
-        {
+        Dispatcher.Invoke(() => {
             var toastNotification = new ToastNotification();
             toastNotification.SetToast(toast);
-            toastNotification.CloseRequested += (s, args) =>
-            {
+            toastNotification.CloseRequested += (s, args) => {
                 ToastContainer.Items.Remove(toastNotification);
             };
             ToastContainer.Items.Add(toastNotification);
@@ -151,7 +151,7 @@ public partial class MainView : Window
 
         bool isMaximized = WindowState == WindowState.Maximized;
 
-        ChromeBorder.CornerRadius = isMaximized  ? new CornerRadius(0) : new CornerRadius(12);
+        ChromeBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(12);
         ChromeBorder.BorderThickness = isMaximized ? new Thickness(0) : new Thickness(1);
         ContentHost.Margin = new Thickness(0);
 
@@ -164,7 +164,7 @@ public partial class MainView : Window
     /// </summary>
     private void ApplyWindowChromePreferences()
     {
-        var handle = new WindowInteropHelper(this).Handle;
+        nint handle = new WindowInteropHelper(this).Handle;
         if (handle == IntPtr.Zero)
         {
             return;
@@ -172,9 +172,16 @@ public partial class MainView : Window
 
         try
         {
-            var preference = DwmWindowCornerPreference.Round;
+            DwmWindowCornerPreference preference = DwmWindowCornerPreference.Round;
             const uint attributeSize = sizeof(uint);
-            DwmSetWindowAttribute(handle, DwmWindowAttribute.WindowCornerPreference, ref preference, attributeSize);
+            int result = DwmSetWindowAttribute(handle, DwmWindowAttribute.WindowCornerPreference, ref preference, attributeSize);
+
+            // Check HRESULT - 0 indicates success
+            if (result != 0)
+            {
+                // Non-zero HRESULT indicates failure, but we can ignore it since it's cosmetic
+                System.Diagnostics.Debug.WriteLine($"DwmSetWindowAttribute returned HRESULT: 0x{result:X}");
+            }
         }
         catch (DllNotFoundException)
         {
@@ -199,7 +206,8 @@ public partial class MainView : Window
         RoundSmall = 3
     }
 
-    [DllImport("dwmapi.dll")]
+    [DllImport("dwmapi.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, DwmWindowAttribute attribute, ref DwmWindowCornerPreference pvAttribute, uint cbAttribute);
 }
 

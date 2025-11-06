@@ -1,70 +1,72 @@
-using System;
+﻿using System;
 using System.Windows.Input;
 using Controller;
+using GUI.Services;
 using UX.Core;
 using UX.Core.Services;
 
-namespace GUI.ViewModels.Auth
+namespace GUI.ViewModels.Auth;
+
+/// <summary>
+/// Handles Google OAuth authentication flow.
+/// </summary>
+public class AuthViewModel : ObservableObject
 {
-    /// <summary>
-    /// Handles Google OAuth authentication flow.
-    /// </summary>
-    public class AuthViewModel : ObservableObject
+    private readonly IController _controller;
+    private readonly IToastService _toastService;
+
+    public event EventHandler<UserProfileEventArgs>? LoggedIn;
+
+    public ICommand SignInWithGoogleCommand { get; }
+
+    public AuthViewModel(IController controller, IToastService toastService)
     {
-        private readonly IController _controller;
-        private readonly IToastService _toastService;
+        _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+        _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
 
-        public event Action<UserProfile>? LoggedIn;
+        SignInWithGoogleCommand = new RelayCommand(SignInWithGoogle);
+    }
 
-        public ICommand SignInWithGoogleCommand { get; }
-
-        public AuthViewModel(IController controller, IToastService toastService)
+    /// <summary>
+    /// Initiates Google OAuth authentication.
+    /// </summary>
+    private async void SignInWithGoogle(object? obj)
+    {
+        try
         {
-            _controller = controller ?? throw new ArgumentNullException(nameof(controller));
-            _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
-            
-            SignInWithGoogleCommand = new RelayCommand(SignInWithGoogle);
-        }
+            // Simulate OAuth popup/redirect delay
+            await Task.Delay(800).ConfigureAwait(false);
 
-        /// <summary>
-        /// Initiates Google OAuth authentication.
-        /// </summary>
-        private async void SignInWithGoogle(object? obj)
-        {
-            try
+            // Generate mock authorization code
+            string authCode = $"MOCK_AUTH_{DateTime.Now.Ticks}";
+
+            // Authenticate via Controller
+            bool success = await Task.Run(() =>
+                _controller.LoginWithGoogle(authCode)).ConfigureAwait(false);
+
+            if (success)
             {
-                // Simulate OAuth popup/redirect delay
-                await Task.Delay(800);
-
-                // Generate mock authorization code
-                string authCode = $"MOCK_AUTH_{DateTime.Now.Ticks}";
-                
-                // Authenticate via Controller
-                bool success = await Task.Run(() => 
-                    _controller.LoginWithGoogle(authCode));
-
-                if (success)
+                UserProfile? user = _controller.GetUser();
+                if (user != null)
                 {
-                    var user = _controller.GetUser();
-                    if (user != null)
-                    {
-                        _toastService.ShowSuccess($"Welcome, {user.DisplayName}!");
-                        LoggedIn?.Invoke(user);
-                    }
-                    else
-                    {
-                        _toastService.ShowError("Failed to retrieve user profile");
-                    }
+                    _toastService.ShowSuccess($"Welcome, {user.DisplayName}!");
+                    LoggedIn?.Invoke(this, new UserProfileEventArgs(user));
                 }
                 else
                 {
-                    _toastService.ShowError("Authentication failed");
+                    _toastService.ShowError("Failed to retrieve user profile");
                 }
             }
-            catch (Exception ex)
+            else
             {
-                _toastService.ShowError($"Authentication error: {ex.Message}");
+                _toastService.ShowError("Authentication failed");
             }
         }
+#pragma warning disable CA1031 // Do not catch general exception types - UI code should gracefully handle all exceptions
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Authentication error: {ex.Message}");
+        }
+#pragma warning restore CA1031
     }
 }

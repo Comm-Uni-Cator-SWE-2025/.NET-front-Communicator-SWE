@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UX.Core.Models;
 
 namespace UX.Core.Services;
@@ -30,14 +30,14 @@ public class ToastService : IToastService
     {
         InvokeToastRequested(new ToastMessage(message, ToastType.Info, duration));
     }
-    
+
     /// <summary>
     /// Thread-safe event invocation to prevent issues with concurrent subscription changes.
     /// </summary>
     private void InvokeToastRequested(ToastMessage message)
     {
         // Capture the event handler to prevent race conditions
-        var handler = ToastRequested;
+        Action<ToastMessage>? handler = ToastRequested;
         handler?.Invoke(message);
     }
 }

@@ -1,4 +1,4 @@
-using UX.Core;
+﻿using UX.Core;
 
 namespace UX.Core.Tests;
 
@@ -7,7 +7,7 @@ public class RelayCommandTests
     [Fact]
     public void Execute_CallsExecuteDelegate()
     {
-        var executed = false;
+        bool executed = false;
         var command = new RelayCommand(_ => executed = true);
 
         command.Execute(null);
@@ -20,7 +20,7 @@ public class RelayCommandTests
     {
         object? receivedParameter = null;
         var command = new RelayCommand(param => receivedParameter = param);
-        var testParameter = "test";
+        string testParameter = "test";
 
         command.Execute(testParameter);
 
@@ -53,12 +53,11 @@ public class RelayCommandTests
         object? receivedParameter = null;
         var command = new RelayCommand(
             _ => { },
-            param =>
-            {
+            param => {
                 receivedParameter = param;
                 return true;
             });
-        var testParameter = "test";
+        string testParameter = "test";
 
         command.CanExecute(testParameter);
 
@@ -69,7 +68,7 @@ public class RelayCommandTests
     public void RaiseCanExecuteChanged_RaisesCanExecuteChangedEvent()
     {
         var command = new RelayCommand(_ => { });
-        var eventRaised = false;
+        bool eventRaised = false;
 
         command.CanExecuteChanged += (sender, args) => eventRaised = true;
 

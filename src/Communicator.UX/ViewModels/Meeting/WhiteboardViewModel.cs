@@ -1,24 +1,23 @@
-using Controller;
+﻿using Controller;
 using UX.Core;
 
-namespace GUI.ViewModels.Meeting
+namespace GUI.ViewModels.Meeting;
+
+/// <summary>
+/// Represents the collaborative whiteboard tab state for the active meeting.
+/// </summary>
+public class WhiteboardViewModel : ObservableObject
 {
     /// <summary>
-    /// Represents the collaborative whiteboard tab state for the active meeting.
+    /// Initializes the whiteboard model with the given user context.
     /// </summary>
-    public class WhiteboardViewModel : ObservableObject
+    public WhiteboardViewModel(UserProfile user)
     {
-        /// <summary>
-        /// Initializes the whiteboard model with the given user context.
-        /// </summary>
-        public WhiteboardViewModel(UserProfile user)
-        {
-            Title = "Whiteboard";
-            CurrentUser = user;
-        }
-
-        public string Title { get; }
-        public UserProfile CurrentUser { get; }
+        Title = "Whiteboard";
+        CurrentUser = user;
     }
+
+    public string Title { get; }
+    public UserProfile CurrentUser { get; }
 }
 

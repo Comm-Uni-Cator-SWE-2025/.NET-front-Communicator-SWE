@@ -6043,10 +6043,12 @@ internal static class IconCodes
     public static string? GetUnicode(string iconName)
     {
         if (string.IsNullOrWhiteSpace(iconName))
+        {
             return null;
+        }
 
-        var normalizedName = iconName.ToLowerInvariant().Trim();
-        return Icons.TryGetValue(normalizedName, out var unicode) ? unicode : null;
+        string normalizedName = iconName.ToLowerInvariant().Trim();
+        return Icons.TryGetValue(normalizedName, out string? unicode) ? unicode : null;
     }
 
     /// <summary>
@@ -6056,9 +6058,11 @@ internal static class IconCodes
     public static bool Exists(string iconName)
     {
         if (string.IsNullOrWhiteSpace(iconName))
+        {
             return false;
+        }
 
-        var normalizedName = iconName.ToLowerInvariant().Trim();
+        string normalizedName = iconName.ToLowerInvariant().Trim();
         return Icons.ContainsKey(normalizedName);
     }
 

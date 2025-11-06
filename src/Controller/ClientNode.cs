@@ -1,4 +1,3 @@
-namespace Controller
-{
-    public record ClientNode(string HostName, int Port);
-}
+﻿namespace Controller;
+
+public record ClientNode(string HostName, int Port);

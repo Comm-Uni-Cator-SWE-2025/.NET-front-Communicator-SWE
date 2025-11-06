@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace UX.Core.Services;
 
@@ -11,7 +11,7 @@ public interface INavigationService
     /// Raised whenever the current view or navigation history changes so listeners can react.
     /// </summary>
     event EventHandler? NavigationChanged;
-    
+
     /// <summary>
     /// The view model currently displayed in the shell.
     /// </summary>
@@ -26,7 +26,7 @@ public interface INavigationService
     /// Indicates whether the service can navigate forward in its stack.
     /// </summary>
     bool CanGoForward { get; }
-    
+
     /// <summary>
     /// Pushes a new view model onto the navigation stack and activates it immediately.
     /// </summary>

@@ -1,4 +1,4 @@
-using UX.Core.Models;
+﻿using UX.Core.Models;
 using UX.Core.Services;
 
 namespace UX.Core.Tests;
