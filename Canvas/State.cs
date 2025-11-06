@@ -1,23 +1,36 @@
-﻿using System.Collections.ObjectModel;
-using System.Text;
+﻿namespace CanvasDataModel;
 
-
-namespace CanvasDataModel;
-
-public class State
+/// <summary>
+/// Represents a single undo-able/redo-able action on the canvas.
+/// This replaces the old 'State' class which stored the entire canvas snapshot.
+/// </summary>
+public class CanvasAction
 {
-    private ObservableCollection<IShape> _shapes;
+    /// <summary>
+    /// The type of action that was performed (e.g., Create, Modify, Delete).
+    /// </summary>
+    public CanvasActionType ActionType { get; }
 
-    public List<IShape> Shapes { get; }
+    /// <summary>
+    /// The state of the shape *before* the action.
+    /// - For Create: null
+    /// - For Modify: The shape before modification.
+    /// - For Delete: The shape being deleted.
+    /// </summary>
+    public IShape? PrevShape { get; }
 
-    public State(List<IShape> shapes)
+    /// <summary>
+    /// The state of the shape *after* the action.
+    /// - For Create: The new shape.
+    /// - For Modify: The shape after modification.
+    /// - For Delete: null
+    /// </summary>
+    public IShape? NewShape { get; }
+
+    public CanvasAction(CanvasActionType actionType, IShape? prevShape, IShape? newShape)
     {
-        // copy so we freeze this moment
-        Shapes = new List<IShape>(shapes);
-    }
-
-    public State(ObservableCollection<IShape> shapes)
-    {
-        Shapes = new List<IShape>(shapes);
+        ActionType = actionType;
+        PrevShape = prevShape;
+        NewShape = newShape;
     }
 }
