@@ -135,7 +135,9 @@
                             Margin="0"
                             VerticalAlignment="Top"
                             HorizontalAlignment="Center">
-                    <Slider Minimum="2" 
+                    <Slider 
+                    x:Name="ThicknessSlider"
+                    Minimum="2" 
                     Maximum="8" 
                     Value="{Binding CurrentThickness, Mode=TwoWay}" 
                     TickFrequency="0.1" 
