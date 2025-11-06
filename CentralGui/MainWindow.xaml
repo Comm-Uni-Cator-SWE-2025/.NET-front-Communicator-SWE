@@ -6,24 +6,23 @@
         xmlns:local="clr-namespace:CentralGui"
         mc:Ignorable="d"
         Title="MainWindow"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Top">
+        Width="1800"
+        Height="1000">
 
     <Window.Resources>
-        <!-- Glassy pressed background -->
         <LinearGradientBrush x:Key="GlassyPressedBrush"
-                StartPoint="0,0"
-                EndPoint="0,1">
+                             StartPoint="0,0"
+                             EndPoint="0,1">
             <GradientStop Color="#80FFFFFF"
-                    Offset="0.0"/>
+                          Offset="0.0"/>
             <GradientStop Color="#55D6EEFF"
-                    Offset="0.45"/>
+                          Offset="0.45"/>
             <GradientStop Color="#33FFFFFF"
-                    Offset="1.0"/>
+                          Offset="1.0"/>
         </LinearGradientBrush>
 
         <Style x:Key="ToolbarButton"
-                TargetType="Button">
+               TargetType="Button">
             <Setter Property="Width"
                     Value="40"/>
             <Setter Property="Height"
@@ -49,20 +48,19 @@
                                 CornerRadius="8"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>
+                                  VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver"
-                        Value="True">
+                         Value="True">
                     <Setter Property="Background"
                             Value="#FFF5F7FB"/>
                 </Trigger>
                 <Trigger Property="IsPressed"
-                        Value="True">
-                    <!-- glassy gradient background + slightly darker border -->
+                         Value="True">
                     <Setter Property="Background"
                             Value="{StaticResource GlassyPressedBrush}"/>
                     <Setter Property="BorderBrush"
@@ -70,7 +68,7 @@
                     <Setter Property="RenderTransform">
                         <Setter.Value>
                             <ScaleTransform ScaleX="0.995"
-                                    ScaleY="0.995"/>
+                                  ScaleY="0.995"/>
                         </Setter.Value>
                     </Setter>
                     <Setter Property="RenderTransformOrigin"
@@ -78,15 +76,43 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="ColorPaletteButton" TargetType="Button">
+            <Setter Property="Width" Value="18"/>
+            <Setter Property="Height" Value="18"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#888"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="Black"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
-    <Grid Background="White">
+    <Grid Background="#FFE0E0E0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Left toolbar -->
         <Border Grid.Column="0"
                 Background="#FFF0F0F0"
                 BorderBrush="#FFDDDDDD"
@@ -94,20 +120,28 @@
             <Grid Margin="6">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Text="Tools"
-                        FontWeight="Bold"
-                        Margin="4"
-                        HorizontalAlignment="Center"/>
+                           FontWeight="Bold"
+                           Margin="4"
+                           HorizontalAlignment="Center"
+                           Grid.Row="0"/>
 
-                <!-- Tool buttons (top) -->
-                <StackPanel Grid.Row="1"
-                        Margin="0"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Center">
+                <StackPanel Grid.Row="2" 
+                            Margin="0"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Center">
+                    <Slider Minimum="2" 
+                    Maximum="8" 
+                    Value="{Binding CurrentThickness, Mode=TwoWay}" 
+                    TickFrequency="0.1" 
+                    IsSnapToTickEnabled="True"
+                    Width="50" 
+                     />
                     <Button x:Name="BtnFreehand"
                             Content="🖋️"
                             Style="{StaticResource ToolbarButton}"
@@ -130,11 +164,42 @@
                             Click="BtnTriangle_Click"/>
                 </StackPanel>
 
-                <!-- Undo/Redo at bottom -->
-                <StackPanel Grid.Row="2"
-                        Orientation="Vertical"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Center">
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,10,0,10">
+                    <TextBlock Text="Colors" FontWeight="Bold" Margin="0,0,0,4" HorizontalAlignment="Center"/>
+                    <WrapPanel Width="45">
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#FF0000" Click="ColorButton_Click" ToolTip="Red" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#008000" Click="ColorButton_Click" ToolTip="Green" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#0000FF" Click="ColorButton_Click" ToolTip="Blue" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#000000" Click="ColorButton_Click" ToolTip="Black" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#FFFF00" Click="ColorButton_Click" ToolTip="Yellow" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#FFA500" Click="ColorButton_Click" ToolTip="Orange" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#800080" Click="ColorButton_Click" ToolTip="Purple" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#A52A2A" Click="ColorButton_Click" ToolTip="Brown" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#FFFFFF" Click="ColorButton_Click" ToolTip="White" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#808080" Click="ColorButton_Click" ToolTip="Gray" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#FFC0CB" Click="ColorButton_Click" ToolTip="Pink" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#00FFFF" Click="ColorButton_Click" ToolTip="Cyan" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#E6E6FA" Click="ColorButton_Click" ToolTip="Lavender" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#F5F5DC" Click="ColorButton_Click" ToolTip="Beige" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#008080" Click="ColorButton_Click" ToolTip="Teal" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#FF00FF" Click="ColorButton_Click" ToolTip="Magenta" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#800000" Click="ColorButton_Click" ToolTip="Maroon" />
+                        <Button Style="{StaticResource ColorPaletteButton}" Background="#000080" Click="ColorButton_Click" ToolTip="Navy" />
+                    </WrapPanel>
+
+                    <TextBlock Text="Current:" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                    <Border x:Name="CurrentColorBorder"
+                            Width="30" Height="30"
+                            Background="Red"
+                            BorderBrush="#888"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="3" 
+                            Orientation="Vertical"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Center">
                     <Button x:Name="BtnUndo"
                             Content="&lt;"
                             Style="{StaticResource ToolbarButton}"
@@ -146,14 +211,21 @@
                 </StackPanel>
             </Grid>
         </Border>
+        <Border Grid.Column="1"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                BorderBrush="#FF888888" 
+                BorderThickness="1"
+                Background="White">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="4" Color="Black" Opacity="0.3" BlurRadius="10"/>
+            </Border.Effect>
 
-        <!-- Canvas area where we track the mouse -->
-        <Canvas x:Name="DrawArea"
-                Grid.Column="1"
-                Width="1600"
-                Height="900"
-                Background="LightGray"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"/>
+            <Canvas x:Name="DrawArea"
+                    Width="1600"
+                    Height="900"
+                    Background="Transparent"/>
+        </Border>
     </Grid>
 </Window>
+
