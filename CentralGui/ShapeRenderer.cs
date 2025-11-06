@@ -3,14 +3,15 @@ using System.Drawing;
 using System.Windows.Controls;
 using System.Windows.Ink;
 using System.Windows.Media;
-using System.Windows.Media;
 using System.Windows.Shapes;
 namespace CanvasDataModel;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Shapes;
-
+using System.Linq; // Add this
+using System; // Add this
+using Drawing = System.Drawing;
 public static class ShapeRenderer
 {
     private static SolidColorBrush ToWpfBrush(System.Drawing.Color color)
@@ -166,10 +167,29 @@ public static class ShapeRenderer
         return uiTriangle;
 
     }
-    public static void RenderAll(Canvas canvas, ObservableCollection<IShape> shapes)
+    // --- MODIFIED ---
+    public static void RenderAll(Canvas canvas, IEnumerable<IShape> shapes)
     {
         canvas.Children.Clear();
         foreach (IShape shape in shapes) { Render(canvas, shape); }
+    }
+    // --- END MODIFIED ---
+    public static Rectangle CreateSelectionBox(Drawing.Rectangle bounds)
+    {
+        Rectangle selectionBox = new Rectangle
+        {
+            Width = bounds.Width + 4,  // Add padding
+            Height = bounds.Height + 4, // Add padding
+            Fill = Brushes.Transparent,
+            Stroke = Brushes.DeepSkyBlue,
+            StrokeThickness = 1,
+            StrokeDashArray = new DoubleCollection { 4, 2 }
+        };
+
+        Canvas.SetLeft(selectionBox, bounds.Left - 2); // Adjust for padding
+        Canvas.SetTop(selectionBox, bounds.Top - 2);   // Adjust for padding
+
+        return selectionBox;
     }
 
 }
