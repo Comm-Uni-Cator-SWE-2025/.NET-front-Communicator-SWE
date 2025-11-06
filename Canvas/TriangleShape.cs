@@ -23,10 +23,79 @@ public class TriangleShape : IShape
         UserId = userId;
     }
 
-    // --- ADDED ---
+    // --- NEW ---
+    /// <summary>
+    /// Private constructor for cloning.
+    /// </summary>
+    private TriangleShape(string shapeId, List<Point> points, Color color, double thickness, string userId)
+    {
+        ShapeId = shapeId;
+        Points.AddRange(points);
+        Color = color;
+        Thickness = thickness;
+        UserId = userId;
+    }
+
+    public IShape WithUpdates(Color? newColor, double? newThickness)
+    {
+        return new TriangleShape(
+            this.ShapeId,
+            this.Points,
+            newColor ?? this.Color,
+            newThickness ?? this.Thickness,
+            this.UserId
+        );
+    }
+    // --- END NEW ---
+    // --- NEW ---
+    public IShape WithMove(Point offset, Rectangle canvasBounds)
+    {
+        Rectangle oldBounds = GetBoundingBox();
+        if (oldBounds.Width == 0 && oldBounds.Height == 0) { return this; }
+
+        // Calculate target new position
+        int newLeft = oldBounds.Left + offset.X;
+        int newTop = oldBounds.Top + offset.Y;
+
+        // Clamp the offset based on canvas bounds
+        if (newLeft < canvasBounds.Left)
+        {
+            offset.X = canvasBounds.Left - oldBounds.Left;
+        }
+        if (newTop < canvasBounds.Top)
+        {
+            offset.Y = canvasBounds.Top - oldBounds.Top;
+        }
+        if (newLeft + oldBounds.Width > canvasBounds.Right)
+        {
+            offset.X = canvasBounds.Right - oldBounds.Right;
+        }
+        if (newTop + oldBounds.Height > canvasBounds.Bottom)
+        {
+            offset.Y = canvasBounds.Bottom - oldBounds.Bottom;
+        }
+
+        // Create new points list with clamped offset
+        List<Point> newPoints = new List<Point>();
+        foreach (Point p in this.Points)
+        {
+            newPoints.Add(new Point(p.X + offset.X, p.Y + offset.Y));
+        }
+
+        // Return a new shape with the same ID but new points
+        return new TriangleShape(
+            this.ShapeId,
+            newPoints,
+            this.Color,
+            this.Thickness,
+            this.UserId
+        );
+    }
+    // --- END NEW ---
+
     private Point[] GetVertices()
     {
-        if (Points.Count < 2) return new Point[0];
+        if (Points.Count < 2) { return new Point[0]; }
 
         Point p1 = Points[0]; // Start point
         Point p2 = Points[1]; // End point
@@ -40,7 +109,7 @@ public class TriangleShape : IShape
 
     public Rectangle GetBoundingBox()
     {
-        if (Points.Count < 2) return new Rectangle(0, 0, 0, 0);
+        if (Points.Count < 2) { return new Rectangle(0, 0, 0, 0); }
 
         int minX = Math.Min(Points[0].X, Points[1].X);
         int minY = Math.Min(Points[0].Y, Points[1].Y);
@@ -52,15 +121,15 @@ public class TriangleShape : IShape
 
     public bool IsHit(Point clickPoint)
     {
-        var vertices = GetVertices();
-        if (vertices.Length == 0) return false;
+        Point[] vertices = GetVertices();
+        if (vertices.Length == 0) { return false; }
 
         double tolerance = (Thickness / 2.0) + 2.0;
 
         // Check distance to each of the 3 line segments
-        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[0], vertices[1]) <= tolerance) return true;
-        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[1], vertices[2]) <= tolerance) return true;
-        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[2], vertices[0]) <= tolerance) return true;
+        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[0], vertices[1]) <= tolerance) { return true; }
+        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[1], vertices[2]) <= tolerance) { return true; }
+        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[2], vertices[0]) <= tolerance) { return true; }
 
         return false;
     }
