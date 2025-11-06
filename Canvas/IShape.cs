@@ -1,13 +1,16 @@
+﻿using System.Drawing;
 
-using System.Drawing;
+namespace CanvasDataModel;
 
-namespace CanvasDataModel
+public interface IShape
 {
-    public interface IShape
-    {
-        ShapeType Type { get; }
-        public List<Point> Points { get; }
+    string ShapeId { get; } // ADDED
+    ShapeType Type { get; }
+    List<Point> Points { get; }
+    Color Color { get; }
+    double Thickness { get; }
+    string UserId { get; }
 
-        //void RenderShape(Controls.Canvas canvas);
-    }
+    Rectangle GetBoundingBox();
+    bool IsHit(Point clickPoint);
 }
