@@ -8,237 +8,235 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Xml.Linq;
 using ViewModel;
+using Drawing = System.Drawing; // Alias to avoid conflict with System.Windows.Shapes
 using static ViewModel.CanvasViewModel;
 
-namespace CentralGui
+namespace CentralGui;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    private readonly CanvasViewModel _vm = new();
+    private UIElement? _currentPreviewElement = null;
+
+    public MainWindow()
     {
-        private readonly CanvasViewModel _vm = new();
-
-        public MainWindow()
+        InitializeComponent();
+        DataContext = _vm;
+        
+        //_vm.RequestRedraw += (s, e) => RedrawCanvas();
+        //Point? lastPoint = null;
+        DrawArea.MouseLeftButtonDown += (s, e) =>
         {
-            InitializeComponent();
-            DataContext = _vm;
+            // --- ADD THIS ---
+            // Safety check: remove any lingering preview
+            if (_currentPreviewElement != null)
+            {
+                DrawArea.Children.Remove(_currentPreviewElement);
+                _currentPreviewElement = null;
+            }
+            // --- END ADD ---
+            Point pos = e.GetPosition(DrawArea);
+            _vm.StartTracking(new Drawing.Point((int)pos.X, (int)pos.Y)); // Use Drawing.Point
+            DrawArea.CaptureMouse();
+        };
 
-            Point? lastPoint = null;
-            DrawArea.MouseLeftButtonDown += (s, e) =>
+        DrawArea.MouseMove += (s, e) =>
+        {
+            if (_vm._isTracking) // Use _isTracking
             {
                 Point pos = e.GetPosition(DrawArea);
-                _vm.StartTracking(new System.Drawing.Point((int)pos.X, (int)pos.Y));
-                DrawArea.CaptureMouse();
-                lastPoint = null;
-            };
 
+                bool isInside = pos.X >= 0 && pos.X <= DrawArea.ActualWidth &&
+                                pos.Y >= 0 && pos.Y <= DrawArea.ActualHeight;
 
-
-            DrawArea.MouseMove += (s, e) =>
-            {
-                if (_vm.IsTracking)
+                if (isInside)
                 {
-                    if (_vm.CurrentMode == DrawingMode.FreeHand)
+                    _vm.TrackPoint(new Drawing.Point((int)pos.X, (int)pos.Y)); // Use Drawing.Point
+
+                    // --- ENTIRELY NEW LOGIC ---
+
+                    // A. Remove the PREVIOUS preview element
+                    if (_currentPreviewElement != null)
                     {
-                        Point pos = e.GetPosition(DrawArea);
-                        //_vm._trackedPoints.Add(pos);
-                        _vm.TrackPoint(new System.Drawing.Point((int)pos.X, (int)pos.Y));
+                        DrawArea.Children.Remove(_currentPreviewElement);
+                    }
 
-                        if (lastPoint != null)
-                        {
-                            Line segment = new Line
-                            {
-                                X1 = lastPoint.Value.X,
-                                Y1 = lastPoint.Value.Y,
-                                X2 = pos.X,
-                                Y2 = pos.Y,
-                                Stroke = Brushes.Red,
-                                StrokeThickness = 2
-                            };
-                            DrawArea.Children.Add(segment);
-                        }
-
-                        lastPoint = pos;
+                    // B. Get the NEW preview shape data
+                    IShape previewData = _vm.CurrentPreviewShape;
+                    if (previewData != null)
+                    {
+                        // C. Render the new preview and STORE a reference to it
+                        _currentPreviewElement = ShapeRenderer.Render(DrawArea, previewData);
                     }
                     else
                     {
-                        Point pos = e.GetPosition(DrawArea);
-                        _vm.TrackPoint(new System.Drawing.Point((int)pos.X, (int)pos.Y));
-
-                        // Clear and redraw all shapes
-                        //DrawArea.Children.Clear();
-                        ShapeRenderer.RenderAll(DrawArea, _vm.Shapes);
-
-                        // Draw the preview shape if any
-                        var preview = _vm.CurrentPreviewShape;
-                        if (preview != null)
-                        {
-                            ShapeRenderer.Render(DrawArea, preview);
-                        }
+                        _currentPreviewElement = null;
                     }
+                    // --- END NEW LOGIC ---
                 }
-            };
-
-            DrawArea.MouseLeftButtonUp += (s, e) =>
-            {
-                //IsTracking = false;
-                //DrawArea.ReleaseMouseCapture();
-
-                // create FreeHand object from points
-                //var freehand = new FreeHand(new List<Point>(_trackedPoints));
-                //Shapes.Add(freehand);
-
-                // save full shapes array as a new state
-                //_stateManager.AddState(new State(Shapes));
-
-                //MessageBox.Show($"Added FreeHand with {_trackedPoints.Count} points.");
-
-                _vm.StopTracking(); // adds FreeHand to Shapes
-
-                DrawArea.ReleaseMouseCapture();
-                RedrawCanvas();
-            };
-
-            // keyboard undo/redo
-            this.KeyDown += (s, e) =>
-            {
-                if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z)
-                {
-                    _vm.Undo();
-                }
-                else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y)
-                {
-                    _vm.Redo();
-                }
-                //else if (e.Key == Key.L)
-                //{
-                //    _vm.CurrentMode = DrawingMode.StraightLine;
-                //}
-                //else if (e.Key == Key.F)
-                //{
-                //    _vm.CurrentMode = DrawingMode.FreeHand;
-                //}
-                //else if (e.Key == Key.R)
-                //{
-                //    _vm.CurrentMode = DrawingMode.Rectangle;
-                //}
-                //else if (e.Key == Key.E)
-                //{
-                //    _vm.CurrentMode = DrawingMode.EllipseShape;
-                //}
-                //else if (e.Key == Key.T)
-                //{
-                //    _vm.CurrentMode = DrawingMode.TriangleShape;
-                //}
-                ShapeRenderer.RenderAll(DrawArea, _vm.Shapes);
-            };
-        }
-
-        private void RedrawCanvas()
-        {
-            ShapeRenderer.RenderAll(DrawArea, _vm.Shapes);
-        }
-        private void BtnFreehand_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.CurrentMode = DrawingMode.FreeHand;
-            UpdateToolButtons();
-        }
-
-        private void BtnLine_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.CurrentMode = DrawingMode.StraightLine;
-            UpdateToolButtons();
-        }
-
-        private void BtnRectangle_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.CurrentMode = DrawingMode.Rectangle;
-            UpdateToolButtons();
-        }
-
-        private void BtnTriangle_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.CurrentMode = DrawingMode.TriangleShape;
-            UpdateToolButtons();
-        }
-
-        private void BtnEllipse_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.CurrentMode = DrawingMode.EllipseShape;
-            UpdateToolButtons();
-        }
-
-        private void BtnUndo_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.Undo();
-            ShapeRenderer.RenderAll(DrawArea, _vm.Shapes);
-        }
-
-        private void BtnRedo_Click(object sender, RoutedEventArgs e)
-        {
-            _vm.Redo();
-            ShapeRenderer.RenderAll(DrawArea, _vm.Shapes);
-        }
-
-        private void UpdateToolButtons()
-        {
-            // Reset all
-            BtnFreehand.ClearValue(Button.BackgroundProperty);
-            BtnFreehand.ClearValue(Button.BorderBrushProperty);
-            BtnLine.ClearValue(Button.BackgroundProperty);
-            BtnLine.ClearValue(Button.BorderBrushProperty);
-            BtnRectangle.ClearValue(Button.BackgroundProperty);
-            BtnRectangle.ClearValue(Button.BorderBrushProperty);
-            BtnEllipse.ClearValue(Button.BackgroundProperty);
-            BtnEllipse.ClearValue(Button.BorderBrushProperty);
-            BtnTriangle.ClearValue(Button.BackgroundProperty);
-            BtnTriangle.ClearValue(Button.BorderBrushProperty);
-            BtnUndo.ClearValue(Button.BackgroundProperty);
-            BtnUndo.ClearValue(Button.BorderBrushProperty);
-            BtnRedo.ClearValue(Button.BackgroundProperty);
-            BtnRedo.ClearValue(Button.BorderBrushProperty);
-
-            // Highlight active
-            Brush? selectedBrush = null;
-            Brush? selectedBorder = null;
-            try
-            {
-                selectedBrush = (Brush)FindResource("GlassyPressedBrush");
             }
-            catch
+        };
+
+        DrawArea.MouseLeftButtonUp += (s, e) =>
+        {
+            if (_currentPreviewElement != null)
             {
-                selectedBrush = Brushes.LightSteelBlue;
+                DrawArea.Children.Remove(_currentPreviewElement);
+                _currentPreviewElement = null;
             }
 
-            selectedBorder = new SolidColorBrush(System.Windows.Media.Color.FromRgb(111, 166, 214)); // #6FA6D6
+            _vm.StopTracking(); 
 
-            if (_vm.CurrentMode == DrawingMode.FreeHand)
+            DrawArea.ReleaseMouseCapture();
+
+            if (_vm._shapes.Count > 0)
             {
-                BtnFreehand.Background = selectedBrush;
-                BtnFreehand.BorderBrush = selectedBorder;
+                IShape newShape = _vm._shapes.Last();
+                ShapeRenderer.Render(DrawArea, newShape);
             }
-            else if (_vm.CurrentMode == DrawingMode.StraightLine)
+        };
+
+        this.KeyDown += (s, e) =>
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z)
             {
-                BtnLine.Background = selectedBrush;
-                BtnLine.BorderBrush = selectedBorder;
+                _vm.Undo();
             }
-            else if (_vm.CurrentMode == DrawingMode.Rectangle)
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y)
             {
-                BtnRectangle.Background = selectedBrush;
-                BtnRectangle.BorderBrush = selectedBorder;
+                _vm.Redo();
             }
-            else if (_vm.CurrentMode == DrawingMode.EllipseShape)
+            else if (e.Key == Key.T) 
             {
-                BtnEllipse.Background = selectedBrush;
-                BtnEllipse.BorderBrush = selectedBorder;
+                _vm.AddTestShape();
             }
-            else if (_vm.CurrentMode == DrawingMode.TriangleShape)
-            {
-                BtnTriangle.Background = selectedBrush;
-                BtnTriangle.BorderBrush = selectedBorder;
-            }
+            ShapeRenderer.RenderAll(DrawArea, _vm._shapes);
+        };
+        UpdateToolButtons();
+        UpdateCurrentColorUI();
+    }
+
+    private void RedrawCanvas()
+    {
+        ShapeRenderer.RenderAll(DrawArea, _vm._shapes);
+    }
+    private void ColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button colorButton && colorButton.Background is SolidColorBrush brush)
+        {
+            System.Windows.Media.Color wpfColor = brush.Color;
+
+            Drawing.Color modelColor = Drawing.Color.FromArgb(wpfColor.A, wpfColor.R, wpfColor.G, wpfColor.B);
+
+            _vm.CurrentColor = modelColor;
+
+            UpdateCurrentColorUI();
+        }
+    }
+
+    private void UpdateCurrentColorUI()
+    {
+        Drawing.Color modelColor = _vm.CurrentColor;
+        var wpfColor = System.Windows.Media.Color.FromArgb(modelColor.A, modelColor.R, modelColor.G, modelColor.B);
+        CurrentColorBorder.Background = new SolidColorBrush(wpfColor);
+    }
+    private void BtnFreehand_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.CurrentMode = DrawingMode.FreeHand;
+        UpdateToolButtons();
+    }
+
+    private void BtnLine_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.CurrentMode = DrawingMode.StraightLine;
+        UpdateToolButtons();
+    }
+
+    private void BtnRectangle_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.CurrentMode = DrawingMode.Rectangle;
+        UpdateToolButtons();
+    }
+
+    private void BtnTriangle_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.CurrentMode = DrawingMode.TriangleShape;
+        UpdateToolButtons();
+    }
+
+    private void BtnEllipse_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.CurrentMode = DrawingMode.EllipseShape;
+        UpdateToolButtons();
+    }
+
+    private void BtnUndo_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.Undo();
+        ShapeRenderer.RenderAll(DrawArea, _vm._shapes);
+    }
+
+    private void BtnRedo_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.Redo();
+        ShapeRenderer.RenderAll(DrawArea, _vm._shapes);
+    }
+    private void UpdateToolButtons()
+    {
+        // Reset all
+        BtnFreehand.ClearValue(Button.BackgroundProperty);
+        BtnFreehand.ClearValue(Button.BorderBrushProperty);
+        BtnLine.ClearValue(Button.BackgroundProperty);
+        BtnLine.ClearValue(Button.BorderBrushProperty);
+        BtnRectangle.ClearValue(Button.BackgroundProperty);
+        BtnRectangle.ClearValue(Button.BorderBrushProperty);
+        BtnEllipse.ClearValue(Button.BackgroundProperty);
+        BtnEllipse.ClearValue(Button.BorderBrushProperty);
+        BtnTriangle.ClearValue(Button.BackgroundProperty);
+        BtnTriangle.ClearValue(Button.BorderBrushProperty);
+        BtnUndo.ClearValue(Button.BackgroundProperty);
+        BtnUndo.ClearValue(Button.BorderBrushProperty);
+        BtnRedo.ClearValue(Button.BackgroundProperty);
+        BtnRedo.ClearValue(Button.BorderBrushProperty);
+
+        Brush? selectedBrush = null;
+        Brush? selectedBorder = null;
+        try
+        {
+            selectedBrush = (Brush)FindResource("GlassyPressedBrush");
+        }
+        catch
+        {
+            selectedBrush = Brushes.LightSteelBlue;
         }
 
+        selectedBorder = new SolidColorBrush(System.Windows.Media.Color.FromRgb(111, 166, 214)); // #6FA6D6
 
-
+        if (_vm.CurrentMode == DrawingMode.FreeHand)
+        {
+            BtnFreehand.Background = selectedBrush;
+            BtnFreehand.BorderBrush = selectedBorder;
+        }
+        else if (_vm.CurrentMode == DrawingMode.StraightLine)
+        {
+            BtnLine.Background = selectedBrush;
+            BtnLine.BorderBrush = selectedBorder;
+        }
+        else if (_vm.CurrentMode == DrawingMode.Rectangle)
+        {
+            BtnRectangle.Background = selectedBrush;
+            BtnRectangle.BorderBrush = selectedBorder;
+        }
+        else if (_vm.CurrentMode == DrawingMode.EllipseShape)
+        {
+            BtnEllipse.Background = selectedBrush;
+            BtnEllipse.BorderBrush = selectedBorder;
+        }
+        else if (_vm.CurrentMode == DrawingMode.TriangleShape)
+        {
+            BtnTriangle.Background = selectedBrush;
+            BtnTriangle.BorderBrush = selectedBorder;
+        }
 
     }
 }
