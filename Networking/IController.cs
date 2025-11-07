@@ -1,0 +1,27 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Networking;
+
+/**
+ * The interface between the controller and networking modules.
+ * Used to send the joining clients address to the networking module
+ *
+ */
+public interface IController
+{
+    /**
+     * Function to add user to the network.
+     *
+     * @param deviceAddress     the device IP address details
+     * @param mainServerAddress the main server IP address details
+     */
+    void AddUser(ClientNode deviceAddress, ClientNode mainServerAddress);
+}
