@@ -1,0 +1,61 @@
+<Application x:Class="GUI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:authVm="clr-namespace:GUI.ViewModels.Auth"
+             xmlns:authViews="clr-namespace:GUI.Views.Auth"
+             xmlns:homeVm="clr-namespace:GUI.ViewModels.Home"
+             xmlns:meetingVm="clr-namespace:GUI.ViewModels.Meeting"
+             xmlns:settingsVm="clr-namespace:GUI.ViewModels.Settings"
+             xmlns:homeViews="clr-namespace:GUI.Views.Home"
+             xmlns:meetingViews="clr-namespace:GUI.Views.Meeting"
+             xmlns:settingsViews="clr-namespace:GUI.Views.Settings"
+             xmlns:converters="clr-namespace:UX.Core.Converters;assembly=UX.Core">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Theme Resources - LightTheme loaded by default, dynamically switched by ThemeService -->
+                <ResourceDictionary Source="/UX.Core;component/Themes/LightTheme.xaml"/>
+                
+                <!-- Control Styles -->
+                <ResourceDictionary Source="/UX.Core;component/Styles/ControlStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Converters -->
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            
+            <!-- Data Template for Auth View (Google OAuth only) -->
+            <DataTemplate DataType="{x:Type authVm:AuthViewModel}">
+                <authViews:AuthView />
+            </DataTemplate>
+            
+            <!-- Data Templates for GUI Views -->
+            <DataTemplate DataType="{x:Type homeVm:HomePageViewModel}">
+                <homeViews:HomePageView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type settingsVm:SettingsViewModel}">
+                <settingsViews:SettingsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:MeetingToolbarViewModel}">
+                <meetingViews:MeetingToolbarView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:MeetingShellViewModel}">
+                <meetingViews:MeetingShellView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:MeetingDashboardViewModel}">
+                <meetingViews:MeetingDashboardView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:VideoSessionViewModel}">
+                <meetingViews:VideoSessionView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:ScreenShareViewModel}">
+                <meetingViews:ScreenShareView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:WhiteboardViewModel}">
+                <meetingViews:WhiteboardView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:MeetingChatViewModel}">
+                <meetingViews:MeetingChatView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

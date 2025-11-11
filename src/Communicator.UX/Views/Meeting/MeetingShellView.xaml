@@ -1,0 +1,297 @@
+<UserControl x:Class="GUI.Views.Meeting.MeetingShellView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="900"
+             Background="{DynamicResource AppBackgroundBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Main content area - takes remaining space -->
+            <ColumnDefinition Width="*" />
+            <!-- Side panel - 320px when open, 0 when closed -->
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        
+        <!-- MAIN CONTENT AREA -->
+        <Grid Grid.Column="0">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ContentControl Grid.Row="0"
+                        Content="{Binding CurrentPage}"/>
+
+        <Border Grid.Row="1"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                Padding="12,10"
+                SnapsToDevicePixels="True">
+            <Border.Resources>
+                <Style x:Key="MeetingControlButtonStyle" TargetType="Button">
+                    <Setter Property="Width" Value="96" />
+                    <Setter Property="Padding" Value="8" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="12">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ActiveOverlayBrush}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Border.Resources>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+
+                <!-- Leave Meeting -->
+                <Button Command="{Binding LeaveMeetingCommand}"
+                        ToolTip="Leave meeting"
+                        Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE8FB;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Leave"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Toggle Mute -->
+                <Button Command="{Binding ToggleMuteCommand}"
+                        ToolTip="Toggle microphone"
+            Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE720;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="&#xE721;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <TextBlock Text="Mute"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="Unmute"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Toggle Camera -->
+                <Button Command="{Binding ToggleCameraCommand}"
+                        ToolTip="Toggle camera"
+            Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE714;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="&#xE713;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <TextBlock Text="Camera Off"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="Camera On"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Toggle Hand -->
+                <Button Command="{Binding ToggleHandCommand}"
+                        ToolTip="Raise hand"
+            Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE756;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="&#xE756;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.5"
+                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <TextBlock Text="Raise Hand"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="Lower Hand"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Toggle Screen Share -->
+                <Button Command="{Binding ToggleScreenShareCommand}"
+                        ToolTip="Toggle screen sharing"
+            Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE14F;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="&#xE15B;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <TextBlock Text="Share Screen"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <TextBlock Text="Stop Share"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Button>
+                
+                <!-- Toggle Chat Panel (NEW) -->
+                <Button Command="{Binding ToggleChatPanelCommand}"
+                        ToolTip="Toggle chat"
+                        Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE8F2;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock FontSize="12"
+                                   HorizontalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Chat" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSidePanelOpen}" Value="True">
+                                            <Setter Property="Text" Value="Close Chat" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Button>
+
+            </StackPanel>
+        </Border>
+        </Grid>
+        
+        <!-- SIDE PANEL -->
+        <Border Grid.Column="1"
+                Width="320"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1,0,0,0"
+                SnapsToDevicePixels="True"
+                Visibility="{Binding IsSidePanelOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <!-- Side Panel Header -->
+                <Border Grid.Row="0"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="16,12">
+                    <Grid>
+                        <TextBlock Text="Chat"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        
+                        <Button Content="&#xE711;"
+                                FontFamily="Segoe MDL2 Assets"
+                                FontSize="14"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Command="{Binding CloseSidePanelCommand}"
+                                ToolTip="Close panel"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8"
+                                Cursor="Hand"
+                                Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="border"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource ActiveOverlayBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+                
+                <!-- Side Panel Content -->
+                <ContentControl Grid.Row="1"
+                                Content="{Binding SidePanelContent}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
