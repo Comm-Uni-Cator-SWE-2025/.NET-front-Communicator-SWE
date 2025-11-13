@@ -66,7 +66,7 @@ public partial class MainWindow : Window
             if (!isInside) { return; }// Don't track outside the canvas
 
             // --- ENTIRELY NEW LOGIC ---
-            if (_vm._isTracking) // Handle drawing preview
+            if (_vm._isTracking)
             {
                 _vm.TrackPoint(new Drawing.Point((int)pos.X, (int)pos.Y));
 
@@ -322,6 +322,22 @@ public partial class MainWindow : Window
         _vm.Redo();
         SyncCanvasState(); // Use RedrawCanvas to correctly handle selection
     }
+    private void BtnRegularize_Click(object sender, RoutedEventArgs e)
+    {
+        // If a shape is already selected, perform immediate regularize replacement
+        if (_vm.SelectedShape != null)
+        {
+            // Replace selected shape with a very small rectangle (1x1)
+            _vm.RegularizeSelectedShape(1,1);
+            SyncCanvasState();
+            return;
+        }
+
+        // Otherwise switch to Regularize mode so user can click to create constant shapes
+        _vm.CurrentMode = DrawingMode.Regularize;
+        UpdateToolButtons();
+    }
+
     private void UpdateToolButtons()
     {
         // Reset all
@@ -341,6 +357,8 @@ public partial class MainWindow : Window
         BtnUndo.ClearValue(Button.BorderBrushProperty);
         BtnRedo.ClearValue(Button.BackgroundProperty);
         BtnRedo.ClearValue(Button.BorderBrushProperty);
+        BtnRegularize?.ClearValue(Button.BackgroundProperty);
+        BtnRegularize?.ClearValue(Button.BorderBrushProperty);
 
         Brush? selectedBrush = null;
         Brush? selectedBorder = null;
@@ -381,6 +399,10 @@ public partial class MainWindow : Window
             case DrawingMode.TriangleShape:
                 BtnTriangle.Background = selectedBrush;
                 BtnTriangle.BorderBrush = selectedBorder;
+                break;
+            case DrawingMode.Regularize:
+                BtnRegularize.Background = selectedBrush;
+                BtnRegularize.BorderBrush = selectedBorder;
                 break;
         }
 

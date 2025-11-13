@@ -27,7 +27,7 @@ public class RectangleShape : IShape
     /// <summary>
     /// Private constructor for cloning.
     /// </summary>
-    private RectangleShape(string shapeId, List<Point> points, Color color, double thickness, string userId)
+    internal RectangleShape(string shapeId, List<Point> points, Color color, double thickness, string userId)
     {
         ShapeId = shapeId;
         Points.AddRange(points);

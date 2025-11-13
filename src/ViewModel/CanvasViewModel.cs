@@ -21,7 +21,7 @@ public class CanvasViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public enum DrawingMode { Select, FreeHand, StraightLine, Rectangle, EllipseShape, TriangleShape }
+    public enum DrawingMode { Select, FreeHand, StraightLine, Rectangle, EllipseShape, TriangleShape, Regularize }
     private DrawingMode _currentMode = DrawingMode.FreeHand;
     public DrawingMode CurrentMode
     {
@@ -277,6 +277,32 @@ public class CanvasViewModel : INotifyPropertyChanged
             }
             return;
         }
+
+        // --- NEW: Regularize tool handling (create a constant shape at click)
+        if (CurrentMode == DrawingMode.Regularize)
+        {
+            _isTracking = false;
+            SelectedShape = null;
+
+            // Create a fixed-size rectangle centered at the click point
+            int width =40;
+            int height =30;
+            var topLeft = new Point(point.X - width /2, point.Y - height /2);
+            var bottomRight = new Point(point.X + width /2, point.Y + height /2);
+            var pts = new List<Point> { topLeft, bottomRight };
+
+            var constantShape = new RectangleShape(pts, CurrentColor, CurrentThickness, CurrentUserId);
+
+            // Add to dictionary and push a Create action
+            _shapes.Add(constantShape.ShapeId, (constantShape, true));
+            _stateManager.AddAction(new CanvasAction(CanvasActionType.Create, null, constantShape));
+
+            SelectedShape = constantShape;
+            LastCreatedShape = constantShape;
+
+            return;
+        }
+        // --- END NEW ---
 
         // --- If not Select, proceed with drawing ---
         _isTracking = true;
@@ -614,4 +640,37 @@ public class CanvasViewModel : INotifyPropertyChanged
 
     }
 
+    // --- NEW METHOD ---
+    /// <summary>
+    /// Regularizes the selected shape by replacing it with a small rectangle.
+    /// This is typically used to simplify a shape to a basic form.
+    /// </summary>
+    /// <param name="width">The width of the regularized shape.</param>
+    /// <param name="height">The height of the regularized shape.</param>
+    public void RegularizeSelectedShape(int width =1, int height =1)
+    {
+        if (SelectedShape == null)
+        {
+            return;
+        }
+
+        // Store previous shape
+        IShape prev = SelectedShape;
+
+        // Create a very small replacement centered on the previous shape's bounding box
+        IShape replacement = RegularizeTool.SmallReplacement(prev, CurrentUserId, width, height);
+
+        // Update dictionary (replace the shape)
+        if (_shapes.ContainsKey(prev.ShapeId))
+        {
+            _shapes[prev.ShapeId] = (replacement, true);
+
+            // Push Modify action to state manager
+            _stateManager.AddAction(new CanvasAction(CanvasActionType.Modify, prev, replacement));
+
+            // Select the replacement so UI updates
+            SelectedShape = replacement;
+        }
+    }
+    // --- END NEW METHOD ---
 }
