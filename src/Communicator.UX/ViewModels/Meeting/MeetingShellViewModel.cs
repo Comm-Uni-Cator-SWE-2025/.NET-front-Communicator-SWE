@@ -90,7 +90,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     {
         yield return new MeetingTabViewModel("Dashboard", new MeetingDashboardViewModel(user));
         yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));
-        yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(user));
+        yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(null));
         yield return new MeetingTabViewModel("Whiteboard", new WhiteboardViewModel(user));
         yield return new MeetingTabViewModel("Chat", new MeetingChatViewModel(user));
     }

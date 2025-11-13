@@ -8,11 +8,6 @@ public class MeetingServices
 
     public MeetingSession? CreateMeeting(UserProfile user)
     {
-        if (user.Role != "instructor")
-        {
-            System.Console.WriteLine($"User is not an instructor: {user.Role}");
-            return null;
-        }
         var meeting = new MeetingSession(user.Email);
         _meetings.Add(meeting.MeetingId, meeting);
         return meeting;
