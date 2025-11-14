@@ -1,0 +1,377 @@
+﻿<Window x:Class="chat_front.ChatView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:chat_front"  
+        mc:Ignorable="d"
+        Title="CommUniCator Chat (.NET/WPF)" Height="600" Width="400" MinHeight="500" MinWidth="350">
+
+    <Window.Resources>
+        <local:MessageAlignmentConverter x:Key="MessageAlignmentConverter" />
+        <local:MessageColorConverter x:Key="MessageColorConverter" />
+        <local:UsernameColorConverter x:Key="UsernameColorConverter" />
+        <local:MessageTemplateSelector x:Key="MessageTemplateSelector" />
+        <local:FileSizeConverter x:Key="FileSizeConverter" />
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+        <SolidColorBrush x:Key="MainBlueBrush" Color="#FF007BFF" />
+        <SolidColorBrush x:Key="ReplyQuoteBgBrush" Color="#FFDDDDDD" />
+
+        <Style x:Key="ReplyButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="5,1,5,1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0F0F0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Text Message Template -->
+        <DataTemplate x:Key="TextMessageTemplate" DataType="{x:Type local:MessageVM}">
+            <Border Padding="3,0">
+                <StackPanel MaxWidth="300" Margin="5,3" 
+                            HorizontalAlignment="{Binding IsSentByMe, Converter={StaticResource MessageAlignmentConverter}}">
+
+                    <Border CornerRadius="10" Padding="8,8,8,12" 
+                            Background="{Binding IsSentByMe, Converter={StaticResource MessageColorConverter}}">
+                        <StackPanel>
+                            <!-- Reply Quote Section -->
+                            <Border Margin="0,0,0,5" Padding="5" 
+                                    Visibility="{Binding HasQuote, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Background="{StaticResource ReplyQuoteBgBrush}"
+                                    BorderBrush="{StaticResource MainBlueBrush}" 
+                                    BorderThickness="3,0,0,0"
+                                    CornerRadius="3">
+                                <TextBlock Text="{Binding QuotedContent}" 
+                                           FontStyle="Italic" 
+                                           FontSize="11" 
+                                           Foreground="#333333" 
+                                           TextWrapping="Wrap" />
+                            </Border>
+
+                            <!-- Username -->
+                            <TextBlock Text="{Binding Username}" 
+                                       FontWeight="Bold" 
+                                       FontSize="13" 
+                                       Foreground="{Binding IsSentByMe, Converter={StaticResource UsernameColorConverter}}" />
+
+                            <!-- Message Content -->
+                            <TextBlock Text="{Binding Content}" 
+                                       FontSize="14" 
+                                       TextWrapping="Wrap" 
+                                       Margin="0,2,0,5" />
+
+                            <!-- Timestamp and Buttons -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding Timestamp}" 
+                                           FontSize="10" 
+                                           Foreground="Gray" 
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="Reply" 
+                                            FontSize="10" 
+                                            Margin="5,0,0,0"
+                                            Foreground="{StaticResource MainBlueBrush}"
+                                            Command="{Binding DataContext.StartReplyCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                            CommandParameter="{Binding}" 
+                                            Style="{StaticResource ReplyButtonStyle}"/>
+
+                                    <Button Content="Delete" 
+                                            FontSize="10" 
+                                            Margin="5,0,0,0"
+                                            Foreground="Red"
+                                            Visibility="{Binding IsSentByMe, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Command="{Binding DataContext.DeleteMessageCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                            CommandParameter="{Binding}" 
+                                            Style="{StaticResource ReplyButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- File Message Template -->
+        <DataTemplate x:Key="FileMessageTemplate" DataType="{x:Type local:MessageVM}">
+            <Border Padding="3,0">
+                <StackPanel MaxWidth="300" Margin="5,3" 
+                            HorizontalAlignment="{Binding IsSentByMe, Converter={StaticResource MessageAlignmentConverter}}">
+
+                    <Border CornerRadius="10" Padding="8,8,8,12" 
+                            Background="{Binding IsSentByMe, Converter={StaticResource MessageColorConverter}}">
+                        <StackPanel>
+                            <!-- Reply Quote Section -->
+                            <Border Margin="0,0,0,5" Padding="5" 
+                                    Visibility="{Binding HasQuote, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Background="{StaticResource ReplyQuoteBgBrush}"
+                                    BorderBrush="{StaticResource MainBlueBrush}" 
+                                    BorderThickness="3,0,0,0"
+                                    CornerRadius="3">
+                                <TextBlock Text="{Binding QuotedContent}" 
+                                           FontStyle="Italic" 
+                                           FontSize="11" 
+                                           Foreground="#333333" 
+                                           TextWrapping="Wrap" />
+                            </Border>
+
+                            <!-- Username -->
+                            <TextBlock Text="{Binding Username}" 
+                                       FontWeight="Bold" 
+                                       FontSize="13" 
+                                       Foreground="{Binding IsSentByMe, Converter={StaticResource UsernameColorConverter}}" />
+
+                            <!-- File Info -->
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- File Icon -->
+                                <Border Grid.Column="0" 
+                                        Background="#EEEEEE" 
+                                        CornerRadius="5" 
+                                        Padding="8"
+                                        Margin="0,0,8,0">
+                                    <TextBlock Text="📄" FontSize="24" />
+                                </Border>
+
+                                <!-- File Details -->
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding FileName}" 
+                                               FontWeight="Bold" 
+                                               FontSize="14" 
+                                               TextWrapping="Wrap" />
+                                    <TextBlock FontSize="12" Foreground="Gray">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} (compressed)">
+                                                <Binding Path="CompressedFileSize" Converter="{StaticResource FileSizeConverter}" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+
+                                    <!-- Save Button for Received Files -->
+                                    <Button Content="Save File" 
+                                            FontSize="12" 
+                                            Margin="0,5,0,0"
+                                            Padding="8,3"
+                                            Background="{StaticResource MainBlueBrush}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Command="{Binding DataContext.DownloadFileCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Visibility>
+                                            <Binding Path="IsSentByMe" Converter="{StaticResource InverseBoolToVisibilityConverter}" />
+                                        </Button.Visibility>
+                                    </Button>
+                                </StackPanel> 
+                            </Grid>
+
+                            <!-- Caption (if exists) -->
+                            <TextBlock Text="{Binding Content}" 
+                                       FontSize="14" 
+                                       TextWrapping="Wrap" 
+                                       Margin="0,8,0,5"
+                                       Visibility="{Binding Content, Converter={StaticResource NullToVisibilityConverter}}" />
+
+                            <!-- Timestamp and Buttons -->
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding Timestamp}" 
+                                           FontSize="10" 
+                                           Foreground="Gray" 
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="Reply" 
+                                            FontSize="10" 
+                                            Margin="5,0,0,0"
+                                            Foreground="{StaticResource MainBlueBrush}"
+                                            Command="{Binding DataContext.StartReplyCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                            CommandParameter="{Binding}" 
+                                            Style="{StaticResource ReplyButtonStyle}"/>
+
+                                    <Button Content="Delete" 
+                                            FontSize="10" 
+                                            Margin="5,0,0,0"
+                                            Foreground="Red"
+                                            Visibility="{Binding IsSentByMe, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Command="{Binding DataContext.DeleteMessageCommand, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                            CommandParameter="{Binding}" 
+                                            Style="{StaticResource ReplyButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Messages Area -->
+        <ScrollViewer Grid.Row="0" x:Name="MessageScrollViewer" VerticalScrollBarVisibility="Auto" Background="White">
+            <ItemsControl ItemsSource="{Binding Messages}" 
+                          ItemTemplateSelector="{StaticResource MessageTemplateSelector}">
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Input Section -->
+        <StackPanel Grid.Row="1">
+            <!-- Attachment Indicator -->
+            <Border Background="#EFEFEF" 
+                    BorderBrush="#CCCCCC" 
+                    BorderThickness="0,1,0,0" 
+                    Padding="10,5"
+                    Visibility="{Binding HasAttachment, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" 
+                               Text="{Binding AttachmentText}" 
+                               Foreground="#555555" 
+                               FontStyle="Italic" 
+                               FontSize="12" 
+                               VerticalAlignment="Center" 
+                               TextTrimming="CharacterEllipsis"/>
+
+                    <Button Grid.Column="1" 
+                            Content="✕" 
+                            FontSize="14" 
+                            FontWeight="Bold"
+                            Margin="5,0,0,0" 
+                            Padding="6,2"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#666666"
+                            Cursor="Hand"
+                            Command="{Binding CancelAttachmentCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Reply Indicator Bar -->
+            <Border Background="#EFEFEF" 
+                    BorderBrush="#CCCCCC" 
+                    BorderThickness="0,1,0,0" 
+                    Padding="10,5"
+                    Visibility="{Binding IsReplying, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" 
+                               Text="{Binding ReplyQuoteText}" 
+                               Foreground="#555555" 
+                               FontStyle="Italic" 
+                               FontSize="12" 
+                               VerticalAlignment="Center" 
+                               TextTrimming="CharacterEllipsis"/>
+
+                    <Button Grid.Column="1" 
+                            Content="✕" 
+                            FontSize="14" 
+                            FontWeight="Bold"
+                            Margin="5,0,0,0" 
+                            Padding="6,2"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#666666"
+                            Cursor="Hand"
+                            Command="{Binding CancelReplyCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Message Input -->
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" 
+                         x:Name="MessageInputBox"
+                         Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}" 
+                         FontSize="14" 
+                         AcceptsReturn="False" 
+                         MinHeight="30" 
+                         VerticalContentAlignment="Center"
+                         Padding="8,5"
+                         Margin="0,0,10,0" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="📎" 
+                            FontSize="16" 
+                            Padding="10,8" 
+                            Background="#F0F0F0"
+                            BorderThickness="1"
+                            BorderBrush="#CCCCCC"
+                            Cursor="Hand"
+                            ToolTip="Attach File"
+                            Command="{Binding AttachFileCommand}" />
+
+                    <Button Content="Send" 
+                            FontSize="12" 
+                            Padding="15,8" 
+                            Margin="5,0,0,0"
+                            Background="{StaticResource MainBlueBrush}" 
+                            Foreground="White" 
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Command="{Binding SendMessageCommand}" />
+
+                    <Button Content="Test Recv" 
+                            FontSize="12" 
+                            Padding="10,8" 
+                            Margin="5,0,0,0"
+                            Background="#F0F0F0"
+                            BorderThickness="1"
+                            BorderBrush="#CCCCCC"
+                            Cursor="Hand"
+                            Command="{Binding TestRecvCommand}" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Window>
