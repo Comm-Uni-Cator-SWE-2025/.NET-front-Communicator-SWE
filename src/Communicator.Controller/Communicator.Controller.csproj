@@ -9,4 +9,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Meeting\" />
+  </ItemGroup>
+
 </Project>
