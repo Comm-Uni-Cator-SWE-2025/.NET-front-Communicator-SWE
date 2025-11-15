@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.UX.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.Core", "src\Communicator.Core\Communicator.Core.csproj", "{381831ED-C37C-430B-AE2E-3A79A7100134}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UX.Icons", "src\UX.Icons\UX.Icons.csproj", "{BE6E90C5-94EF-4BFC-85D5-0919D2DF50A3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.Icons", "src\Communicator.Icons\Communicator.Icons.csproj", "{BE6E90C5-94EF-4BFC-85D5-0919D2DF50A3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Controller", "src\Controller\Controller.csproj", "{4478B2F2-6600-40FE-9EA0-E7786B6D959F}"
 EndProject

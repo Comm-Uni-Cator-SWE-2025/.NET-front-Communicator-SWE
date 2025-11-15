@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace UX.Icons;
+namespace Communicator.Icons;
 
 /// <summary>
 /// Demo application to showcase the icon library

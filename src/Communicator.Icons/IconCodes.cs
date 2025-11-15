@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace UX.Icons;
+namespace Communicator.Icons;
 
 /// <summary>
 /// Maps Tabler icon names to Unicode characters

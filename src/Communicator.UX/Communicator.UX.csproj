@@ -15,7 +15,7 @@
     <ProjectReference Include="..\Communicator.ScreenShare\Communicator.ScreenShare.csproj" />
     <ProjectReference Include="..\Controller\Controller.csproj" />
     <ProjectReference Include="..\Communicator.Core\Communicator.Core.csproj" />
-    <ProjectReference Include="..\UX.Icons\UX.Icons.csproj" />
+    <ProjectReference Include="..\Communicator.Icons\Communicator.Icons.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="900"
@@ -71,10 +72,9 @@
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE8FB;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"/>
+                        <icons:Icon IconName="door-exit" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource ErrorBrush}" />
                         <TextBlock Text="Leave"
                                    FontSize="12"
                                    HorizontalAlignment="Center"/>
@@ -87,16 +87,14 @@
             Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE720;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="&#xE721;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <icons:Icon IconName="microphone" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource IconBrush}"
+                                    Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <icons:Icon IconName="microphone-off" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource ErrorBrush}"
+                                    Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         <TextBlock Text="Mute"
                                    FontSize="12"
                                    HorizontalAlignment="Center"
@@ -114,16 +112,14 @@
             Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE714;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="&#xE713;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <icons:Icon IconName="video" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource IconBrush}"
+                                    Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <icons:Icon IconName="video-off" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource ErrorBrush}"
+                                    Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         <TextBlock Text="Camera Off"
                                    FontSize="12"
                                    HorizontalAlignment="Center"
@@ -141,17 +137,15 @@
             Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE756;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="&#xE756;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Opacity="0.5"
-                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <icons:Icon IconName="hand-stop" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource IconBrush}"
+                                    Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <icons:Icon IconName="hand-stop" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource WarningBrush}"
+                                    Opacity="0.8"
+                                    Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         <TextBlock Text="Raise Hand"
                                    FontSize="12"
                                    HorizontalAlignment="Center"
@@ -169,16 +163,14 @@
             Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE14F;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="&#xE15B;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <icons:Icon IconName="screen-share" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource IconBrush}"
+                                    Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                        <icons:Icon IconName="screen-share-off" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource SuccessBrush}"
+                                    Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         <TextBlock Text="Share Screen"
                                    FontSize="12"
                                    HorizontalAlignment="Center"
@@ -196,10 +188,9 @@
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE8F2;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="20"
-                                   HorizontalAlignment="Center"/>
+                        <icons:Icon IconName="message-circle" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource IconBrush}"/>
                         <TextBlock FontSize="12"
                                    HorizontalAlignment="Center">
                             <TextBlock.Style>
@@ -247,18 +238,17 @@
                                    VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                         
-                        <Button Content="&#xE711;"
-                                FontFamily="Segoe MDL2 Assets"
-                                FontSize="14"
-                                HorizontalAlignment="Right"
+                        <Button HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
                                 Command="{Binding CloseSidePanelCommand}"
                                 ToolTip="Close panel"
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Padding="8"
-                                Cursor="Hand"
-                                Foreground="{DynamicResource TextSecondaryBrush}">
+                                Cursor="Hand">
+                            <icons:Icon IconName="x" 
+                                        IconSize="16" 
+                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Template">

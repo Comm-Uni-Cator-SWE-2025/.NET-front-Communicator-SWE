@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <OutputType>WinExe</OutputType>
-    <StartupObject>UX.Icons.DemoApp</StartupObject>
+    <StartupObject>Communicator.Icons.DemoApp</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

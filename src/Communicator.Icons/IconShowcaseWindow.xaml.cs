@@ -5,7 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace UX.Icons;
+namespace Communicator.Icons;
 
 public partial class IconShowcaseWindow : Window
 {

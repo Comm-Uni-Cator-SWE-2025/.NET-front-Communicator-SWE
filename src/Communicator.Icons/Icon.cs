@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace UX.Icons;
+namespace Communicator.Icons;
 
 /// <summary>
 /// Custom icon control using Tabler Icons font
@@ -18,7 +18,7 @@ public class Icon : Control
 
         // Set default font family
         FontFamilyProperty.OverrideMetadata(typeof(Icon),
-            new FrameworkPropertyMetadata(new FontFamily("/UX.Icons;component/Assets/Fonts/#tabler-icons")));
+            new FrameworkPropertyMetadata(new FontFamily("/Communicator.Icons;component/Assets/Fonts/#tabler-icons")));
     }
 
     /// <summary>
