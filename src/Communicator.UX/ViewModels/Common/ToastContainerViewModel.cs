@@ -1,8 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
-using UX.Core;
-using UX.Core.Models;
-using UX.Core.Services;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Models;
+using Communicator.Core.UX.Services;
 
 namespace GUI.ViewModels.Common;
 
@@ -27,10 +27,10 @@ public class ToastContainerViewModel : ObservableObject
     /// <summary>
     /// Adds incoming toast notifications on the UI dispatcher thread.
     /// </summary>
-    private void OnToastRequested(ToastMessage toast)
+    private void OnToastRequested(object? sender, ToastRequestedEventArgs e)
     {
         Application.Current.Dispatcher.Invoke(() => {
-            Toasts.Add(toast);
+            Toasts.Add(e.Message);
         });
     }
 

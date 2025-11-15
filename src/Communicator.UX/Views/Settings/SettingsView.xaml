@@ -66,15 +66,6 @@
                                            FontSize="14"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,0,4"/>
-                                <Border Background="{DynamicResource PrimaryLightBrush}"
-                                        CornerRadius="4"
-                                        Padding="8,4"
-                                        HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding Role}"
-                                               FontSize="12"
-                                               FontWeight="Medium"
-                                               Foreground="{DynamicResource PrimaryBrush}"/>
-                                </Border>
                             </StackPanel>
                         </Grid>
                     </StackPanel>

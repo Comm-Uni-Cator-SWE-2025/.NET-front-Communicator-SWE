@@ -1,7 +1,7 @@
 ﻿using System;
-using UX.Core.Models;
+using Communicator.Core.UX.Models;
 
-namespace UX.Core.Services;
+namespace Communicator.Core.UX.Services;
 
 /// <summary>
 /// Emits toast notifications by invoking ToastRequested with preconfigured message types.
@@ -9,7 +9,7 @@ namespace UX.Core.Services;
 /// </summary>
 public class ToastService : IToastService
 {
-    public event Action<ToastMessage>? ToastRequested;
+    public event EventHandler<ToastRequestedEventArgs>? ToastRequested;
 
     public void ShowSuccess(string message, int duration = 3000)
     {
@@ -37,7 +37,7 @@ public class ToastService : IToastService
     private void InvokeToastRequested(ToastMessage message)
     {
         // Capture the event handler to prevent race conditions
-        Action<ToastMessage>? handler = ToastRequested;
-        handler?.Invoke(message);
+        EventHandler<ToastRequestedEventArgs>? handler = ToastRequested;
+        handler?.Invoke(this, new ToastRequestedEventArgs(message));
     }
 }

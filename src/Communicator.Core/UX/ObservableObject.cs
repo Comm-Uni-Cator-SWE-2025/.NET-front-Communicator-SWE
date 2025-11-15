@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace UX.Core;
+namespace Communicator.Core.UX;
 
 /// <summary>
 /// Provides INotifyPropertyChanged support for derived view models.

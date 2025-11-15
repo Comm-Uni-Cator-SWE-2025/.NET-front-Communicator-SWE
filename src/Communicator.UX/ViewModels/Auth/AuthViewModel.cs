@@ -2,8 +2,8 @@
 using System.Windows.Input;
 using Controller;
 using GUI.Services;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
 namespace GUI.ViewModels.Auth;
 
@@ -46,7 +46,7 @@ public class AuthViewModel : ObservableObject
 
             if (success)
             {
-                UserProfile? user = _controller.GetUser();
+                User? user = _controller.GetUser();
                 if (user != null)
                 {
                     _toastService.ShowSuccess($"Welcome, {user.DisplayName}!");

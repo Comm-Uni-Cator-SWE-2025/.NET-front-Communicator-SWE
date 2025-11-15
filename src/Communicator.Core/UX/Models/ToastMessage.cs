@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UX.Core.Models;
+namespace Communicator.Core.UX.Models;
 
 public enum ToastType
 {

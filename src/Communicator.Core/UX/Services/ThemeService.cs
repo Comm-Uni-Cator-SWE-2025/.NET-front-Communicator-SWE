@@ -2,9 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Windows;
-using UX.Core.Models;
+using Communicator.Core.UX.Models;
 
-namespace UX.Core.Services;
+namespace Communicator.Core.UX.Services;
 
 /// <summary>
 /// Implementation of IThemeService managing dynamic theme switching at runtime using WPF ResourceDictionaries.
@@ -13,9 +13,10 @@ public class ThemeService : IThemeService
 {
     private const string ThemePreferenceKey = "AppTheme";
     private const string SettingsFileName = "settings.txt";
+    private static readonly char[] s_lineSeparators = ['\n', '\r'];
     private AppTheme _currentTheme;
 
-    public event EventHandler<AppTheme>? ThemeChanged;
+    public event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
 
     public AppTheme CurrentTheme => _currentTheme;
 
@@ -36,7 +37,7 @@ public class ThemeService : IThemeService
 
         _currentTheme = theme;
 
-        var themeUri = new Uri($"/UX.Core;component/Themes/{theme}Theme.xaml", UriKind.Relative);
+        var themeUri = new Uri($"/Communicator.Core;component/UX/Themes/{theme}Theme.xaml", UriKind.Relative);
 
         try
         {
@@ -44,8 +45,8 @@ public class ThemeService : IThemeService
 
             ResourceDictionary? existingTheme = Application.Current.Resources.MergedDictionaries
                 .FirstOrDefault(d => d.Source != null &&
-                                    (d.Source.OriginalString.Contains("LightTheme.xaml") ||
-                                     d.Source.OriginalString.Contains("DarkTheme.xaml")));
+                                    (d.Source.OriginalString.Contains("LightTheme.xaml", StringComparison.OrdinalIgnoreCase) ||
+                                     d.Source.OriginalString.Contains("DarkTheme.xaml", StringComparison.OrdinalIgnoreCase)));
 
             if (existingTheme != null)
             {
@@ -56,11 +57,15 @@ public class ThemeService : IThemeService
 
             SaveThemePreference();
 
-            ThemeChanged?.Invoke(this, theme);
+            ThemeChanged?.Invoke(this, new ThemeChangedEventArgs(theme));
         }
-        catch (Exception ex)
+        catch (IOException ioEx)
         {
-            Console.Error.WriteLine($"Failed to load theme: {ex.Message}");
+            Console.Error.WriteLine($"Failed to load theme due to IO error: {ioEx.Message}");
+        }
+        catch (UnauthorizedAccessException uaEx)
+        {
+            Console.Error.WriteLine($"Failed to load theme due to access denied: {uaEx.Message}");
         }
     }
 
@@ -76,11 +81,11 @@ public class ThemeService : IThemeService
             if (File.Exists(settingsPath))
             {
                 string content = File.ReadAllText(settingsPath);
-                string[] lines = content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] lines = content.Split(s_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (string line in lines)
                 {
-                    if (line.StartsWith($"{ThemePreferenceKey}="))
+                    if (line.StartsWith($"{ThemePreferenceKey}=", StringComparison.Ordinal))
                     {
                         string value = line.Substring(ThemePreferenceKey.Length + 1);
                         if (Enum.TryParse<AppTheme>(value, out AppTheme savedTheme))
@@ -92,9 +97,13 @@ public class ThemeService : IThemeService
                 }
             }
         }
-        catch (Exception ex)
+        catch (IOException ioEx)
         {
-            Console.Error.WriteLine($"Failed to load theme preference: {ex.Message}");
+            Console.Error.WriteLine($"Failed to load theme preference due to IO error: {ioEx.Message}");
+        }
+        catch (UnauthorizedAccessException uaEx)
+        {
+            Console.Error.WriteLine($"Failed to load theme preference due to access denied: {uaEx.Message}");
         }
 
         SetTheme(AppTheme.Light);
@@ -117,13 +126,17 @@ public class ThemeService : IThemeService
 
             File.WriteAllText(settingsPath, $"{ThemePreferenceKey}={_currentTheme}");
         }
-        catch (Exception ex)
+        catch (IOException ioEx)
         {
-            Console.Error.WriteLine($"Failed to save theme preference: {ex.Message}");
+            Console.Error.WriteLine($"Failed to save theme preference due to IO error: {ioEx.Message}");
+        }
+        catch (UnauthorizedAccessException uaEx)
+        {
+            Console.Error.WriteLine($"Failed to save theme preference due to access denied: {uaEx.Message}");
         }
     }
 
-    private string GetSettingsFilePath()
+    private static string GetSettingsFilePath()
     {
         string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         // Use the actual application name instead of library name

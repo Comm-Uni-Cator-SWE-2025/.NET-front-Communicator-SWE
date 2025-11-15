@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Windows.Input;
 using Controller;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
 namespace GUI.ViewModels.Meeting;
 
@@ -14,7 +14,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
-    private readonly UserProfile _user;
+    private readonly User _user;
     private readonly Stack<MeetingTabViewModel> _backStack = new();
     private readonly Stack<MeetingTabViewModel> _forwardStack = new();
     private MeetingTabViewModel? _currentTab;
@@ -33,7 +33,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// Builds meeting tabs for the supplied user and initializes navigation state.
     /// Services are now injected via constructor for better testability.
     /// </summary>
-    public MeetingShellViewModel(UserProfile user, IToastService toastService)
+    public MeetingShellViewModel(User user, IToastService toastService)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
@@ -86,11 +86,11 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// <summary>
     /// Creates the default set of meeting tabs for the logged-in user.
     /// </summary>
-    private static IEnumerable<MeetingTabViewModel> CreateTabs(UserProfile user)
+    private static IEnumerable<MeetingTabViewModel> CreateTabs(User user)
     {
         yield return new MeetingTabViewModel("Dashboard", new MeetingDashboardViewModel(user));
         yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));
-        yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(null));
+        yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(user));
         yield return new MeetingTabViewModel("Whiteboard", new WhiteboardViewModel(user));
         yield return new MeetingTabViewModel("Chat", new MeetingChatViewModel(user));
     }

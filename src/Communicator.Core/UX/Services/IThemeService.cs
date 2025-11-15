@@ -1,7 +1,7 @@
 ﻿using System;
-using UX.Core.Models;
+using Communicator.Core.UX.Models;
 
-namespace UX.Core.Services;
+namespace Communicator.Core.UX.Services;
 
 /// <summary>
 /// Service interface for managing application themes.
@@ -11,7 +11,7 @@ public interface IThemeService
     /// <summary>
     /// Event raised when the theme changes.
     /// </summary>
-    event EventHandler<AppTheme>? ThemeChanged;
+    event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
 
     /// <summary>
     /// Gets the current active theme.

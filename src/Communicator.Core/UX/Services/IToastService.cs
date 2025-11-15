@@ -1,7 +1,7 @@
 ﻿using System;
-using UX.Core.Models;
+using Communicator.Core.UX.Models;
 
-namespace UX.Core.Services;
+namespace Communicator.Core.UX.Services;
 
 /// <summary>
 /// Publishes toast notification requests so the UI layer can surface transient feedback to the user.
@@ -11,7 +11,7 @@ public interface IToastService
     /// <summary>
     /// Raised whenever a toast should be displayed; subscribers decide how to render the message.
     /// </summary>
-    event Action<ToastMessage>? ToastRequested;
+    event EventHandler<ToastRequestedEventArgs>? ToastRequested;
 
     /// <summary>
     /// Shows a success toast conveying a positive outcome.

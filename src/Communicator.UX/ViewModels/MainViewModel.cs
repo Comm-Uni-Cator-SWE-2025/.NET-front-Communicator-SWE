@@ -6,8 +6,8 @@ using GUI.ViewModels.Common;
 using GUI.ViewModels.Home;
 using GUI.ViewModels.Meeting;
 using GUI.ViewModels.Settings;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
 namespace GUI.ViewModels;
 
@@ -21,8 +21,8 @@ public class MainViewModel : ObservableObject
     private readonly INavigationService _navigationService;
     private readonly IAuthenticationService _authenticationService;
     private readonly Func<GUI.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
-    private readonly Func<UserProfile, HomePageViewModel> _homePageViewModelFactory;
-    private readonly Func<UserProfile, SettingsViewModel> _settingsViewModelFactory;
+    private readonly Func<User, HomePageViewModel> _homePageViewModelFactory;
+    private readonly Func<User, SettingsViewModel> _settingsViewModelFactory;
 
     // Simplified: IsLoggedIn now comes from AuthenticationService
     public bool IsLoggedIn => _authenticationService.IsAuthenticated;
@@ -82,8 +82,8 @@ public class MainViewModel : ObservableObject
         IAuthenticationService authenticationService,
         ToastContainerViewModel toastContainerViewModel,
         Func<GUI.ViewModels.Auth.AuthViewModel> authViewModelFactory,
-        Func<UserProfile, HomePageViewModel> homePageViewModelFactory,
-        Func<UserProfile, SettingsViewModel> settingsViewModelFactory)
+        Func<User, HomePageViewModel> homePageViewModelFactory,
+        Func<User, SettingsViewModel> settingsViewModelFactory)
     {
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
@@ -137,7 +137,7 @@ public class MainViewModel : ObservableObject
         }
 
         // Complete login via authentication service
-        _authenticationService.CompleteLogin(e.UserProfile);
+        _authenticationService.CompleteLogin(e.User);
 
         // Notify UI that user properties changed
         OnPropertyChanged(nameof(IsLoggedIn));
@@ -146,7 +146,7 @@ public class MainViewModel : ObservableObject
 
         // Clear navigation history and navigate to home
         _navigationService.ClearHistory();
-        _navigationService.NavigateTo(_homePageViewModelFactory(e.UserProfile));
+        _navigationService.NavigateTo(_homePageViewModelFactory(e.User));
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class MainViewModel : ObservableObject
     /// </summary>
     private void NavigateToSettings(object? obj)
     {
-        UserProfile? currentUser = _authenticationService.CurrentUser;
+        User? currentUser = _authenticationService.CurrentUser;
         if (currentUser != null)
         {
             _navigationService.NavigateTo(_settingsViewModelFactory(currentUser));

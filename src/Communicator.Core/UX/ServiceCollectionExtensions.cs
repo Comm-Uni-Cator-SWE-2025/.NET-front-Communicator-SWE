@@ -1,15 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using UX.Core.Services;
+using Communicator.Core.UX.Services;
 
-namespace UX.Core;
+namespace Communicator.Core.UX;
 
 /// <summary>
-/// Extension methods for registering UX.Core services in the dependency injection container.
+/// Extension methods for registering Communicator.Core.UX services in the dependency injection container.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers all UX.Core services (ToastService, ThemeService) as singletons.
+    /// Registers all Communicator.Core.UX services (ToastService, ThemeService) as singletons.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <returns>The service collection for chaining.</returns>

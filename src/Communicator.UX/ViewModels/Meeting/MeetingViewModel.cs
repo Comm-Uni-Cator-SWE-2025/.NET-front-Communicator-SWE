@@ -3,18 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel; // For ObservableCollection
-using System.Threading.Tasks;
 using System.Windows.Input;
+using Communicator.Core.UX;
 using Communicator.ScreenShare;
 using Controller;
 using GUI;
 using GUI.Services;
-using GUI.ViewModels;
 using GUI.ViewModels.Meeting;
-using UX.Core;
 
 namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>

@@ -6,8 +6,8 @@ using GUI.Services;
 using GUI.ViewModels;
 using GUI.Views;
 using Microsoft.Extensions.DependencyInjection;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
 namespace GUI;
 
@@ -49,7 +49,7 @@ public partial class App : Application
     /// </summary>
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Register UX.Core services (Toast, Theme)
+        // Register Communicator.Core.UX services (Toast, Theme)
         services.AddUXCoreServices();
 
         // Register GUI-specific services
@@ -74,15 +74,15 @@ public partial class App : Application
         services.AddTransient<Func<GUI.ViewModels.Auth.AuthViewModel>>(sp =>
             () => sp.GetRequiredService<GUI.ViewModels.Auth.AuthViewModel>());
 
-        // Factory for creating ViewModels with UserProfile parameter
+        // Factory for creating ViewModels with User parameter
         // Using ActivatorUtilities.CreateInstance for automatic dependency resolution
-        services.AddTransient<Func<UserProfile, GUI.ViewModels.Home.HomePageViewModel>>(sp =>
+        services.AddTransient<Func<User, GUI.ViewModels.Home.HomePageViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Home.HomePageViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, GUI.ViewModels.Settings.SettingsViewModel>>(sp =>
+        services.AddTransient<Func<User, GUI.ViewModels.Settings.SettingsViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, GUI.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
+        services.AddTransient<Func<User, GUI.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
     }
 

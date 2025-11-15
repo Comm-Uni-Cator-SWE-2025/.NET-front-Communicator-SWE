@@ -8,8 +8,8 @@ using System.Windows.Interop;
 using GUI.ViewModels;
 using GUI.ViewModels.Common;
 using Microsoft.Extensions.DependencyInjection;
-using UX.Core.Models;
-using UX.Core.Services;
+using Communicator.Core.UX.Models;
+using Communicator.Core.UX.Services;
 
 namespace GUI.Views;
 
@@ -65,11 +65,11 @@ public partial class MainView : Window
     /// <summary>
     /// Renders toast notifications and tracks their lifetime within the visual tree.
     /// </summary>
-    private void OnToastRequested(ToastMessage toast)
+    private void OnToastRequested(object? sender, ToastRequestedEventArgs e)
     {
         Dispatcher.Invoke(() => {
             var toastNotification = new ToastNotification();
-            toastNotification.SetToast(toast);
+            toastNotification.SetToast(e.Message);
             toastNotification.CloseRequested += (s, args) => {
                 ToastContainer.Items.Remove(toastNotification);
             };

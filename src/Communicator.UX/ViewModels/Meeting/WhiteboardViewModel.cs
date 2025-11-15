@@ -1,5 +1,5 @@
 ﻿using Controller;
-using UX.Core;
+using Communicator.Core.UX;
 
 namespace GUI.ViewModels.Meeting;
 
@@ -11,13 +11,13 @@ public class WhiteboardViewModel : ObservableObject
     /// <summary>
     /// Initializes the whiteboard model with the given user context.
     /// </summary>
-    public WhiteboardViewModel(UserProfile user)
+    public WhiteboardViewModel(User user)
     {
         Title = "Whiteboard";
         CurrentUser = user;
     }
 
     public string Title { get; }
-    public UserProfile CurrentUser { get; }
+    public User CurrentUser { get; }
 }
 

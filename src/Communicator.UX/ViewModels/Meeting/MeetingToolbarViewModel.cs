@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using UX.Core;
+using Communicator.Core.UX;
 
 namespace GUI.ViewModels.Meeting;
 

@@ -9,15 +9,15 @@
              xmlns:homeViews="clr-namespace:GUI.Views.Home"
              xmlns:meetingViews="clr-namespace:GUI.Views.Meeting"
              xmlns:settingsViews="clr-namespace:GUI.Views.Settings"
-             xmlns:converters="clr-namespace:UX.Core.Converters;assembly=UX.Core">
+             xmlns:converters="clr-namespace:Communicator.Core.UX.Converters;assembly=Communicator.Core">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Theme Resources - LightTheme loaded by default, dynamically switched by ThemeService -->
-                <ResourceDictionary Source="/UX.Core;component/Themes/LightTheme.xaml"/>
+                <ResourceDictionary Source="/Communicator.Core;component/UX/Themes/LightTheme.xaml"/>
                 
                 <!-- Control Styles -->
-                <ResourceDictionary Source="/UX.Core;component/Styles/ControlStyles.xaml"/>
+                <ResourceDictionary Source="/Communicator.Core;component/UX/Styles/ControlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Converters -->

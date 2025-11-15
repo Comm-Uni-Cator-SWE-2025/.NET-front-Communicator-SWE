@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UX.Core;
+namespace Communicator.Core.UX;
 
 /// <summary>
 /// Abstraction for view models that manage their own navigation history (e.g., meeting tabs) so the shell can delegate back/forward behavior.

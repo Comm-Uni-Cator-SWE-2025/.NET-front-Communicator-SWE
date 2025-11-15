@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using UX.Core.Services;
+using Communicator.Core.UX.Services;
 
 namespace GUI.Services;
 
 /// <summary>
 /// Stack-based navigation service that tracks back and forward history for shell-wide view model transitions.
 /// </summary>
-public class NavigationService : UX.Core.Services.INavigationService
+public class NavigationService : Communicator.Core.UX.Services.INavigationService
 {
     private readonly Stack<object> _backStack = new();
     private readonly Stack<object> _forwardStack = new();

@@ -1,10 +1,12 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 namespace Controller;
 
 public class MockController : IController
 {
-    private UserProfile? _currentUser;
+    private User? _currentUser;
 
     public MockController()
     {
@@ -23,18 +25,18 @@ public class MockController : IController
             return false;
         }
 
-        var googleUser = new UserProfile(
+        var googleUser = new User(
+            id: $"{Math.Abs(authorizationCode.GetHashCode()) % 1000}",
+            username: $"User {Math.Abs(authorizationCode.GetHashCode()) % 1000}",
             email: $"user{Math.Abs(authorizationCode.GetHashCode()) % 1000}@iitpkd.ac.in",
-            displayName: $"User {Math.Abs(authorizationCode.GetHashCode()) % 1000}",
-            passwordHash: "GOOGLE_OAUTH_NO_PASSWORD",
-            userRole: "User"
+            displayName: $"User {Math.Abs(authorizationCode.GetHashCode()) % 1000}"
         );
 
         _currentUser = googleUser;
         return true;
     }
 
-    public UserProfile? GetUser()
+    public User? GetUser()
     {
         return _currentUser;
     }

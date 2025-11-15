@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace UX.Core.Converters;
+namespace Communicator.Core.UX.Converters;
 
 /// <summary>
 /// Converts boolean values to Visibility for binding scenarios, with optional inversion via converter parameter.

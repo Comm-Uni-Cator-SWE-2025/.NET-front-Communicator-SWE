@@ -1,4 +1,4 @@
-﻿using UX.Core;
+﻿using Communicator.Core.UX;
 
 namespace GUI.ViewModels.Meeting;
 

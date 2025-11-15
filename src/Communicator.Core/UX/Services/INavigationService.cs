@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UX.Core.Services;
+namespace Communicator.Core.UX.Services;
 
 /// <summary>
 /// Provides a shell-wide navigation stack for view models, allowing forward/back traversal and change notifications.
