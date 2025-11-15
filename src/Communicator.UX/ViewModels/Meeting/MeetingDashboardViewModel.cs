@@ -1,7 +1,7 @@
 ﻿using Controller;
 using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Supplies summary data for the dashboard tab within the meeting experience.

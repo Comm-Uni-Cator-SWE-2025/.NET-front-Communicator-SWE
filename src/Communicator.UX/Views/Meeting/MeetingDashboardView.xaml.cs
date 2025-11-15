@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Meeting;
+namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Hosts high-level meeting status and widgets for the active session.

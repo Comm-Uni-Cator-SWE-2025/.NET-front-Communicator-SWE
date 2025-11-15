@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Communicator.Core.UX.Services;
 
-namespace GUI.Services;
+namespace Communicator.UX.Services;
 
 /// <summary>
 /// Stack-based navigation service that tracks back and forward history for shell-wide view model transitions.

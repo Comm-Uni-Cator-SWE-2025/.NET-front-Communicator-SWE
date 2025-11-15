@@ -5,7 +5,7 @@ using Communicator.Core.UX;
 using Communicator.Core.UX.Models;
 using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels.Settings;
+namespace Communicator.UX.ViewModels.Settings;
 
 /// <summary>
 /// ViewModel for the Settings Page

@@ -1,7 +1,7 @@
 ﻿using Controller;
 using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Represents the primary meeting session surface, exposing the current user context.

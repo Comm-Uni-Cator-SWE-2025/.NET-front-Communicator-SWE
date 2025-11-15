@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Event arguments for selected tab changes.

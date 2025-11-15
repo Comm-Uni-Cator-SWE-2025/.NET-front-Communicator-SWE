@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Windows.Input;
 using Controller;
-using GUI.Services;
+using Communicator.UX.Services;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels.Auth;
+namespace Communicator.UX.ViewModels.Auth;
 
 /// <summary>
 /// Handles Google OAuth authentication flow.

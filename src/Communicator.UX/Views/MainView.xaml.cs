@@ -5,13 +5,13 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
-using GUI.ViewModels;
-using GUI.ViewModels.Common;
+using Communicator.UX.ViewModels;
+using Communicator.UX.ViewModels.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Communicator.Core.UX.Models;
 using Communicator.Core.UX.Services;
 
-namespace GUI.Views;
+namespace Communicator.UX.Views;
 
 /// <summary>
 /// Primary application window that hosts navigation, toast notifications, and custom chrome behaviors.

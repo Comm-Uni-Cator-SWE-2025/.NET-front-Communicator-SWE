@@ -2,7 +2,7 @@
 using Controller;
 using Communicator.Core.UX;
 
-namespace GUI.Services;
+namespace Communicator.UX.Services;
 
 /// <summary>
 /// Implementation of authentication service that manages user session state.

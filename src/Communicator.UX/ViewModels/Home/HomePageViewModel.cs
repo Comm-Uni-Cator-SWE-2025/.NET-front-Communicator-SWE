@@ -2,11 +2,11 @@
 using System.Globalization;
 using System.Windows.Input;
 using Controller;
-using GUI.ViewModels.Meeting;
+using Communicator.UX.ViewModels.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels.Home;
+namespace Communicator.UX.ViewModels.Home;
 
 /// <summary>
 /// Provides welcome content and meeting shortcuts displayed after authentication.

@@ -5,7 +5,7 @@ using Controller;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Coordinates meeting sub-tabs, maintains an internal navigation stack, and exposes toolbar state to the shell.

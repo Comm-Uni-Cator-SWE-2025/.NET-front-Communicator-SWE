@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Settings;
+namespace Communicator.UX.Views.Settings;
 
 /// <summary>
 /// Hosts application preferences such as theme selection and account details.

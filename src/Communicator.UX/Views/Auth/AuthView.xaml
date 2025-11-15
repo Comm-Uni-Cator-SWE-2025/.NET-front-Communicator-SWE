@@ -1,4 +1,4 @@
-<UserControl x:Class="GUI.Views.Auth.AuthView"
+<UserControl x:Class="Communicator.UX.Views.Auth.AuthView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:Communicator.Core.UX.Converters;assembly=Communicator.Core">

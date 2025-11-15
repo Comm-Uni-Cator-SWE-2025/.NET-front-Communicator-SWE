@@ -1,7 +1,7 @@
 ﻿using Controller;
 using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Describes the screen share tab, holding the current user for access control or display.

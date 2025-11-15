@@ -4,7 +4,7 @@ using Communicator.Core.UX;
 using Communicator.Core.UX.Models;
 using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels.Common;
+namespace Communicator.UX.ViewModels.Common;
 
 /// <summary>
 /// Collects toast messages from <see cref="IToastService"/> and exposes them to the view for rendering.

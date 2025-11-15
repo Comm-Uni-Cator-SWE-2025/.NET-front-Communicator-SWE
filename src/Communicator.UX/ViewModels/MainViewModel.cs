@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Windows.Input;
 using Controller;
-using GUI.Services;
-using GUI.ViewModels.Common;
-using GUI.ViewModels.Home;
-using GUI.ViewModels.Meeting;
-using GUI.ViewModels.Settings;
+using Communicator.UX.Services;
+using Communicator.UX.ViewModels.Common;
+using Communicator.UX.ViewModels.Home;
+using Communicator.UX.ViewModels.Meeting;
+using Communicator.UX.ViewModels.Settings;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels;
+namespace Communicator.UX.ViewModels;
 
 /// <summary>
 /// Shell view model that coordinates authentication, navigation, meeting toolbar state, and toast presentation.
@@ -17,10 +17,10 @@ namespace GUI.ViewModels;
 /// </summary>
 public class MainViewModel : ObservableObject
 {
-    private GUI.ViewModels.Auth.AuthViewModel? _authViewModel;
+    private Communicator.UX.ViewModels.Auth.AuthViewModel? _authViewModel;
     private readonly INavigationService _navigationService;
     private readonly IAuthenticationService _authenticationService;
-    private readonly Func<GUI.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
+    private readonly Func<Communicator.UX.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
     private readonly Func<User, HomePageViewModel> _homePageViewModelFactory;
     private readonly Func<User, SettingsViewModel> _settingsViewModelFactory;
 
@@ -81,7 +81,7 @@ public class MainViewModel : ObservableObject
         INavigationService navigationService,
         IAuthenticationService authenticationService,
         ToastContainerViewModel toastContainerViewModel,
-        Func<GUI.ViewModels.Auth.AuthViewModel> authViewModelFactory,
+        Func<Communicator.UX.ViewModels.Auth.AuthViewModel> authViewModelFactory,
         Func<User, HomePageViewModel> homePageViewModelFactory,
         Func<User, SettingsViewModel> settingsViewModelFactory)
     {
@@ -118,7 +118,7 @@ public class MainViewModel : ObservableObject
     /// Creates the authentication view model and hooks the post-login callback.
     /// Uses injected factory instead of service locator pattern.
     /// </summary>
-    private GUI.ViewModels.Auth.AuthViewModel CreateAuthViewModel()
+    private Communicator.UX.ViewModels.Auth.AuthViewModel CreateAuthViewModel()
     {
         Auth.AuthViewModel authViewModel = _authViewModelFactory();
         authViewModel.LoggedIn += OnLoggedIn;

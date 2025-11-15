@@ -1,7 +1,7 @@
 ﻿using System;
 using Controller;
 
-namespace GUI.Services;
+namespace Communicator.UX.Services;
 
 /// <summary>
 /// Event arguments for user authentication events.

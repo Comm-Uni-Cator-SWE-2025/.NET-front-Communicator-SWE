@@ -8,9 +8,9 @@ using System.Windows.Input;
 using Communicator.Core.UX;
 using Communicator.ScreenShare;
 using Controller;
-using GUI;
-using GUI.Services;
-using GUI.ViewModels.Meeting;
+using Communicator.UX;
+using Communicator.UX.Services;
+using Communicator.UX.ViewModels.Meeting;
 
 namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>

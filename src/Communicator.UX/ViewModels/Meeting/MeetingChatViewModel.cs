@@ -1,7 +1,7 @@
 ﻿using Controller;
 using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Represents the meeting chat pane, exposing metadata about the current user.
