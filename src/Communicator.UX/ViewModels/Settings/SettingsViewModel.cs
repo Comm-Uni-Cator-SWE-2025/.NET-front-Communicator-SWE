@@ -1,9 +1,9 @@
 ﻿using System.Globalization;
 using System.Windows.Input;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Models;
 using Communicator.Core.UX.Services;
-using Controller;
 
 namespace Communicator.UX.ViewModels.Settings;
 
@@ -13,12 +13,12 @@ namespace Communicator.UX.ViewModels.Settings;
 /// </summary>
 public class SettingsViewModel : ObservableObject
 {
-    private readonly User _user;
+    private readonly UserProfile _user;
     private readonly IThemeService _themeService;
 
     // User Information
-    public string DisplayName => _user.DisplayName;
-    public string Email => _user.Email;
+    public string DisplayName => _user.DisplayName ?? "User";
+    public string Email => _user.Email ?? string.Empty;
 
     // Theme Settings
     private bool _isDarkMode;
@@ -40,7 +40,7 @@ public class SettingsViewModel : ObservableObject
 
     public string CurrentThemeText => _isDarkMode ? "Dark" : "Light";
 
-    public SettingsViewModel(User user, IThemeService themeService)
+    public SettingsViewModel(UserProfile user, IThemeService themeService)
     {
         _user = user;
         _themeService = themeService;

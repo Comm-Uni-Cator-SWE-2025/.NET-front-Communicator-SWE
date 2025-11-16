@@ -2,15 +2,12 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Communicator.Controller;
+using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.UX.Services;
-
-// Alias to avoid ambiguity between Controller.User (mock) and Communicator.Controller.Meeting.UserProfile (RPC)
-using MockUser = Controller.User;
-using RpcUserProfile = Communicator.Controller.Meeting.UserProfile;
 
 namespace Communicator.UX.ViewModels.Auth;
 
@@ -39,22 +36,15 @@ public class AuthViewModel : ObservableObject
         set => SetProperty(ref _errorMessage, value);
     }
 
-    private RpcUserProfile? _currentUser;
-    public RpcUserProfile? CurrentUser
+    private UserProfile? _currentUser;
+    public UserProfile? CurrentUser
     {
         get => _currentUser;
         set {
             if (SetProperty(ref _currentUser, value) && value != null)
             {
-                // Convert RpcUserProfile (from Communicator.Controller.Meeting) to MockUser (from Controller)
-                // This maintains compatibility with existing screens that use MockUser
-                MockUser mockUser = new(
-                    id: value.Email ?? "unknown",
-                    username: value.DisplayName ?? "User",
-                    displayName: value.DisplayName ?? "User",
-                    email: value.Email ?? string.Empty
-                );
-                LoggedIn?.Invoke(this, new UserProfileEventArgs(mockUser));
+                // Raise event to notify that user has logged in
+                LoggedIn?.Invoke(this, new UserProfileEventArgs(value));
             }
         }
     }
@@ -93,15 +83,14 @@ public class AuthViewModel : ObservableObject
 
             System.Diagnostics.Debug.WriteLine($"[AuthViewModel] Response data length: {responseData.Length}");
 
-            // Deserialize response to RpcUserProfile
+            // Deserialize response to UserProfile
             // This matches Java: DataSerializer.deserialize(data, UserProfile.class)
-            RpcUserProfile user = DataSerializer.Deserialize<RpcUserProfile>(responseData);
+            UserProfile user = DataSerializer.Deserialize<UserProfile>(responseData);
 
             // Update current user on UI thread
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
                 CurrentUser = user;
                 IsLoading = false;
-                _toastService.ShowSuccess($"Welcome, {user.DisplayName}!");
             });
         }
 #pragma warning disable CA1031 // Do not catch general exception types - UI code should gracefully handle all exceptions
@@ -128,17 +117,15 @@ public class AuthViewModel : ObservableObject
         System.Diagnostics.Debug.WriteLine("[AuthViewModel] Skipping to home with mock user");
 
         // Create a mock user for testing
-        MockUser mockUser = new(
-            id: "test-user-id",
-            username: "TestUser",
+        UserProfile mockUser = new(
+            email: "testuser@iitpkd.ac.in",
             displayName: "Test User (Dev Mode)",
-            email: "testuser@iitpkd.ac.in"
+            role: ParticipantRole.Student,
+            logoUrl: null
         );
 
         // Trigger the LoggedIn event to navigate to home screen
         LoggedIn?.Invoke(this, new UserProfileEventArgs(mockUser));
-
-        _toastService.ShowInfo("Logged in with test user (Dev Mode)");
     }
 
     /// <summary>

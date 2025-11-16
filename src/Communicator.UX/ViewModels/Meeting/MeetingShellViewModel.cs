@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
-using Controller;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
@@ -14,7 +14,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
-    private readonly User _user;
+    private readonly UserProfile _user;
     private readonly Stack<MeetingTabViewModel> _backStack = new();
     private readonly Stack<MeetingTabViewModel> _forwardStack = new();
     private MeetingTabViewModel? _currentTab;
@@ -39,7 +39,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// Builds meeting tabs for the supplied user and initializes navigation state.
     /// Services are now injected via constructor for better testability.
     /// </summary>
-    public MeetingShellViewModel(User user, IToastService toastService)
+    public MeetingShellViewModel(UserProfile user, IToastService toastService)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
@@ -93,7 +93,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// <summary>
     /// Creates the default set of meeting tabs for the logged-in user.
     /// </summary>
-    private static IEnumerable<MeetingTabViewModel> CreateTabs(User user)
+    private static IEnumerable<MeetingTabViewModel> CreateTabs(UserProfile user)
     {
         yield return new MeetingTabViewModel("AI Insights", new AIInsightsViewModel(user));
         yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));
@@ -221,13 +221,11 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     private void ToggleMute()
     {
         IsMuted = !IsMuted;
-        _toastService.ShowInfo(IsMuted ? "Microphone muted." : "Microphone unmuted.");
     }
 
     private void ToggleCamera()
     {
         IsCameraOn = !IsCameraOn;
-        _toastService.ShowInfo(IsCameraOn ? "Camera enabled." : "Camera disabled.");
     }
 
     private void ToggleHandRaised()
@@ -238,20 +236,17 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         {
             // Open the quick doubt bubble
             IsQuickDoubtBubbleOpen = true;
-            _toastService.ShowInfo("Hand raised. Type your quick doubt below.");
         }
         else
         {
             // Close the bubble and clear any doubt data
             ClearQuickDoubt();
-            _toastService.ShowInfo("Hand lowered.");
         }
     }
 
     private void ToggleScreenShare()
     {
         IsScreenSharing = !IsScreenSharing;
-        _toastService.ShowInfo(IsScreenSharing ? "Screen sharing on." : "Screen sharing off.");
     }
 
     private bool CanSendQuickDoubt()
@@ -271,7 +266,6 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         QuickDoubtTimestamp = DateTime.Now;
 
         // Simulate broadcasting to all participants
-        _toastService.ShowSuccess($"Quick Doubt sent: \"{QuickDoubtSentMessage}\"");
         
         // In real implementation, this would call:
         // await _meetingService.BroadcastQuickDoubtAsync(QuickDoubtSentMessage);
@@ -309,11 +303,10 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         else
         {
             // Open chat panel with the current user
-            var chatViewModel = new MeetingChatViewModel(_user);
+            var chatViewModel = new ChatViewModel(_user, _toastService);
 
             SidePanelContent = chatViewModel;
             IsSidePanelOpen = true;
-            _toastService.ShowInfo("Chat panel opened.");
         }
     }
 
@@ -324,7 +317,6 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     {
         IsSidePanelOpen = false;
         SidePanelContent = null;
-        _toastService.ShowInfo("Side panel closed.");
     }
 
     /// <summary>

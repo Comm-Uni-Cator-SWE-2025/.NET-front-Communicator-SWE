@@ -1,5 +1,5 @@
 ﻿using System;
-using Controller;
+using Communicator.Controller.Meeting;
 
 namespace Communicator.UX.Services;
 
@@ -8,9 +8,9 @@ namespace Communicator.UX.Services;
 /// </summary>
 public class UserProfileEventArgs : EventArgs
 {
-    public User User { get; }
+    public UserProfile User { get; }
 
-    public UserProfileEventArgs(User user)
+    public UserProfileEventArgs(UserProfile user)
     {
         User = user;
     }
@@ -35,7 +35,7 @@ public interface IAuthenticationService
     /// <summary>
     /// The currently authenticated user, or null if not logged in.
     /// </summary>
-    User? CurrentUser { get; }
+    UserProfile? CurrentUser { get; }
 
     /// <summary>
     /// Indicates whether a user is currently authenticated.
@@ -45,7 +45,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Completes the authentication process with the provided user profile.
     /// </summary>
-    void CompleteLogin(User user);
+    void CompleteLogin(UserProfile user);
 
     /// <summary>
     /// Clears the current user session.
