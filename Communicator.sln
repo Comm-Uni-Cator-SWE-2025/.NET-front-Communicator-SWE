@@ -11,11 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.Controller", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.UX", "src\Communicator.UX\Communicator.UX.csproj", "{EF832D28-D534-4140-B6D5-96202A69766A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasApp.DataModel", "src\module-canvas\DataModel\CanvasApp.DataModel.csproj", "{1E2E261E-813B-4D98-B1A1-986D465675E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Canvas.DataModel", "src\module-canvas\DataModel\Canvas.DataModel.csproj", "{1E2E261E-813B-4D98-B1A1-986D465675E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasApp.ViewModel", "src\module-canvas\ViewModel\CanvasApp.ViewModel.csproj", "{7BF62479-276F-450E-A86D-890E0293FA49}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Canvas.ViewModel", "src\module-canvas\ViewModel\Canvas.ViewModel.csproj", "{7BF62479-276F-450E-A86D-890E0293FA49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasApp.Gui", "src\module-canvas\Gui\CanvasApp.Gui.csproj", "{A79BC038-4D35-4E66-AA21-245E9B9F2715}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Canvas.Gui", "src\module-canvas\Gui\Canvas.Gui.csproj", "{A79BC038-4D35-4E66-AA21-245E9B9F2715}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.Canvas.Tests", "tests\Communicator.Canvas.Tests\Communicator.Canvas.Tests.csproj", "{4CA2F7C2-7E25-47A5-93CE-F642363E7459}"
 EndProject
@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.Controller.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.UX.Tests", "tests\Communicator.UX.Tests\Communicator.UX.Tests.csproj", "{E2AF82A3-23DF-43CB-8332-4B8CCAA18E6A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasApp.Services", "src\module-canvas\Services\CanvasApp.Services.csproj", "{606DFADB-5C7C-4761-95F9-7F703FDC170F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Canvas.Services", "src\module-canvas\Services\Canvas.Services.csproj", "{606DFADB-5C7C-4761-95F9-7F703FDC170F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,19 +1,16 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq; // --- ADDED ---
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Xml.Linq;
-using CanvasApp.DataModel;
-using CanvasApp.ViewModel;
-using static CanvasApp.ViewModel.CanvasViewModel;
+using Canvas.DataModel;
+using Canvas.ViewModel;
+using static Canvas.ViewModel.CanvasViewModel;
 using Drawing = System.Drawing; // Alias to avoid conflict with System.Windows.Shapes
 
-namespace CanvasApp.Gui;
+namespace Canvas.Gui;
 
 public partial class MainWindow : Window
 {
@@ -245,7 +242,7 @@ public partial class MainWindow : Window
     {
         if (sender is Button colorButton && colorButton.Background is SolidColorBrush brush)
         {
-            System.Windows.Media.Color wpfColor = brush.Color;
+            Color wpfColor = brush.Color;
             Drawing.Color modelColor = Drawing.Color.FromArgb(wpfColor.A, wpfColor.R, wpfColor.G, wpfColor.B);
 
             // Set the color in the VM, which triggers the modification logic
@@ -267,7 +264,7 @@ public partial class MainWindow : Window
     private void UpdateCurrentColorUI()
     {
         Drawing.Color modelColor = _vm.CurrentColor;
-        var wpfColor = System.Windows.Media.Color.FromArgb(modelColor.A, modelColor.R, modelColor.G, modelColor.B);
+        var wpfColor = Color.FromArgb(modelColor.A, modelColor.R, modelColor.G, modelColor.B);
         CurrentColorBorder.Background = new SolidColorBrush(wpfColor);
     }
     // --- ADDED ---
@@ -336,24 +333,24 @@ public partial class MainWindow : Window
     private void UpdateToolButtons()
     {
         // Reset all
-        BtnSelect.ClearValue(Button.BackgroundProperty); // ADDED
-        BtnSelect.ClearValue(Button.BorderBrushProperty); // ADDED
-        BtnFreehand.ClearValue(Button.BackgroundProperty);
-        BtnFreehand.ClearValue(Button.BorderBrushProperty);
-        BtnLine.ClearValue(Button.BackgroundProperty);
-        BtnLine.ClearValue(Button.BorderBrushProperty);
-        BtnRectangle.ClearValue(Button.BackgroundProperty);
-        BtnRectangle.ClearValue(Button.BorderBrushProperty);
-        BtnEllipse.ClearValue(Button.BackgroundProperty);
-        BtnEllipse.ClearValue(Button.BorderBrushProperty);
-        BtnTriangle.ClearValue(Button.BackgroundProperty);
-        BtnTriangle.ClearValue(Button.BorderBrushProperty);
-        BtnUndo.ClearValue(Button.BackgroundProperty);
-        BtnUndo.ClearValue(Button.BorderBrushProperty);
-        BtnRedo.ClearValue(Button.BackgroundProperty);
-        BtnRedo.ClearValue(Button.BorderBrushProperty);
-        BtnRegularize?.ClearValue(Button.BackgroundProperty);
-        BtnRegularize?.ClearValue(Button.BorderBrushProperty);
+        BtnSelect.ClearValue(BackgroundProperty); // ADDED
+        BtnSelect.ClearValue(BorderBrushProperty); // ADDED
+        BtnFreehand.ClearValue(BackgroundProperty);
+        BtnFreehand.ClearValue(BorderBrushProperty);
+        BtnLine.ClearValue(BackgroundProperty);
+        BtnLine.ClearValue(BorderBrushProperty);
+        BtnRectangle.ClearValue(BackgroundProperty);
+        BtnRectangle.ClearValue(BorderBrushProperty);
+        BtnEllipse.ClearValue(BackgroundProperty);
+        BtnEllipse.ClearValue(BorderBrushProperty);
+        BtnTriangle.ClearValue(BackgroundProperty);
+        BtnTriangle.ClearValue(BorderBrushProperty);
+        BtnUndo.ClearValue(BackgroundProperty);
+        BtnUndo.ClearValue(BorderBrushProperty);
+        BtnRedo.ClearValue(BackgroundProperty);
+        BtnRedo.ClearValue(BorderBrushProperty);
+        BtnRegularize?.ClearValue(BackgroundProperty);
+        BtnRegularize?.ClearValue(BorderBrushProperty);
 
         Brush? selectedBrush = null;
         Brush? selectedBorder = null;
@@ -366,7 +363,7 @@ public partial class MainWindow : Window
             selectedBrush = Brushes.LightSteelBlue;
         }
 
-        selectedBorder = new SolidColorBrush(System.Windows.Media.Color.FromRgb(111, 166, 214)); // #6FA6D6
+        selectedBorder = new SolidColorBrush(Color.FromRgb(111, 166, 214)); // #6FA6D6
 
         // --- MODIFIED ---
         switch (_vm.CurrentMode)

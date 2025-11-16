@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataModel\CanvasApp.DataModel.csproj" />
+    <ProjectReference Include="..\DataModel\Canvas.DataModel.csproj" />
+    <ProjectReference Include="..\Services\Canvas.Services.csproj" />
   </ItemGroup>
 
 </Project>

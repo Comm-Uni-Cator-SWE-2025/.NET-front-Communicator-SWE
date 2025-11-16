@@ -1,23 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing;
-using System.Diagnostics;
-using System.Text.Json;
-using System.Linq;
+﻿using System.Drawing;
 
-using CanvasApp.DataModel;
-using CanvasApp.Services;
+using Canvas.DataModel;
+using Canvas.Services;
 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 
 
-namespace CanvasApp.ViewModel;
+namespace Canvas.ViewModel;
 
 public class CanvasViewModel : INotifyPropertyChanged
 {

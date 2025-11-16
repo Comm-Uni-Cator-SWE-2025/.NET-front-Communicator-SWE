@@ -1,27 +1,22 @@
-﻿using System.Collections.ObjectModel;
-using System.Drawing;
-using System.Windows.Controls;
-using System.Windows.Ink;
-using System.Windows.Media;
-using System.Windows.Shapes;
-namespace CanvasApp.DataModel;
+﻿namespace Canvas.DataModel;
 
 using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Linq; // Add this
 using System; // Add this
+
 using Drawing = System.Drawing;
+using BaseCanvas = System.Windows.Controls.Canvas;
+
 public static class ShapeRenderer
 {
-    private static SolidColorBrush ToWpfBrush(System.Drawing.Color color)
+    private static SolidColorBrush ToWpfBrush(Drawing.Color color)
     {
-        var wpfColor = System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B);
+        var wpfColor = Color.FromArgb(color.A, color.R, color.G, color.B);
         return new SolidColorBrush(wpfColor);
     }
 
-    public static UIElement? Render(Canvas canvas, IShape shape)
+    public static UIElement? Render(BaseCanvas canvas, IShape shape)
     {
         switch (shape.Type)
         {
@@ -43,7 +38,7 @@ public static class ShapeRenderer
         return null; // Add default return
     }
 
-    private static UIElement RenderStraightLine(Canvas canvas, StraightLine line)
+    private static UIElement RenderStraightLine(BaseCanvas canvas, StraightLine line)
     {
         Line uiLine = new Line {
             X1 = line.Points[0].X,
@@ -56,7 +51,7 @@ public static class ShapeRenderer
         canvas.Children.Add(uiLine);
         return uiLine;
     }
-    private static UIElement RenderFreeHand(Canvas canvas, FreeHand freeHand)
+    private static UIElement RenderFreeHand(BaseCanvas canvas, FreeHand freeHand)
     {
         if (freeHand.Points.Count < 2)
         {
@@ -67,9 +62,9 @@ public static class ShapeRenderer
 
         PointCollection wpfPoints = new PointCollection();
 
-        foreach (System.Drawing.Point point in freeHand.Points)
+        foreach (Drawing.Point point in freeHand.Points)
         {
-            wpfPoints.Add(new System.Windows.Point(point.X, point.Y));
+            wpfPoints.Add(new Point(point.X, point.Y));
         }
 
         Polyline polyline = new Polyline {
@@ -86,13 +81,13 @@ public static class ShapeRenderer
         canvas.Children.Add(polyline);
         return polyline;
     }
-    private static UIElement RenderRectangle(Canvas canvas, RectangleShape rectangle)
+    private static UIElement RenderRectangle(BaseCanvas canvas, RectangleShape rectangle)
     {
-        System.Drawing.Point topLeftPoint = rectangle.Points[0];
-        System.Drawing.Point bottomRightPoint = rectangle.Points[1];
+        Drawing.Point topLeftPoint = rectangle.Points[0];
+        Drawing.Point bottomRightPoint = rectangle.Points[1];
 
-        var topLeft = new System.Windows.Point(topLeftPoint.X, topLeftPoint.Y);
-        var bottomRight = new System.Windows.Point(bottomRightPoint.X, bottomRightPoint.Y);
+        var topLeft = new Point(topLeftPoint.X, topLeftPoint.Y);
+        var bottomRight = new Point(bottomRightPoint.X, bottomRightPoint.Y);
 
         double x = Math.Min(topLeft.X, bottomRight.X);
         double y = Math.Min(topLeft.Y, bottomRight.Y);
@@ -106,16 +101,16 @@ public static class ShapeRenderer
             StrokeThickness = rectangle.Thickness
         };
 
-        Canvas.SetLeft(uiRectangle, x);
-        Canvas.SetTop(uiRectangle, y);
+        BaseCanvas.SetLeft(uiRectangle, x);
+        BaseCanvas.SetTop(uiRectangle, y);
 
         canvas.Children.Add(uiRectangle);
         return uiRectangle;
     }
-    public static UIElement RenderEllipse(Canvas canvas, EllipseShape ellipse)
+    public static UIElement RenderEllipse(BaseCanvas canvas, EllipseShape ellipse)
     {
-        System.Drawing.Point topLeft = ellipse.Points[0];
-        System.Drawing.Point bottomRight = ellipse.Points[1];
+        Drawing.Point topLeft = ellipse.Points[0];
+        Drawing.Point bottomRight = ellipse.Points[1];
 
         double x = Math.Min(topLeft.X, bottomRight.X);
         double y = Math.Min(topLeft.Y, bottomRight.Y);
@@ -129,20 +124,20 @@ public static class ShapeRenderer
             StrokeThickness = ellipse.Thickness
         };
 
-        Canvas.SetLeft(uiEllipse, x);
-        Canvas.SetTop(uiEllipse, y);
+        BaseCanvas.SetLeft(uiEllipse, x);
+        BaseCanvas.SetTop(uiEllipse, y);
 
         canvas.Children.Add(uiEllipse);
         return uiEllipse;
     }
-    public static UIElement RenderTriangle(Canvas canvas, TriangleShape triangle)
+    public static UIElement RenderTriangle(BaseCanvas canvas, TriangleShape triangle)
     {
-        System.Drawing.Point p1 = triangle.Points[0]; // Start point (e.g., top-left)
-        System.Drawing.Point p2 = triangle.Points[1]; // End point (e.g., bottom-right)
+        Drawing.Point p1 = triangle.Points[0]; // Start point (e.g., top-left)
+        Drawing.Point p2 = triangle.Points[1]; // End point (e.g., bottom-right)
 
-        System.Windows.Point vertex1 = new System.Windows.Point(p1.X, p2.Y);
-        System.Windows.Point vertex2 = new System.Windows.Point((p1.X + p2.X) / 2, p1.Y);
-        System.Windows.Point vertex3 = new System.Windows.Point(p2.X, p2.Y);
+        Point vertex1 = new Point(p1.X, p2.Y);
+        Point vertex2 = new Point((p1.X + p2.X) / 2, p1.Y);
+        Point vertex3 = new Point(p2.X, p2.Y);
 
         PointCollection wpfPoints = new PointCollection
         {
@@ -164,7 +159,7 @@ public static class ShapeRenderer
 
     }
     // --- MODIFIED ---
-    public static void RenderAll(Canvas canvas, IEnumerable<IShape> shapes)
+    public static void RenderAll(BaseCanvas canvas, IEnumerable<IShape> shapes)
     {
         canvas.Children.Clear();
         foreach (IShape shape in shapes) { Render(canvas, shape); }
@@ -181,8 +176,8 @@ public static class ShapeRenderer
             StrokeDashArray = new DoubleCollection { 4, 2 }
         };
 
-        Canvas.SetLeft(selectionBox, bounds.Left - 2); // Adjust for padding
-        Canvas.SetTop(selectionBox, bounds.Top - 2);   // Adjust for padding
+        BaseCanvas.SetLeft(selectionBox, bounds.Left - 2); // Adjust for padding
+        BaseCanvas.SetTop(selectionBox, bounds.Top - 2);   // Adjust for padding
 
         return selectionBox;
     }

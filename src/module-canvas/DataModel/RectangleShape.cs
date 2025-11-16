@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+﻿using System.Drawing;
 
-namespace CanvasApp.DataModel;
+namespace Canvas.DataModel;
 
 public class RectangleShape : IShape
 {

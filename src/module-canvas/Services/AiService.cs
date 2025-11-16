@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+﻿using System.Drawing;
 
-namespace CanvasApp.Services;
+namespace Canvas.Services;
 
-using CanvasApp.DataModel;
+using Canvas.DataModel;
 
 /// <summary>
 /// Helper "tool" that mirrors the selection behavior (finding the top-most shape at a point)

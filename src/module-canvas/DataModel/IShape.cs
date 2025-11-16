@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace CanvasApp.DataModel;
+namespace Canvas.DataModel;
 
 public interface IShape
 {
