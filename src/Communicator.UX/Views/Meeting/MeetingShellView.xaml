@@ -133,8 +133,151 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Toggle Hand -->
-                <Button Command="{Binding ToggleHandCommand}"
+                <!-- Toggle Hand with Quick Doubt Bubble -->
+                <Grid x:Name="RaiseHandButtonContainer">
+                    <!-- Quick Doubt Bubble - positioned above the button -->
+                    <Popup IsOpen="{Binding IsQuickDoubtBubbleOpen, Mode=OneWay}"
+                           PlacementTarget="{Binding ElementName=RaiseHandButton}"
+                           Placement="Top"
+                           AllowsTransparency="True"
+                           StaysOpen="True"
+                           HorizontalOffset="0"
+                           VerticalOffset="-20">
+                        <Border x:Name="BubbleBorder"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="2"
+                                CornerRadius="12"
+                                Padding="16"
+                                MinWidth="320"
+                                MaxWidth="400"
+                                RenderTransformOrigin="0.5,1">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" 
+                                                  Opacity="0.3" 
+                                                  BlurRadius="20" 
+                                                  ShadowDepth="4"/>
+                            </Border.Effect>
+                            <Border.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!-- Scale animation -->
+                                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             From="0.8" To="1" Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             From="0.8" To="1" Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <!-- Opacity animation -->
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             From="0" To="1" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Border.Triggers>
+                            
+                            <StackPanel>
+                                <!-- Header -->
+                                <TextBlock Text="Quick Doubt"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,8"/>
+                                
+                                <!-- Show sent message if exists -->
+                                <Border Background="{DynamicResource HoverOverlayBrush}"
+                                        CornerRadius="8"
+                                        Padding="12,8"
+                                        Margin="0,0,0,8"
+                                        Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <TextBlock Text="✓ Sent to everyone:"
+                                                   FontSize="11"
+                                                   Opacity="0.7"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding QuickDoubtSentMessage}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Opacity="0.6"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="0,4,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0:hh:mm:ss tt}">
+                                                    <Binding Path="QuickDoubtTimestamp"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Input TextBox -->
+                                <TextBox Text="{Binding QuickDoubtMessage, UpdateSourceTrigger=PropertyChanged}"
+                                         x:Name="QuickDoubtTextBox"
+                                         MinHeight="60"
+                                         MaxHeight="120"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="False"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Padding="8"
+                                         FontSize="13"
+                                         Margin="0,0,0,8"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         CaretBrush="{DynamicResource TextPrimaryBrush}">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="TextBox">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="6">
+                                                            <ScrollViewer x:Name="PART_ContentHost"
+                                                                          Margin="{TemplateBinding Padding}"
+                                                                          VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsFocused" Value="True">
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                
+                                <!-- Hint Text -->
+                                <TextBlock Text="Press Enter to send to everyone"
+                                           FontSize="11"
+                                           Opacity="0.7"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                    
+                    <!-- Raise Hand Button -->
+                <Button x:Name="RaiseHandButton"
+                        Command="{Binding ToggleHandCommand}"
                         ToolTip="Raise hand"
             Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -158,6 +301,7 @@
                                    Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     </StackPanel>
                 </Button>
+                </Grid>
 
                 <!-- Toggle Screen Share -->
                 <Button Command="{Binding ToggleScreenShareCommand}"

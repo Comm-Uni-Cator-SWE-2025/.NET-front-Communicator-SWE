@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Communicator.UX.Views.Meeting;
 
@@ -20,6 +21,28 @@ public partial class MeetingShellView : UserControl
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        
+        // Wire up Enter key handler for Quick Doubt TextBox
+        if (FindName("QuickDoubtTextBox") is TextBox quickDoubtTextBox)
+        {
+            quickDoubtTextBox.PreviewKeyDown += QuickDoubtTextBox_PreviewKeyDown;
+        }
+    }
+
+    private void QuickDoubtTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            e.Handled = true; // Prevent new line
+            
+            if (DataContext is ViewModels.Meeting.MeetingShellViewModel viewModel)
+            {
+                if (viewModel.SendQuickDoubtCommand.CanExecute(null))
+                {
+                    viewModel.SendQuickDoubtCommand.Execute(null);
+                }
+            }
+        }
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -37,7 +60,7 @@ public partial class MeetingShellView : UserControl
             if (DataContext is ViewModels.Meeting.MeetingShellViewModel viewModel)
             {
                 ColumnDefinition columnDefinition = ((Grid)Content).ColumnDefinitions[2];
-                
+
                 if (viewModel.IsSidePanelOpen)
                 {
                     // Open: Set to previous width or default
