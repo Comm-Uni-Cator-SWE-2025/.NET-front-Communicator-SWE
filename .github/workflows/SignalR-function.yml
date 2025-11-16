@@ -5,6 +5,7 @@ on:
     - main
     paths:
       - "src/Communicator.Cloud.SignalR/**"
+      - "tests/Communicator.Cloud.SignalR.Tests/**"
       - ".github/workflows/SignalR-function.yml"
 env:
   AZURE_FUNCTIONAPP_NAME: SignalR-function
