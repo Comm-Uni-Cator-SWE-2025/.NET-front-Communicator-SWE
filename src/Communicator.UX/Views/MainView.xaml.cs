@@ -5,13 +5,13 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
-using GUI.ViewModels;
-using GUI.ViewModels.Common;
+using Communicator.UX.ViewModels;
+using Communicator.UX.ViewModels.Common;
 using Microsoft.Extensions.DependencyInjection;
-using UX.Core.Models;
-using UX.Core.Services;
+using Communicator.Core.UX.Models;
+using Communicator.Core.UX.Services;
 
-namespace GUI.Views;
+namespace Communicator.UX.Views;
 
 /// <summary>
 /// Primary application window that hosts navigation, toast notifications, and custom chrome behaviors.
@@ -65,11 +65,11 @@ public partial class MainView : Window
     /// <summary>
     /// Renders toast notifications and tracks their lifetime within the visual tree.
     /// </summary>
-    private void OnToastRequested(ToastMessage toast)
+    private void OnToastRequested(object? sender, ToastRequestedEventArgs e)
     {
         Dispatcher.Invoke(() => {
             var toastNotification = new ToastNotification();
-            toastNotification.SetToast(toast);
+            toastNotification.SetToast(e.Message);
             toastNotification.CloseRequested += (s, args) => {
                 ToastContainer.Items.Remove(toastNotification);
             };

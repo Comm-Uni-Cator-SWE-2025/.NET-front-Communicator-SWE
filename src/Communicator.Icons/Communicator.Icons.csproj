@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>Communicator.Icons.DemoApp</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Fonts\tabler-icons.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference files (not included in build) -->
+    <None Include="Assets\Fonts\tabler-icons.css" />
+  </ItemGroup>
+
+</Project>

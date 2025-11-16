@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Home;
+namespace Communicator.UX.Views.Home;
 
 /// <summary>
 /// Landing page shown after authentication, presenting meeting shortcuts and user context.

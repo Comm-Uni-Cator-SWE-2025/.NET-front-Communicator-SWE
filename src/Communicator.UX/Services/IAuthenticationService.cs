@@ -1,18 +1,18 @@
 ﻿using System;
 using Controller;
 
-namespace GUI.Services;
+namespace Communicator.UX.Services;
 
 /// <summary>
 /// Event arguments for user authentication events.
 /// </summary>
 public class UserProfileEventArgs : EventArgs
 {
-    public UserProfile UserProfile { get; }
+    public User User { get; }
 
-    public UserProfileEventArgs(UserProfile userProfile)
+    public UserProfileEventArgs(User user)
     {
-        UserProfile = userProfile;
+        User = user;
     }
 }
 
@@ -35,7 +35,7 @@ public interface IAuthenticationService
     /// <summary>
     /// The currently authenticated user, or null if not logged in.
     /// </summary>
-    UserProfile? CurrentUser { get; }
+    User? CurrentUser { get; }
 
     /// <summary>
     /// Indicates whether a user is currently authenticated.
@@ -45,7 +45,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Completes the authentication process with the provided user profile.
     /// </summary>
-    void CompleteLogin(UserProfile user);
+    void CompleteLogin(User user);
 
     /// <summary>
     /// Clears the current user session.

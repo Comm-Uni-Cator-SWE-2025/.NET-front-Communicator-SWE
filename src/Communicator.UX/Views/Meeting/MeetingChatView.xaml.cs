@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Meeting;
+namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Displays meeting chat content within the meeting workspace.

@@ -1,7 +1,7 @@
 ﻿using Controller;
-using UX.Core;
+using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Supplies summary data for the dashboard tab within the meeting experience.
@@ -11,13 +11,13 @@ public class MeetingDashboardViewModel : ObservableObject
     /// <summary>
     /// Captures the active user for personalization within the dashboard.
     /// </summary>
-    public MeetingDashboardViewModel(UserProfile user)
+    public MeetingDashboardViewModel(User user)
     {
         Title = "Dashboard";
         CurrentUser = user;
     }
 
     public string Title { get; }
-    public UserProfile CurrentUser { get; }
+    public User CurrentUser { get; }
 }
 

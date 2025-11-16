@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Meeting;
+namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Provides a collaborative whiteboard surface for meeting participants.

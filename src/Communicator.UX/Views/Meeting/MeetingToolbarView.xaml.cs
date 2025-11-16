@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Meeting;
+namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Renders the tab strip and navigation controls for meeting-related pages.

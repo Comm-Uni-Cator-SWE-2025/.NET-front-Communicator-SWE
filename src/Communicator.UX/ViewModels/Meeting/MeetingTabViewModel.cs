@@ -1,6 +1,6 @@
-﻿using UX.Core;
+﻿using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Simple holder for a meeting tab header and its corresponding page view model.

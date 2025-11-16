@@ -1,7 +1,7 @@
 ﻿using Controller;
-using UX.Core;
+using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Represents the meeting chat pane, exposing metadata about the current user.
@@ -11,13 +11,13 @@ public class MeetingChatViewModel : ObservableObject
     /// <summary>
     /// Initializes the chat view model with the active user context.
     /// </summary>
-    public MeetingChatViewModel(UserProfile user)
+    public MeetingChatViewModel(User user)
     {
         Title = "Chat";
         CurrentUser = user;
     }
 
     public string Title { get; }
-    public UserProfile CurrentUser { get; }
+    public User CurrentUser { get; }
 }
 

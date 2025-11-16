@@ -1,7 +1,7 @@
 ﻿using Controller;
-using UX.Core;
+using Communicator.Core.UX;
 
-namespace GUI.ViewModels.Meeting;
+namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Represents the primary meeting session surface, exposing the current user context.
@@ -11,13 +11,13 @@ public class VideoSessionViewModel : ObservableObject
     /// <summary>
     /// Initializes the session view model with the supplied user context.
     /// </summary>
-    public VideoSessionViewModel(UserProfile user)
+    public VideoSessionViewModel(User user)
     {
         Title = "Meeting";
         CurrentUser = user;
     }
 
     public string Title { get; }
-    public UserProfile CurrentUser { get; }
+    public User CurrentUser { get; }
 }
 

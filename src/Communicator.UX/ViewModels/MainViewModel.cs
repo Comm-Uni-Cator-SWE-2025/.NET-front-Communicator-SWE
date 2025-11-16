@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Windows.Input;
 using Controller;
-using GUI.Services;
-using GUI.ViewModels.Common;
-using GUI.ViewModels.Home;
-using GUI.ViewModels.Meeting;
-using GUI.ViewModels.Settings;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.UX.Services;
+using Communicator.UX.ViewModels.Common;
+using Communicator.UX.ViewModels.Home;
+using Communicator.UX.ViewModels.Meeting;
+using Communicator.UX.ViewModels.Settings;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels;
+namespace Communicator.UX.ViewModels;
 
 /// <summary>
 /// Shell view model that coordinates authentication, navigation, meeting toolbar state, and toast presentation.
@@ -17,12 +17,12 @@ namespace GUI.ViewModels;
 /// </summary>
 public class MainViewModel : ObservableObject
 {
-    private GUI.ViewModels.Auth.AuthViewModel? _authViewModel;
+    private Communicator.UX.ViewModels.Auth.AuthViewModel? _authViewModel;
     private readonly INavigationService _navigationService;
     private readonly IAuthenticationService _authenticationService;
-    private readonly Func<GUI.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
-    private readonly Func<UserProfile, HomePageViewModel> _homePageViewModelFactory;
-    private readonly Func<UserProfile, SettingsViewModel> _settingsViewModelFactory;
+    private readonly Func<Communicator.UX.ViewModels.Auth.AuthViewModel> _authViewModelFactory;
+    private readonly Func<User, HomePageViewModel> _homePageViewModelFactory;
+    private readonly Func<User, SettingsViewModel> _settingsViewModelFactory;
 
     // Simplified: IsLoggedIn now comes from AuthenticationService
     public bool IsLoggedIn => _authenticationService.IsAuthenticated;
@@ -81,9 +81,9 @@ public class MainViewModel : ObservableObject
         INavigationService navigationService,
         IAuthenticationService authenticationService,
         ToastContainerViewModel toastContainerViewModel,
-        Func<GUI.ViewModels.Auth.AuthViewModel> authViewModelFactory,
-        Func<UserProfile, HomePageViewModel> homePageViewModelFactory,
-        Func<UserProfile, SettingsViewModel> settingsViewModelFactory)
+        Func<Communicator.UX.ViewModels.Auth.AuthViewModel> authViewModelFactory,
+        Func<User, HomePageViewModel> homePageViewModelFactory,
+        Func<User, SettingsViewModel> settingsViewModelFactory)
     {
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
@@ -118,7 +118,7 @@ public class MainViewModel : ObservableObject
     /// Creates the authentication view model and hooks the post-login callback.
     /// Uses injected factory instead of service locator pattern.
     /// </summary>
-    private GUI.ViewModels.Auth.AuthViewModel CreateAuthViewModel()
+    private Communicator.UX.ViewModels.Auth.AuthViewModel CreateAuthViewModel()
     {
         Auth.AuthViewModel authViewModel = _authViewModelFactory();
         authViewModel.LoggedIn += OnLoggedIn;
@@ -137,7 +137,7 @@ public class MainViewModel : ObservableObject
         }
 
         // Complete login via authentication service
-        _authenticationService.CompleteLogin(e.UserProfile);
+        _authenticationService.CompleteLogin(e.User);
 
         // Notify UI that user properties changed
         OnPropertyChanged(nameof(IsLoggedIn));
@@ -146,7 +146,7 @@ public class MainViewModel : ObservableObject
 
         // Clear navigation history and navigate to home
         _navigationService.ClearHistory();
-        _navigationService.NavigateTo(_homePageViewModelFactory(e.UserProfile));
+        _navigationService.NavigateTo(_homePageViewModelFactory(e.User));
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class MainViewModel : ObservableObject
     /// </summary>
     private void NavigateToSettings(object? obj)
     {
-        UserProfile? currentUser = _authenticationService.CurrentUser;
+        User? currentUser = _authenticationService.CurrentUser;
         if (currentUser != null)
         {
             _navigationService.NavigateTo(_settingsViewModelFactory(currentUser));

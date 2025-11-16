@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Meeting;
+namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Presents shared screen content within the meeting workflow.

@@ -2,14 +2,14 @@
 using System.Windows;
 using System.Windows.Threading;
 using Controller;
-using GUI.Services;
-using GUI.ViewModels;
-using GUI.Views;
+using Communicator.UX.Services;
+using Communicator.UX.ViewModels;
+using Communicator.UX.Views;
 using Microsoft.Extensions.DependencyInjection;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
-namespace GUI;
+namespace Communicator.UX;
 
 public partial class App : Application
 {
@@ -49,10 +49,10 @@ public partial class App : Application
     /// </summary>
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Register UX.Core services (Toast, Theme)
+        // Register Communicator.Core.UX services (Toast, Theme)
         services.AddUXCoreServices();
 
-        // Register GUI-specific services
+        // Register Communicator.UX services
         services.AddSingleton<INavigationService, Services.NavigationService>();
         services.AddSingleton<IAuthenticationService, Services.AuthenticationService>();
 
@@ -61,29 +61,29 @@ public partial class App : Application
 
         // Register ViewModels
         services.AddTransient<MainViewModel>();
-        services.AddTransient<GUI.ViewModels.Auth.AuthViewModel>();
-        services.AddTransient<GUI.ViewModels.Home.HomePageViewModel>();
-        services.AddTransient<GUI.ViewModels.Settings.SettingsViewModel>();
-        services.AddTransient<GUI.ViewModels.Meeting.MeetingShellViewModel>();
+        services.AddTransient<Communicator.UX.ViewModels.Auth.AuthViewModel>();
+        services.AddTransient<Communicator.UX.ViewModels.Home.HomePageViewModel>();
+        services.AddTransient<Communicator.UX.ViewModels.Settings.SettingsViewModel>();
+        services.AddTransient<Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>();
 
         // Register ToastContainerViewModel as Singleton (single toast container for app)
-        services.AddSingleton<GUI.ViewModels.Common.ToastContainerViewModel>();
+        services.AddSingleton<Communicator.UX.ViewModels.Common.ToastContainerViewModel>();
 
         // Register ViewModel Factories
         // Factory for creating AuthViewModel instances (used in MainViewModel)
-        services.AddTransient<Func<GUI.ViewModels.Auth.AuthViewModel>>(sp =>
-            () => sp.GetRequiredService<GUI.ViewModels.Auth.AuthViewModel>());
+        services.AddTransient<Func<Communicator.UX.ViewModels.Auth.AuthViewModel>>(sp =>
+            () => sp.GetRequiredService<Communicator.UX.ViewModels.Auth.AuthViewModel>());
 
-        // Factory for creating ViewModels with UserProfile parameter
+        // Factory for creating ViewModels with User parameter
         // Using ActivatorUtilities.CreateInstance for automatic dependency resolution
-        services.AddTransient<Func<UserProfile, GUI.ViewModels.Home.HomePageViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Home.HomePageViewModel>(sp, user));
+        services.AddTransient<Func<User, Communicator.UX.ViewModels.Home.HomePageViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Home.HomePageViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, GUI.ViewModels.Settings.SettingsViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Settings.SettingsViewModel>(sp, user));
+        services.AddTransient<Func<User, Communicator.UX.ViewModels.Settings.SettingsViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, GUI.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<GUI.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
+        services.AddTransient<Func<User, Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

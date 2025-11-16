@@ -3,9 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using UX.Core.Models;
+using Communicator.Core.UX.Models;
 
-namespace GUI.Views;
+namespace Communicator.UX.Views;
 
 /// <summary>
 /// Visual container for toast messages, handling styling, animations, and lifetime management.

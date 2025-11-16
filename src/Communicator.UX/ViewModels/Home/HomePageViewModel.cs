@@ -2,21 +2,21 @@
 using System.Globalization;
 using System.Windows.Input;
 using Controller;
-using GUI.ViewModels.Meeting;
-using UX.Core;
-using UX.Core.Services;
+using Communicator.UX.ViewModels.Meeting;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 
-namespace GUI.ViewModels.Home;
+namespace Communicator.UX.ViewModels.Home;
 
 /// <summary>
 /// Provides welcome content and meeting shortcuts displayed after authentication.
 /// </summary>
 public class HomePageViewModel : ObservableObject
 {
-    private readonly UserProfile _user;
+    private readonly User _user;
     private readonly IToastService _toastService;
     private readonly INavigationService _navigationService;
-    private readonly Func<UserProfile, MeetingShellViewModel> _meetingShellViewModelFactory;
+    private readonly Func<User, MeetingShellViewModel> _meetingShellViewModelFactory;
 
     public static string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy", CultureInfo.CurrentCulture);
     public string WelcomeMessage => _user.DisplayName;
@@ -41,10 +41,10 @@ public class HomePageViewModel : ObservableObject
     /// Uses injected factory to create MeetingShellViewModel.
     /// </summary>
     public HomePageViewModel(
-        UserProfile user,
+        User user,
         IToastService toastService,
         INavigationService navigationService,
-        Func<UserProfile, MeetingShellViewModel> meetingShellViewModelFactory)
+        Func<User, MeetingShellViewModel> meetingShellViewModelFactory)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
