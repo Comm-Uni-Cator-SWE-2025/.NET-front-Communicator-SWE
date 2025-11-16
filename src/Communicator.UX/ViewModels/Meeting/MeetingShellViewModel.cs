@@ -309,7 +309,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         else
         {
             // Open chat panel with the current user
-            var chatViewModel = new MeetingChatViewModel(_user);
+            var chatViewModel = new ChatViewModel(_user, _toastService);
 
             SidePanelContent = chatViewModel;
             IsSidePanelOpen = true;

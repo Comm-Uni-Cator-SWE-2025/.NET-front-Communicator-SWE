@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Communicator.Chat\Communicator.Chat.csproj" />
     <ProjectReference Include="..\Communicator.ScreenShare\Communicator.ScreenShare.csproj" />
     <ProjectReference Include="..\Communicator.Controller\Communicator.Controller.csproj" />
     <ProjectReference Include="..\Controller\Controller.csproj" />

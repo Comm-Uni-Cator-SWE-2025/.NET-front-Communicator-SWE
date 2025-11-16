@@ -1,11 +1,10 @@
-﻿// MessageVM.cs
-namespace chat_front
+﻿namespace Communicator.Chat
 {
     /// <summary>
     /// Data object for a single chat message displayed in the View.
     /// Supports both text and file messages.
     /// </summary>
-    public class MessageVM
+    public class ChatMessage
     {
         public string MessageId { get; }
         public string Username { get; }
@@ -18,10 +17,10 @@ namespace chat_front
         public string QuotedContent { get; }
 
         // Helper properties
-        public bool HasQuote => QuotedContent != null;
+        public bool HasQuote => !string.IsNullOrEmpty(QuotedContent);
         public bool IsFileMessage => !string.IsNullOrEmpty(FileName);
 
-        public MessageVM(
+        public ChatMessage(
             string messageId,
             string username,
             string content,

@@ -66,7 +66,7 @@ public class MeetingViewModel : ObservableObject, INavigationScope
 
     // --- Sub-ViewModels (Required by .NET Repo) ---
     public MeetingToolbarViewModel Toolbar { get; }
-    public MeetingChatViewModel Chat { get; }
+    public ChatViewModel Chat { get; }
     public ScreenShareViewModel ScreenShare { get; }
     public WhiteboardViewModel Whiteboard { get; }
     public VideoSessionViewModel VideoSession { get; }
@@ -77,7 +77,7 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         IController controller,
         AbstractRPC rpc,
         MeetingToolbarViewModel toolbar,
-        MeetingChatViewModel chat,
+        ChatViewModel chat,
         ScreenShareViewModel screenShare,
         WhiteboardViewModel whiteboard,
         VideoSessionViewModel videoSession)
