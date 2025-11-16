@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace Communicator.UX;
+namespace Canvas.CentralGui;
 
 /// <summary>
 /// Interaction logic for App.xaml
@@ -8,4 +8,3 @@ namespace Communicator.UX;
 public partial class App : Application
 {
 }
-
