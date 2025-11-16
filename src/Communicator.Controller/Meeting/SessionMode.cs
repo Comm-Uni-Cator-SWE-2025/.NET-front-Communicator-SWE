@@ -1,4 +1,4 @@
-namespace Communicator.Controller.Meeting;
+﻿namespace Communicator.Controller.Meeting;
 
 public enum SessionMode
 {
