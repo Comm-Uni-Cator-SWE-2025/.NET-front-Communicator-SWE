@@ -30,7 +30,7 @@ jobs:
     - name: Restore
       run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
     - name: Run Tests
-      run: dotnet test test/Communicator.Cloud.SignalR.Tests --configuration ${{ env.CONFIGURATION }}
+      run: dotnet test tests/Communicator.Cloud.SignalR.Tests --configuration ${{ env.CONFIGURATION }}
     - name: Build
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
     - name: Publish
