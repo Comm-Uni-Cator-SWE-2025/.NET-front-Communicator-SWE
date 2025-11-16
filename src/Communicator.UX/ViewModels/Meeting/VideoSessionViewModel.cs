@@ -1,5 +1,5 @@
-﻿using Communicator.Core.UX;
-using Controller;
+﻿using Communicator.Controller.Meeting;
+using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
@@ -11,13 +11,13 @@ public class VideoSessionViewModel : ObservableObject
     /// <summary>
     /// Initializes the session view model with the supplied user context.
     /// </summary>
-    public VideoSessionViewModel(User user)
+    public VideoSessionViewModel(UserProfile user)
     {
         Title = "Meeting";
         CurrentUser = user;
     }
 
     public string Title { get; }
-    public User CurrentUser { get; }
+    public UserProfile CurrentUser { get; }
 }
 

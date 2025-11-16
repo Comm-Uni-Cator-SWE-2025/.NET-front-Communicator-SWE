@@ -2,13 +2,13 @@
 using System.Windows;
 using System.Windows.Threading;
 using Communicator.Controller;
+using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.UX.Services;
 using Communicator.UX.ViewModels;
 using Communicator.UX.Views;
-using Controller;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Communicator.UX;
@@ -61,9 +61,6 @@ public partial class App : Application
         // Register RPC Service (for authentication via Controller backend)
         services.AddSingleton<IRPC, RPCService>();
 
-        // Register Controller services (Mock for demo purposes - will be replaced by RPC)
-        services.AddSingleton<IController, MockController>();
-
         // Register ViewModels
         services.AddTransient<MainViewModel>();
         services.AddTransient<Communicator.UX.ViewModels.Auth.AuthViewModel>();
@@ -79,15 +76,15 @@ public partial class App : Application
         services.AddTransient<Func<Communicator.UX.ViewModels.Auth.AuthViewModel>>(sp =>
             () => sp.GetRequiredService<Communicator.UX.ViewModels.Auth.AuthViewModel>());
 
-        // Factory for creating ViewModels with User parameter
+        // Factory for creating ViewModels with UserProfile parameter
         // Using ActivatorUtilities.CreateInstance for automatic dependency resolution
-        services.AddTransient<Func<User, Communicator.UX.ViewModels.Home.HomePageViewModel>>(sp =>
+        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Home.HomePageViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Home.HomePageViewModel>(sp, user));
 
-        services.AddTransient<Func<User, Communicator.UX.ViewModels.Settings.SettingsViewModel>>(sp =>
+        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Settings.SettingsViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        services.AddTransient<Func<User, Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
+        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
     }
 

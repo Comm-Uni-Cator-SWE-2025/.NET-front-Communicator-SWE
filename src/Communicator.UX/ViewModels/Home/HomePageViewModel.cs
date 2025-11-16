@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Input;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.UX.ViewModels.Meeting;
-using Controller;
 
 namespace Communicator.UX.ViewModels.Home;
 
@@ -13,13 +13,13 @@ namespace Communicator.UX.ViewModels.Home;
 /// </summary>
 public class HomePageViewModel : ObservableObject
 {
-    private readonly User _user;
+    private readonly UserProfile _user;
     private readonly IToastService _toastService;
     private readonly INavigationService _navigationService;
-    private readonly Func<User, MeetingShellViewModel> _meetingShellViewModelFactory;
+    private readonly Func<UserProfile, MeetingShellViewModel> _meetingShellViewModelFactory;
 
     public static string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy", CultureInfo.CurrentCulture);
-    public string WelcomeMessage => _user.DisplayName;
+    public string WelcomeMessage => _user.DisplayName ?? "User";
     public static string SubHeading => "Ready to connect and collaborate? Join an existing meeting or create a new one to get started.";
 
     private string _meetingLink;
@@ -41,10 +41,10 @@ public class HomePageViewModel : ObservableObject
     /// Uses injected factory to create MeetingShellViewModel.
     /// </summary>
     public HomePageViewModel(
-        User user,
+        UserProfile user,
         IToastService toastService,
         INavigationService navigationService,
-        Func<User, MeetingShellViewModel> meetingShellViewModelFactory)
+        Func<UserProfile, MeetingShellViewModel> meetingShellViewModelFactory)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));

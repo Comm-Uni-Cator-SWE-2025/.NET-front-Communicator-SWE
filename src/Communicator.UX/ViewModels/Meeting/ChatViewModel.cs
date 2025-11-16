@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Communicator.Chat;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
-using Controller;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
@@ -23,7 +23,7 @@ public class ChatViewModel : ObservableObject
     private const long MaxFileSizeBytes = 50 * 1024 * 1024; // 50 MB
 
     // --- Dependencies ---
-    private readonly User _currentUser;
+    private readonly UserProfile _currentUser;
     private readonly IToastService _toastService;
     // private readonly AbstractRPC _rpc; // TODO: Wire up when RPC is available
     
@@ -91,7 +91,7 @@ public class ChatViewModel : ObservableObject
     public event Func<FileInfo?>? RequestFileSelection;
 
     // --- Constructor ---
-    public ChatViewModel(User user, IToastService toastService)
+    public ChatViewModel(UserProfile user, IToastService toastService)
     {
         _currentUser = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
@@ -142,7 +142,7 @@ public class ChatViewModel : ObservableObject
         // Create and add message optimistically
         ChatMessage message = new ChatMessage(
             messageId,
-            _currentUser.DisplayName,
+            _currentUser.DisplayName ?? "User",
             messageText,
             string.Empty, // fileName
             0, // compressedFileSize
@@ -179,7 +179,7 @@ public class ChatViewModel : ObservableObject
         // Create and add message optimistically
         ChatMessage message = new ChatMessage(
             messageId,
-            _currentUser.DisplayName,
+            _currentUser.DisplayName ?? "User",
             caption ?? $"Sent {file.Name}",
             file.Name,
             file.Length,

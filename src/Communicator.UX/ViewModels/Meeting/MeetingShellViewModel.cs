@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
-using Controller;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
@@ -14,7 +14,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
-    private readonly User _user;
+    private readonly UserProfile _user;
     private readonly Stack<MeetingTabViewModel> _backStack = new();
     private readonly Stack<MeetingTabViewModel> _forwardStack = new();
     private MeetingTabViewModel? _currentTab;
@@ -39,7 +39,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// Builds meeting tabs for the supplied user and initializes navigation state.
     /// Services are now injected via constructor for better testability.
     /// </summary>
-    public MeetingShellViewModel(User user, IToastService toastService)
+    public MeetingShellViewModel(UserProfile user, IToastService toastService)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
@@ -93,7 +93,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// <summary>
     /// Creates the default set of meeting tabs for the logged-in user.
     /// </summary>
-    private static IEnumerable<MeetingTabViewModel> CreateTabs(User user)
+    private static IEnumerable<MeetingTabViewModel> CreateTabs(UserProfile user)
     {
         yield return new MeetingTabViewModel("AI Insights", new AIInsightsViewModel(user));
         yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));

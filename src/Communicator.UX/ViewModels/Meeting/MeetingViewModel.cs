@@ -5,12 +5,12 @@
 
 using System.Collections.ObjectModel; // For ObservableCollection
 using System.Windows.Input;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.ScreenShare;
 using Communicator.UX;
 using Communicator.UX.Services;
 using Communicator.UX.ViewModels.Meeting;
-using Controller;
 
 namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>
@@ -21,14 +21,13 @@ namespace Communicator.UX.ViewModels.Meeting;
 public class MeetingViewModel : ObservableObject, INavigationScope
 {
     // --- Private Fields ---
-    private readonly IController _controller;
     private readonly AbstractRPC _rpc;
-    private readonly User? _currentUser;
-    private Meetings? _currentMeeting;
+    private readonly UserProfile? _currentUser;
+    private MeetingSession? _currentMeeting;
 
     // --- Bindable Properties (from your Java VM) ---
     // C# equivalent of 'BindableProperty<List<User>> participants'
-    public ObservableCollection<User> Participants { get; }
+    public ObservableCollection<UserProfile> Participants { get; }
 
     // C# equivalent of 'BindableProperty<Boolean> isVideoEnabled'
     private bool _isVideoEnabled;
@@ -74,7 +73,6 @@ public class MeetingViewModel : ObservableObject, INavigationScope
     // --- Constructor ---
     public MeetingViewModel(
         IAuthenticationService authService, // We need this to get CurrentUser
-        IController controller,
         AbstractRPC rpc,
         MeetingToolbarViewModel toolbar,
         ChatViewModel chat,
@@ -83,7 +81,6 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         VideoSessionViewModel videoSession)
     // NO base() call is needed, constructor is empty
     {
-        _controller = controller;
         _rpc = rpc;
         _currentUser = authService.CurrentUser; // Get the logged-in user
 
@@ -95,7 +92,7 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         VideoSession = videoSession;
 
         // Initialize Properties
-        Participants = new ObservableCollection<User>();
+        Participants = new ObservableCollection<UserProfile>();
 
         // Initialize Commands (using RelayCommand from UX.Core)
         ToggleVideoCommand = new RelayCommand(_ => ToggleVideo());
@@ -109,8 +106,12 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         // Subscribe to RPC for new participants
         _rpc.Subscribe(Utils.SUBSCRIBE_AS_VIEWER, (args) => {
             string viewerIP = System.Text.Encoding.UTF8.GetString(args);
-            var newUser = new User(viewerIP, "New User", "Student", "new@example.com");
-            //User(string id, string username, string displayName, string email)
+            var newUser = new UserProfile(
+                email: $"{viewerIP}@example.com",
+                displayName: "New User",
+                role: ParticipantRole.Student,
+                logoUrl: null
+            );
 
             // Update collection on UI thread
             App.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
@@ -122,12 +123,12 @@ public class MeetingViewModel : ObservableObject, INavigationScope
 
     public void StartMeeting()
     {
-        string newMeetingId = Guid.NewGuid().ToString();
-        string title = $"Meeting {newMeetingId.Substring(0, 8)}";
-
-        // Use the C# Meeting model from the Controller project
-        _currentMeeting = new Meetings(title);
-        _currentMeeting.AddParticipant(_currentUser);
+        if (_currentUser != null)
+        {
+            // Create a new meeting session (placeholder logic)
+            _currentMeeting = new MeetingSession(_currentUser.Email ?? "unknown", SessionMode.Class);
+            _currentMeeting.AddParticipant(_currentUser);
+        }
 
         IsMeetingActive = true;
         UpdateParticipants();
@@ -136,20 +137,20 @@ public class MeetingViewModel : ObservableObject, INavigationScope
 
     private void ToggleVideo()
     {
-        if (_currentMeeting == null || !_currentMeeting.IsActive)
+        if (_currentMeeting == null)
         {
             return;
         }
 
         IsVideoEnabled = !IsVideoEnabled;
         _rpc.CallAsync(IsVideoEnabled ? Utils.START_VIDEO_CAPTURE : Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
-        _currentMeeting.VideoEnabled = IsVideoEnabled;
+        // TODO: Update via RPC when meeting service is ready
         //AddSystemMessage($"Video {(IsVideoEnabled ? "enabled" : "disabled")}");
     }
 
     private void ToggleAudio()
     {
-        if (_currentMeeting == null || !_currentMeeting.IsActive)
+        if (_currentMeeting == null)
         {
             return;
         }
@@ -157,36 +158,37 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         IsAudioEnabled = !IsAudioEnabled;
         // Make sure these are in your C# Utils.cs
         _rpc.CallAsync(IsAudioEnabled ? "START_AUDIO_CAPTURE" : "STOP_AUDIO_CAPTURE", Array.Empty<byte>());
-        _currentMeeting.AudioEnabled = IsAudioEnabled;
+        // TODO: Update via RPC when meeting service is ready
         //AddSystemMessage($"Audio {(IsAudioEnabled ? "enabled" : "disabled")}");
     }
 
     private void ToggleScreenSharing()
     {
-        if (_currentMeeting == null || !_currentMeeting.IsActive)
+        if (_currentMeeting == null)
         {
             return;
         }
 
         IsScreenShareEnabled = !IsScreenShareEnabled;
         _rpc.CallAsync(IsScreenShareEnabled ? Utils.START_SCREEN_CAPTURE : Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
-        _currentMeeting.ScreenSharingEnabled = IsScreenShareEnabled;
+        // TODO: Update via RPC when meeting service is ready
         //AddSystemMessage($"Screen sharing {(IsScreenShareEnabled ? "enabled" : "disabled")}");
     }
 
     private void EndMeeting()
     {
-        if (_currentMeeting == null || !_currentMeeting.IsActive)
+        if (_currentMeeting == null)
         {
             return;
         }
 
-        _currentMeeting.EndMeeting();
+        // TODO: Implement proper meeting end logic via RPC
+        _currentMeeting = null;
         IsMeetingActive = false;
         //AddSystemMessage("Meeting ended.");
     }
 
-    private void AddParticipant(User user) // Use C# User
+    private void AddParticipant(UserProfile user)
     {
         if (_currentMeeting != null && !Participants.Contains(user))
         {
@@ -195,12 +197,12 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         }
     }
 
-    private void UpdateParticipants() // From Java
+    private void UpdateParticipants()
     {
         if (_currentMeeting != null)
         {
             Participants.Clear();
-            foreach (User participant in _currentMeeting.Participants)
+            foreach (UserProfile participant in _currentMeeting.Participants.Values)
             {
                 Participants.Add(participant);
             }

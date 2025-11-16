@@ -1,5 +1,5 @@
-﻿using Communicator.Core.UX;
-using Controller;
+﻿using Communicator.Controller.Meeting;
+using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
@@ -11,13 +11,13 @@ public class ScreenShareViewModel : ObservableObject
     /// <summary>
     /// Initializes screen share metadata with the active user context.
     /// </summary>
-    public ScreenShareViewModel(User user)
+    public ScreenShareViewModel(UserProfile user)
     {
         Title = "ScreenShare";
         CurrentUser = user;
     }
 
     public string Title { get; }
-    public User CurrentUser { get; }
+    public UserProfile CurrentUser { get; }
 }
 

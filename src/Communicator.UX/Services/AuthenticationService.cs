@@ -1,6 +1,6 @@
 ﻿using System;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
-using Controller;
 
 namespace Communicator.UX.Services;
 
@@ -9,12 +9,12 @@ namespace Communicator.UX.Services;
 /// </summary>
 public class AuthenticationService : ObservableObject, IAuthenticationService
 {
-    private User? _currentUser;
+    private UserProfile? _currentUser;
 
     public event EventHandler<UserProfileEventArgs>? UserLoggedIn;
     public event EventHandler? UserLoggedOut;
 
-    public User? CurrentUser
+    public UserProfile? CurrentUser
     {
         get => _currentUser;
         private set {
@@ -27,7 +27,7 @@ public class AuthenticationService : ObservableObject, IAuthenticationService
 
     public bool IsAuthenticated => CurrentUser != null;
 
-    public void CompleteLogin(User user)
+    public void CompleteLogin(UserProfile user)
     {
         CurrentUser = user ?? throw new ArgumentNullException(nameof(user));
         UserLoggedIn?.Invoke(this, new UserProfileEventArgs(user));
