@@ -11,9 +11,11 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <!-- Main content area - takes remaining space -->
-            <ColumnDefinition Width="*" />
-            <!-- Side panel - 320px when open, 0 when closed -->
+            <ColumnDefinition Width="*" MinWidth="600"/>
+            <!-- GridSplitter column -->
             <ColumnDefinition Width="Auto" />
+            <!-- Side panel column - use star sizing for proper GridSplitter behavior -->
+            <ColumnDefinition Width="0" MinWidth="0"/>
         </Grid.ColumnDefinitions>
         
         <!-- MAIN CONTENT AREA -->
@@ -211,14 +213,24 @@
         </Border>
         </Grid>
         
+        <!-- GRID SPLITTER -->
+        <GridSplitter Grid.Column="1"
+                      Width="4"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Stretch"
+                      Background="Transparent"
+                      BorderBrush="{DynamicResource BorderBrush}"
+                      BorderThickness="1,0,0,0"
+                      ResizeDirection="Columns"
+                      ResizeBehavior="PreviousAndNext"
+                      Visibility="{Binding IsSidePanelOpen, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        
         <!-- SIDE PANEL -->
-        <Border Grid.Column="1"
-                Width="320"
+        <Border Grid.Column="2"
+                x:Name="SidePanelBorder"
                 Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="1,0,0,0"
-                SnapsToDevicePixels="True"
-                Visibility="{Binding IsSidePanelOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                BorderThickness="0"
+                SnapsToDevicePixels="True">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

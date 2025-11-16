@@ -5,26 +5,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="600"
-             d:DesignWidth="900"
-             Background="{DynamicResource AppBackgroundBrush}">
+             d:DesignWidth="320"
+             Background="Transparent">
     <Grid>
-        <Viewbox StretchDirection="DownOnly"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center"
-                 MaxWidth="640">
-            <Border Background="{DynamicResource CardBackgroundBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="12"
-                    Padding="32"
-                    Effect="{DynamicResource CardShadow}">
-                <TextBlock Text="{Binding Title}"
-                           FontSize="36"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource TextPrimaryBrush}"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"/>
-            </Border>
-        </Viewbox>
+        <TextBlock Text="{Binding Title}"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="20"/>
     </Grid>
 </UserControl>

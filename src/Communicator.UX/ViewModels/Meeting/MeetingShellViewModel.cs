@@ -88,11 +88,10 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// </summary>
     private static IEnumerable<MeetingTabViewModel> CreateTabs(User user)
     {
-        yield return new MeetingTabViewModel("Dashboard", new MeetingDashboardViewModel(user));
+        yield return new MeetingTabViewModel("AI Insights", new AIInsightsViewModel(user));
         yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));
         yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(user));
-        yield return new MeetingTabViewModel("Whiteboard", new WhiteboardViewModel(user));
-        yield return new MeetingTabViewModel("Chat", new MeetingChatViewModel(user));
+        yield return new MeetingTabViewModel("Canvas", new WhiteboardViewModel(user));
     }
 
     public bool CanNavigateBack => _backStack.Count > 0;
