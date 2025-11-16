@@ -60,6 +60,7 @@ public class AuthViewModel : ObservableObject
     }
 
     public ICommand SignInWithGoogleCommand { get; }
+    public ICommand SkipToHomeCommand { get; }
 
     public AuthViewModel(IRPC rpc, IToastService toastService)
     {
@@ -67,6 +68,7 @@ public class AuthViewModel : ObservableObject
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
 
         SignInWithGoogleCommand = new RelayCommand(SignInWithGoogle, _ => !IsLoading);
+        SkipToHomeCommand = new RelayCommand(SkipToHome, _ => !IsLoading);
     }
 
     /// <summary>
@@ -115,6 +117,28 @@ public class AuthViewModel : ObservableObject
                 _toastService.ShowError($"Authentication failed: {ex.Message}");
             });
         }
+    }
+
+    /// <summary>
+    /// Skips authentication and navigates directly to home screen with a mock user.
+    /// This is a temporary bypass for testing purposes while backend is unavailable.
+    /// </summary>
+    private void SkipToHome(object? obj)
+    {
+        System.Diagnostics.Debug.WriteLine("[AuthViewModel] Skipping to home with mock user");
+
+        // Create a mock user for testing
+        MockUser mockUser = new(
+            id: "test-user-id",
+            username: "TestUser",
+            displayName: "Test User (Dev Mode)",
+            email: "testuser@iitpkd.ac.in"
+        );
+
+        // Trigger the LoggedIn event to navigate to home screen
+        LoggedIn?.Invoke(this, new UserProfileEventArgs(mockUser));
+        
+        _toastService.ShowInfo("Logged in with test user (Dev Mode)");
     }
 
     /// <summary>
