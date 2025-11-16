@@ -29,6 +29,12 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     private object? _sidePanelContent;
     private bool _isSidePanelOpen;
 
+    // Quick Doubt Feature
+    private string _quickDoubtMessage = string.Empty;
+    private bool _isQuickDoubtBubbleOpen;
+    private DateTime? _quickDoubtTimestamp;
+    private string _quickDoubtSentMessage = string.Empty;
+
     /// <summary>
     /// Builds meeting tabs for the supplied user and initializes navigation state.
     /// Services are now injected via constructor for better testability.
@@ -52,6 +58,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         LeaveMeetingCommand = new RelayCommand(_ => LeaveMeeting());
         ToggleChatPanelCommand = new RelayCommand(_ => ToggleChatPanel());
         CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
+        SendQuickDoubtCommand = new RelayCommand(_ => SendQuickDoubt(), _ => CanSendQuickDoubt());
         RaiseNavigationStateChanged();
     }
 
@@ -88,11 +95,10 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// </summary>
     private static IEnumerable<MeetingTabViewModel> CreateTabs(User user)
     {
-        yield return new MeetingTabViewModel("Dashboard", new MeetingDashboardViewModel(user));
+        yield return new MeetingTabViewModel("AI Insights", new AIInsightsViewModel(user));
         yield return new MeetingTabViewModel("Video", new VideoSessionViewModel(user));
         yield return new MeetingTabViewModel("ScreenShare", new ScreenShareViewModel(user));
-        yield return new MeetingTabViewModel("Whiteboard", new WhiteboardViewModel(user));
-        yield return new MeetingTabViewModel("Chat", new MeetingChatViewModel(user));
+        yield return new MeetingTabViewModel("Canvas", new WhiteboardViewModel(user));
     }
 
     public bool CanNavigateBack => _backStack.Count > 0;
@@ -135,6 +141,31 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         private set => SetProperty(ref _isSidePanelOpen, value);
     }
 
+    // Quick Doubt Properties
+    public string QuickDoubtMessage
+    {
+        get => _quickDoubtMessage;
+        set => SetProperty(ref _quickDoubtMessage, value);
+    }
+
+    public bool IsQuickDoubtBubbleOpen
+    {
+        get => _isQuickDoubtBubbleOpen;
+        private set => SetProperty(ref _isQuickDoubtBubbleOpen, value);
+    }
+
+    public DateTime? QuickDoubtTimestamp
+    {
+        get => _quickDoubtTimestamp;
+        private set => SetProperty(ref _quickDoubtTimestamp, value);
+    }
+
+    public string QuickDoubtSentMessage
+    {
+        get => _quickDoubtSentMessage;
+        private set => SetProperty(ref _quickDoubtSentMessage, value);
+    }
+
     public ICommand ToggleMuteCommand { get; }
     public ICommand ToggleCameraCommand { get; }
     public ICommand ToggleHandCommand { get; }
@@ -142,6 +173,7 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     public ICommand LeaveMeetingCommand { get; }
     public ICommand ToggleChatPanelCommand { get; }
     public ICommand CloseSidePanelCommand { get; }
+    public ICommand SendQuickDoubtCommand { get; }
 
     /// <inheritdoc />
     public void NavigateBack()
@@ -201,13 +233,62 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     private void ToggleHandRaised()
     {
         IsHandRaised = !IsHandRaised;
-        _toastService.ShowInfo(IsHandRaised ? "Hand raised." : "Hand lowered.");
+        
+        if (IsHandRaised)
+        {
+            // Open the quick doubt bubble
+            IsQuickDoubtBubbleOpen = true;
+            _toastService.ShowInfo("Hand raised. Type your quick doubt below.");
+        }
+        else
+        {
+            // Close the bubble and clear any doubt data
+            ClearQuickDoubt();
+            _toastService.ShowInfo("Hand lowered.");
+        }
     }
 
     private void ToggleScreenShare()
     {
         IsScreenSharing = !IsScreenSharing;
         _toastService.ShowInfo(IsScreenSharing ? "Screen sharing on." : "Screen sharing off.");
+    }
+
+    private bool CanSendQuickDoubt()
+    {
+        return !string.IsNullOrWhiteSpace(QuickDoubtMessage);
+    }
+
+    private void SendQuickDoubt()
+    {
+        if (string.IsNullOrWhiteSpace(QuickDoubtMessage))
+        {
+            return;
+        }
+
+        // Capture the sent message and timestamp
+        QuickDoubtSentMessage = QuickDoubtMessage.Trim();
+        QuickDoubtTimestamp = DateTime.Now;
+
+        // Simulate broadcasting to all participants
+        _toastService.ShowSuccess($"Quick Doubt sent: \"{QuickDoubtSentMessage}\"");
+        
+        // In real implementation, this would call:
+        // await _meetingService.BroadcastQuickDoubtAsync(QuickDoubtSentMessage);
+
+        // Clear the input field for next message
+        QuickDoubtMessage = string.Empty;
+
+        // Keep the bubble open to show the sent message
+        // User must click "Lower Hand" to dismiss
+    }
+
+    private void ClearQuickDoubt()
+    {
+        QuickDoubtMessage = string.Empty;
+        QuickDoubtSentMessage = string.Empty;
+        QuickDoubtTimestamp = null;
+        IsQuickDoubtBubbleOpen = false;
     }
 
     private void LeaveMeeting()

@@ -1,4 +1,4 @@
-<UserControl x:Class="Communicator.UX.Views.Meeting.MeetingDashboardView"
+<UserControl x:Class="Communicator.UX.Views.Meeting.AIInsightsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -22,8 +22,7 @@
                            FontSize="36"
                            FontWeight="Bold"
                            Foreground="{DynamicResource TextPrimaryBrush}"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"/>
+                           HorizontalAlignment="Center"/>
             </Border>
         </Viewbox>
     </Grid>

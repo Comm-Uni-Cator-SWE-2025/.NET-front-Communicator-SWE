@@ -19,6 +19,7 @@ namespace Communicator.UX.Views;
 public partial class MainView : Window
 {
     private readonly IToastService _toastService;
+    private HwndSource? _hwndSource;
 
     /// <summary>
     /// Initializes the window, wires up toast handling, and configures chrome behavior.
@@ -82,7 +83,49 @@ public partial class MainView : Window
     /// </summary>
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
+        _hwndSource = (HwndSource?)PresentationSource.FromVisual(this);
+        _hwndSource?.AddHook(WndProc);
         ApplyWindowChromePreferences();
+    }
+
+    /// <summary>
+    /// Handles Windows messages to fix maximized window positioning.
+    /// </summary>
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        const int WM_GETMINMAXINFO = 0x0024;
+
+        if (msg == WM_GETMINMAXINFO)
+        {
+            // Get the monitor information for the window
+            MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO))!;
+
+            IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+            if (monitor != IntPtr.Zero)
+            {
+                MONITORINFO monitorInfo = new() {
+                    cbSize = Marshal.SizeOf(typeof(MONITORINFO))
+                };
+
+                if (GetMonitorInfo(monitor, ref monitorInfo))
+                {
+                    RECT rcWorkArea = monitorInfo.rcWork;
+                    RECT rcMonitorArea = monitorInfo.rcMonitor;
+
+                    // Set the maximized size to the work area (excluding taskbar)
+                    mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
+                    mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
+                    mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
+                    mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top);
+
+                    Marshal.StructureToPtr(mmi, lParam, true);
+                    handled = true;
+                }
+            }
+        }
+
+        return IntPtr.Zero;
     }
 
     /// <summary>
@@ -151,8 +194,21 @@ public partial class MainView : Window
 
         bool isMaximized = WindowState == WindowState.Maximized;
 
-        ChromeBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(12);
-        ChromeBorder.BorderThickness = isMaximized ? new Thickness(0) : new Thickness(1);
+        if (isMaximized)
+        {
+            // WM_GETMINMAXINFO handles proper positioning, no need for manual margin
+            ChromeBorder.Margin = new Thickness(0);
+            ChromeBorder.CornerRadius = new CornerRadius(0);
+            ChromeBorder.BorderThickness = new Thickness(0);
+        }
+        else
+        {
+            // Normal state - restore rounded corners and border
+            ChromeBorder.Margin = new Thickness(0);
+            ChromeBorder.CornerRadius = new CornerRadius(12);
+            ChromeBorder.BorderThickness = new Thickness(1);
+        }
+
         ContentHost.Margin = new Thickness(0);
 
         MaximizeButton.Content = isMaximized ? "\uE923" : "\uE922";
@@ -209,5 +265,49 @@ public partial class MainView : Window
     [DllImport("dwmapi.dll", ExactSpelling = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, DwmWindowAttribute attribute, ref DwmWindowCornerPreference pvAttribute, uint cbAttribute);
-}
 
+    // Windows API for monitor information
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
+}

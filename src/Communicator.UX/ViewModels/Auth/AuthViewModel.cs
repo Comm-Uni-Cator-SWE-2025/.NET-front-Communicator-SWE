@@ -137,7 +137,7 @@ public class AuthViewModel : ObservableObject
 
         // Trigger the LoggedIn event to navigate to home screen
         LoggedIn?.Invoke(this, new UserProfileEventArgs(mockUser));
-        
+
         _toastService.ShowInfo("Logged in with test user (Dev Mode)");
     }
 
