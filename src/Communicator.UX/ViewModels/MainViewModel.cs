@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Windows.Input;
-using Controller;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 using Communicator.UX.Services;
 using Communicator.UX.ViewModels.Common;
 using Communicator.UX.ViewModels.Home;
 using Communicator.UX.ViewModels.Meeting;
 using Communicator.UX.ViewModels.Settings;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Controller;
 
 namespace Communicator.UX.ViewModels;
 

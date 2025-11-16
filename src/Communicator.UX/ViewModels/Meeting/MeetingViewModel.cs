@@ -7,10 +7,10 @@ using System.Collections.ObjectModel; // For ObservableCollection
 using System.Windows.Input;
 using Communicator.Core.UX;
 using Communicator.ScreenShare;
-using Controller;
 using Communicator.UX;
 using Communicator.UX.Services;
 using Communicator.UX.ViewModels.Meeting;
+using Controller;
 
 namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>

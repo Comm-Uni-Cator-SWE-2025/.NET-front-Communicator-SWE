@@ -1,6 +1,6 @@
 ﻿using System;
-using Controller;
 using Communicator.Core.UX;
+using Controller;
 
 namespace Communicator.UX.Services;
 

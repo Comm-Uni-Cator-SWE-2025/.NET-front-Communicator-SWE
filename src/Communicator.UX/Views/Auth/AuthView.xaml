@@ -6,6 +6,9 @@
     
     <UserControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:BooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVis"/>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
@@ -35,18 +38,86 @@
                            TextAlignment="Center"
                            Margin="0,0,0,48"/>
 
+                <!-- Error Message -->
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="#D32F2F"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           Margin="0,0,0,12"
+                           Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVis}}"/>
+
                 <!-- Google Sign-In Button - Using SecondaryButtonStyle -->
                 <Button Command="{Binding SignInWithGoogleCommand}"
                         Style="{StaticResource SecondaryButtonStyle}"
                         Height="50"
                         Padding="16,0"
-                        Margin="0,0,0,20">
+                        Margin="0,0,0,20"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
                     <StackPanel Orientation="Horizontal">
-                        <!-- Official Google Logo with brand colors -->
-                        <icons:GoogleIcon Width="20" Height="20" Margin="0,0,12,0"/>
-                        <TextBlock Text="Sign in with Google"
+                        <!-- Loading Spinner (visible when IsLoading is true) -->
+                        <TextBlock Text="⟳"
+                                   FontSize="20"
+                                   Margin="0,0,12,0"
+                                   VerticalAlignment="Center"
+                                   Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform x:Name="SpinnerRotate" CenterX="10" CenterY="10"/>
+                            </TextBlock.RenderTransform>
+                            <TextBlock.Triggers>
+                                <EventTrigger RoutedEvent="TextBlock.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetName="SpinnerRotate"
+                                                           Storyboard.TargetProperty="Angle"
+                                                           From="0" To="360" Duration="0:0:1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </TextBlock.Triggers>
+                        </TextBlock>
+
+                        <!-- Official Google Logo with brand colors (hidden when loading) -->
+                        <icons:GoogleIcon Width="20" Height="20" Margin="0,0,12,0"
+                                        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}"/>
+                        
+                        <TextBlock FontSize="15"
+                                   FontWeight="Medium"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Sign in with Google"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                            <Setter Property="Text" Value="Signing in..."/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Button>
+
+                <!-- Skip to Home Button (Dev Mode) -->
+                <Button Command="{Binding SkipToHomeCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Height="50"
+                        Padding="16,0"
+                        Margin="0,0,0,20"
+                        Background="#FF6B35"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <icons:Icon IconName="arrow-right"
+                                    IconSize="20"
+                                    Foreground="White"
+                                    Margin="0,0,12,0"
+                                    VerticalAlignment="Center"/>
+                        
+                        <TextBlock Text="Skip to Home (Dev Mode)"
                                    FontSize="15"
                                    FontWeight="Medium"
+                                   Foreground="White"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
