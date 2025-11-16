@@ -6,7 +6,6 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <RunSettingsFilePath>C:\Users\nikhi\Desktop\Sem 7\Software Engineering\Comm-Uni-Cator Repositories\.NET-front-Communicator-SWE\tests\Communicator.Cloud.SignalR.Tests\bin\Debug\net8.0\fine-code-coverage\coverage-tool-output\Communicator.Cloud.SignalR.Tests-fcc-mscodecoverage-generated.runsettings</RunSettingsFilePath>
     </PropertyGroup>
 
     <ItemGroup>
