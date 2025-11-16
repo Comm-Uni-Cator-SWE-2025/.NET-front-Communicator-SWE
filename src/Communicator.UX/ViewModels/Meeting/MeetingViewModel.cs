@@ -59,8 +59,6 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         get => _isMeetingActive;
         set => SetProperty(ref _isMeetingActive, value);
     }
-
-    // --- Commands (replaces Java ActionListeners) ---
     public ICommand ToggleVideoCommand { get; }
     public ICommand ToggleAudioCommand { get; }
     public ICommand ToggleScreenShareCommand { get; }
@@ -68,7 +66,6 @@ public class MeetingViewModel : ObservableObject, INavigationScope
 
     // --- Sub-ViewModels (Required by .NET Repo) ---
     public MeetingToolbarViewModel Toolbar { get; }
-    public MeetingDashboardViewModel Dashboard { get; }
     public MeetingChatViewModel Chat { get; }
     public ScreenShareViewModel ScreenShare { get; }
     public WhiteboardViewModel Whiteboard { get; }
@@ -80,7 +77,6 @@ public class MeetingViewModel : ObservableObject, INavigationScope
         IController controller,
         AbstractRPC rpc,
         MeetingToolbarViewModel toolbar,
-        MeetingDashboardViewModel dashboard,
         MeetingChatViewModel chat,
         ScreenShareViewModel screenShare,
         WhiteboardViewModel whiteboard,
@@ -93,7 +89,6 @@ public class MeetingViewModel : ObservableObject, INavigationScope
 
         // Store Sub-ViewModels
         Toolbar = toolbar;
-        Dashboard = dashboard;
         Chat = chat;
         ScreenShare = screenShare;
         Whiteboard = whiteboard;
