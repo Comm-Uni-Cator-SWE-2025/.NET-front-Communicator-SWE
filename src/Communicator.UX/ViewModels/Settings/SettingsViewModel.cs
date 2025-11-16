@@ -1,9 +1,9 @@
 ﻿using System.Globalization;
 using System.Windows.Input;
-using Controller;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Models;
 using Communicator.Core.UX.Services;
+using Controller;
 
 namespace Communicator.UX.ViewModels.Settings;
 

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Input;
-using Controller;
-using Communicator.UX.ViewModels.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
+using Communicator.UX.ViewModels.Meeting;
+using Controller;
 
 namespace Communicator.UX.ViewModels.Home;
 

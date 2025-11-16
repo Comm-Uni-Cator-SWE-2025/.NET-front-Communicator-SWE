@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Threading;
-using Controller;
+using Communicator.Controller;
+using Communicator.Core.RPC;
+using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
 using Communicator.UX.Services;
 using Communicator.UX.ViewModels;
 using Communicator.UX.Views;
+using Controller;
 using Microsoft.Extensions.DependencyInjection;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
 
 namespace Communicator.UX;
 
@@ -56,7 +58,10 @@ public partial class App : Application
         services.AddSingleton<INavigationService, Services.NavigationService>();
         services.AddSingleton<IAuthenticationService, Services.AuthenticationService>();
 
-        // Register Controller services
+        // Register RPC Service (for authentication via Controller backend)
+        services.AddSingleton<IRPC, RPCService>();
+
+        // Register Controller services (Mock for demo purposes - will be replaced by RPC)
         services.AddSingleton<IController, MockController>();
 
         // Register ViewModels

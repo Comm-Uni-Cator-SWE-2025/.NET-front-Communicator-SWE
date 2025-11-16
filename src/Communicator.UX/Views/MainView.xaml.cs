@@ -5,11 +5,11 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Communicator.Core.UX.Models;
+using Communicator.Core.UX.Services;
 using Communicator.UX.ViewModels;
 using Communicator.UX.ViewModels.Common;
 using Microsoft.Extensions.DependencyInjection;
-using Communicator.Core.UX.Models;
-using Communicator.Core.UX.Services;
 
 namespace Communicator.UX.Views;
 
