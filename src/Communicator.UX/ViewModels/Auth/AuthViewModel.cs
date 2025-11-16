@@ -101,7 +101,6 @@ public class AuthViewModel : ObservableObject
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
                 CurrentUser = user;
                 IsLoading = false;
-                _toastService.ShowSuccess($"Welcome, {user.DisplayName}!");
             });
         }
 #pragma warning disable CA1031 // Do not catch general exception types - UI code should gracefully handle all exceptions
@@ -137,8 +136,6 @@ public class AuthViewModel : ObservableObject
 
         // Trigger the LoggedIn event to navigate to home screen
         LoggedIn?.Invoke(this, new UserProfileEventArgs(mockUser));
-
-        _toastService.ShowInfo("Logged in with test user (Dev Mode)");
     }
 
     /// <summary>

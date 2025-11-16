@@ -221,13 +221,11 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     private void ToggleMute()
     {
         IsMuted = !IsMuted;
-        _toastService.ShowInfo(IsMuted ? "Microphone muted." : "Microphone unmuted.");
     }
 
     private void ToggleCamera()
     {
         IsCameraOn = !IsCameraOn;
-        _toastService.ShowInfo(IsCameraOn ? "Camera enabled." : "Camera disabled.");
     }
 
     private void ToggleHandRaised()
@@ -238,20 +236,17 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         {
             // Open the quick doubt bubble
             IsQuickDoubtBubbleOpen = true;
-            _toastService.ShowInfo("Hand raised. Type your quick doubt below.");
         }
         else
         {
             // Close the bubble and clear any doubt data
             ClearQuickDoubt();
-            _toastService.ShowInfo("Hand lowered.");
         }
     }
 
     private void ToggleScreenShare()
     {
         IsScreenSharing = !IsScreenSharing;
-        _toastService.ShowInfo(IsScreenSharing ? "Screen sharing on." : "Screen sharing off.");
     }
 
     private bool CanSendQuickDoubt()
@@ -271,7 +266,6 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         QuickDoubtTimestamp = DateTime.Now;
 
         // Simulate broadcasting to all participants
-        _toastService.ShowSuccess($"Quick Doubt sent: \"{QuickDoubtSentMessage}\"");
         
         // In real implementation, this would call:
         // await _meetingService.BroadcastQuickDoubtAsync(QuickDoubtSentMessage);
@@ -313,7 +307,6 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
 
             SidePanelContent = chatViewModel;
             IsSidePanelOpen = true;
-            _toastService.ShowInfo("Chat panel opened.");
         }
     }
 
@@ -324,7 +317,6 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     {
         IsSidePanelOpen = false;
         SidePanelContent = null;
-        _toastService.ShowInfo("Side panel closed.");
     }
 
     /// <summary>

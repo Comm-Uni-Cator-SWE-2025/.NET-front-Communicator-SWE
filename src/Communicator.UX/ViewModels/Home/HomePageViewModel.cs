@@ -68,7 +68,7 @@ public class HomePageViewModel : ObservableObject
             return;
         }
 
-        _toastService.ShowInfo("Join meeting functionality will be implemented soon");
+        // TODO: Implement join meeting functionality
     }
 
     /// <summary>
@@ -86,7 +86,6 @@ public class HomePageViewModel : ObservableObject
     private void CreateMeeting(object? obj)
     {
         // TODO: Implement Create Meeting logic
-        _toastService.ShowInfo("Create meeting functionality will be implemented soon");
     }
 
     /// <summary>

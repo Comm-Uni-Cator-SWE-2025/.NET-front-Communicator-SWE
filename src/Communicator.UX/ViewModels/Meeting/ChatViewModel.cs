@@ -153,7 +153,6 @@ public class ChatViewModel : ObservableObject
         );
 
         Messages.Add(message);
-        _toastService.ShowSuccess("Message sent");
 
         // TODO: Send via RPC
         // var messageBytes = Encoding.UTF8.GetBytes(SerializeMessage(message));
@@ -191,7 +190,6 @@ public class ChatViewModel : ObservableObject
         );
 
         Messages.Add(message);
-        _toastService.ShowSuccess($"File {file.Name} sent");
 
         // TODO: Send via RPC
         // var messageBytes = Encoding.UTF8.GetBytes(SerializeFileMessage(message, file.FullName));
@@ -250,8 +248,6 @@ public class ChatViewModel : ObservableObject
             return;
         }
 
-        _toastService.ShowInfo($"Downloading {fileMessage.FileName}...");
-
         // TODO: Implement file download via RPC
         // var messageIdBytes = Encoding.UTF8.GetBytes(fileMessage.MessageId);
         // await _rpc.CallAsync("chat:save-file-to-disk", messageIdBytes);
@@ -266,7 +262,6 @@ public class ChatViewModel : ObservableObject
 
         // Remove from local collection
         Messages.Remove(messageToDelete);
-        _toastService.ShowInfo("Message deleted");
 
         // Clear reply if replying to deleted message
         if (_currentReplyId == messageToDelete.MessageId)
@@ -297,7 +292,6 @@ public class ChatViewModel : ObservableObject
         );
 
         Messages.Add(message);
-        _toastService.ShowInfo("Received test message");
     }
 
     // --- Helper Methods ---
