@@ -8,11 +8,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Xml.Linq;
-using CanvasDataModel;
-using ViewModel;
-using static ViewModel.CanvasViewModel;
+using CanvasApp.DataModel;
+using CanvasApp.ViewModel;
+using static CanvasApp.ViewModel.CanvasViewModel;
 using Drawing = System.Drawing; // Alias to avoid conflict with System.Windows.Shapes
-namespace CentralGui;
+
+namespace CanvasApp.Gui;
 
 public partial class MainWindow : Window
 {
@@ -20,9 +21,9 @@ public partial class MainWindow : Window
     // --- FIELDS FOR PERFORMANCE OPTIMIZATION ---
     private UIElement? _currentPreviewElement = null;
     private Rectangle? _selectionBox = null;
-    // --- END FIELDS ---
     public MainWindow()
     {
+        // Ensure InitializeComponent exists even if XAML-generated partial wasn't created.
         InitializeComponent();
         DataContext = _vm;
 
@@ -35,8 +36,7 @@ public partial class MainWindow : Window
         _vm.PropertyChanged += Vm_PropertyChanged;
         // --- END ADDED ---
 
-        DrawArea.MouseLeftButtonDown += (s, e) =>
-        {
+        DrawArea.MouseLeftButtonDown += (s, e) => {
             // --- ADD THIS ---
             // Safety check: remove any lingering preview
             if (_currentPreviewElement != null)
@@ -57,8 +57,7 @@ public partial class MainWindow : Window
             // --- END MODIFIED ---
         };
 
-        DrawArea.MouseMove += (s, e) =>
-        {
+        DrawArea.MouseMove += (s, e) => {
             Point pos = e.GetPosition(DrawArea);
             bool isInside = pos.X >= 0 && pos.X <= DrawArea.ActualWidth &&
                             pos.Y >= 0 && pos.Y <= DrawArea.ActualHeight;
@@ -98,8 +97,7 @@ public partial class MainWindow : Window
             // --- END NEW LOGIC ---
         };
 
-        DrawArea.MouseLeftButtonUp += (s, e) =>
-        {
+        DrawArea.MouseLeftButtonUp += (s, e) => {
             if (_currentPreviewElement != null)
             {
                 DrawArea.Children.Remove(_currentPreviewElement);
@@ -127,8 +125,7 @@ public partial class MainWindow : Window
             // --- END MODIFIED ---
         };
 
-        this.KeyDown += (s, e) =>
-        {
+        this.KeyDown += (s, e) => {
             // --- FIX IS HERE ---
             // DO NOT get visibleShapes here. Get it *after* the action.
 
@@ -164,8 +161,7 @@ public partial class MainWindow : Window
         // --- NEW: EVENT HANDLERS FOR MODIFICATION ---
         // We assume your slider in XAML has the name x:Name="ThicknessSlider"
         // This handler provides the live-preview redraw while dragging
-        ThicknessSlider.ValueChanged += (s, e) =>
-        {
+        ThicknessSlider.ValueChanged += (s, e) => {
             // --- MODIFIED ---
             // Only update if we are not currently dragging the slider
             if (ThicknessSlider.IsMouseCaptureWithin)
@@ -180,8 +176,7 @@ public partial class MainWindow : Window
 
         // This handler commits the change to the undo stack
         // when the user releases the mouse from the slider.
-        ThicknessSlider.PreviewMouseLeftButtonUp += (s, e) =>
-        {
+        ThicknessSlider.PreviewMouseLeftButtonUp += (s, e) => {
             _vm.CommitModification();
         };
         // --- END NEW ---
@@ -328,7 +323,7 @@ public partial class MainWindow : Window
         if (_vm.SelectedShape != null)
         {
             // Replace selected shape with a very small rectangle (1x1)
-            _vm.RegularizeSelectedShape(1,1);
+            _vm.RegularizeSelectedShape(1, 1);
             SyncCanvasState();
             return;
         }

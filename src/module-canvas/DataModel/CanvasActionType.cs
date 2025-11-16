@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CanvasDataModel;
+namespace CanvasApp.DataModel;
 
 /// <summary>
 /// Defines the type of action performed on the canvas for state management.

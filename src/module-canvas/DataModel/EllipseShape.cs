@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace CanvasDataModel;
+namespace CanvasApp.DataModel;
 
 public class EllipseShape : IShape
 {

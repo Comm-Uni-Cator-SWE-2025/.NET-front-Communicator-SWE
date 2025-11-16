@@ -4,7 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Ink;
 using System.Windows.Media;
 using System.Windows.Shapes;
-namespace CanvasDataModel;
+namespace CanvasApp.DataModel;
+
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -44,8 +45,7 @@ public static class ShapeRenderer
 
     private static UIElement RenderStraightLine(Canvas canvas, StraightLine line)
     {
-        Line uiLine = new Line
-        {
+        Line uiLine = new Line {
             X1 = line.Points[0].X,
             Y1 = line.Points[0].Y,
             X2 = line.Points[1].X,
@@ -72,8 +72,7 @@ public static class ShapeRenderer
             wpfPoints.Add(new System.Windows.Point(point.X, point.Y));
         }
 
-        Polyline polyline = new Polyline
-        {
+        Polyline polyline = new Polyline {
             Points = wpfPoints,
             Stroke = brush,
             StrokeThickness = freeHand.Thickness,
@@ -100,8 +99,7 @@ public static class ShapeRenderer
         double width = Math.Abs(bottomRight.X - topLeft.X);
         double height = Math.Abs(bottomRight.Y - topLeft.Y);
 
-        Rectangle uiRectangle = new Rectangle
-        {
+        Rectangle uiRectangle = new Rectangle {
             Width = width,
             Height = height,
             Stroke = ToWpfBrush(rectangle.Color),
@@ -124,8 +122,7 @@ public static class ShapeRenderer
         double width = Math.Abs(bottomRight.X - topLeft.X);
         double height = Math.Abs(bottomRight.Y - topLeft.Y);
 
-        Ellipse uiEllipse = new Ellipse
-        {
+        Ellipse uiEllipse = new Ellipse {
             Width = width,
             Height = height,
             Stroke = ToWpfBrush(ellipse.Color), // Use shape's color
@@ -154,8 +151,7 @@ public static class ShapeRenderer
             vertex3
         };
 
-        Polygon uiTriangle = new Polygon
-        {
+        Polygon uiTriangle = new Polygon {
             Points = wpfPoints,
             Stroke = ToWpfBrush(triangle.Color),
             StrokeThickness = triangle.Thickness,
@@ -176,8 +172,7 @@ public static class ShapeRenderer
     // --- END MODIFIED ---
     public static Rectangle CreateSelectionBox(Drawing.Rectangle bounds)
     {
-        Rectangle selectionBox = new Rectangle
-        {
+        Rectangle selectionBox = new Rectangle {
             Width = bounds.Width + 4,  // Add padding
             Height = bounds.Height + 4, // Add padding
             Fill = Brushes.Transparent,

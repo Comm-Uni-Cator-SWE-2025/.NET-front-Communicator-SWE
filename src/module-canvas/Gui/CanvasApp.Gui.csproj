@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Canvas\CanvasDataModel.csproj" />
-    <ProjectReference Include="..\ViewModel\ViewModel.csproj" />
+    <ProjectReference Include="..\DataModel\CanvasApp.DataModel.csproj" />
+    <ProjectReference Include="..\ViewModel\CanvasApp.ViewModel.csproj" />
   </ItemGroup>
 
 </Project>

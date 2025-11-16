@@ -1,4 +1,4 @@
-﻿namespace CanvasDataModel;
+﻿namespace CanvasApp.DataModel;
 
 /// <summary>
 /// Internal node for the doubly-linked list, now holding a CanvasAction.

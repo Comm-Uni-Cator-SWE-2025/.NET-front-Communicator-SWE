@@ -8,10 +8,16 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Linq;
-using CanvasDataModel;
+
+using CanvasApp.DataModel;
+using CanvasApp.Services;
+
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-namespace ViewModel;
+
+
+
+namespace CanvasApp.ViewModel;
 
 public class CanvasViewModel : INotifyPropertyChanged
 {
@@ -26,8 +32,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     public DrawingMode CurrentMode
     {
         get => _currentMode;
-        set
-        {
+        set {
             if (_currentMode != value)
             {
                 _currentMode = value;
@@ -86,8 +91,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     public Color CurrentColor
     {
         get => _currentColor;
-        set
-        {
+        set {
             if (_currentColor == value) { return; }
             _currentColor = value;
             OnPropertyChanged();
@@ -122,8 +126,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     public double CurrentThickness
     {
         get => _currentThickness;
-        set
-        {
+        set {
             if (_currentThickness == value) { return; }
             _currentThickness = value;
             OnPropertyChanged();
@@ -156,8 +159,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     public IShape? SelectedShape
     {
         get => _selectedShape;
-        set
-        {
+        set {
             if (_selectedShape != value)
             {
                 // --- NEW ---
@@ -285,10 +287,10 @@ public class CanvasViewModel : INotifyPropertyChanged
             SelectedShape = null;
 
             // Create a fixed-size rectangle centered at the click point
-            int width =40;
-            int height =30;
-            var topLeft = new Point(point.X - width /2, point.Y - height /2);
-            var bottomRight = new Point(point.X + width /2, point.Y + height /2);
+            int width = 40;
+            int height = 30;
+            var topLeft = new Point(point.X - width / 2, point.Y - height / 2);
+            var bottomRight = new Point(point.X + width / 2, point.Y + height / 2);
             var pts = new List<Point> { topLeft, bottomRight };
 
             var constantShape = new RectangleShape(pts, CurrentColor, CurrentThickness, CurrentUserId);
@@ -452,8 +454,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     }
     public IShape? CurrentPreviewShape
     {
-        get
-        {
+        get {
             // --- MODIFIED ---
             if (!_isTracking || _trackedPoints.Count < 2 || CurrentMode == DrawingMode.Select)
             {
@@ -647,7 +648,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// </summary>
     /// <param name="width">The width of the regularized shape.</param>
     /// <param name="height">The height of the regularized shape.</param>
-    public void RegularizeSelectedShape(int width =1, int height =1)
+    public void RegularizeSelectedShape(int width = 1, int height = 1)
     {
         if (SelectedShape == null)
         {
@@ -658,7 +659,7 @@ public class CanvasViewModel : INotifyPropertyChanged
         IShape prev = SelectedShape;
 
         // Create a very small replacement centered on the previous shape's bounding box
-        IShape replacement = RegularizeTool.SmallReplacement(prev, CurrentUserId, width, height);
+        IShape replacement = AiService.SmallReplacement(prev, CurrentUserId, width, height);
 
         // Update dictionary (replace the shape)
         if (_shapes.ContainsKey(prev.ShapeId))

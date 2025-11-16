@@ -9,7 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CanvasDataModel;
+namespace CanvasApp.DataModel;
+
 public class HitTestHelper
 {
     /// <summary>

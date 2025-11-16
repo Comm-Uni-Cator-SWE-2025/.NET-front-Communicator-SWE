@@ -1,4 +1,4 @@
-﻿namespace CanvasDataModel;
+﻿namespace CanvasApp.DataModel;
 
 /// <summary>
 /// Represents a single undo-able/redo-able action on the canvas.

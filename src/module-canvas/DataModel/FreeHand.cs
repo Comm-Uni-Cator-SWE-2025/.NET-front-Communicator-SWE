@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace CanvasDataModel;
+namespace CanvasApp.DataModel;
 
-public class TriangleShape : IShape
+public class FreeHand : IShape
 {
     public string ShapeId { get; } // ADDED
-    public ShapeType Type => ShapeType.Triangle;
+    public ShapeType Type => ShapeType.FreeHand;
     public List<Point> Points { get; } = new();
     public Color Color { get; }
     public double Thickness { get; }
     public string UserId { get; }
-
-    public TriangleShape(List<Point> points, Color color, double thickness, string userId)
+    public FreeHand(List<Point> points, Color color, double thickness, string userId)
     {
         ShapeId = Guid.NewGuid().ToString(); // ADDED
         Points.AddRange(points);
@@ -27,7 +26,7 @@ public class TriangleShape : IShape
     /// <summary>
     /// Private constructor for cloning.
     /// </summary>
-    private TriangleShape(string shapeId, List<Point> points, Color color, double thickness, string userId)
+    private FreeHand(string shapeId, List<Point> points, Color color, double thickness, string userId)
     {
         ShapeId = shapeId;
         Points.AddRange(points);
@@ -38,7 +37,7 @@ public class TriangleShape : IShape
 
     public IShape WithUpdates(Color? newColor, double? newThickness)
     {
-        return new TriangleShape(
+        return new FreeHand(
             this.ShapeId,
             this.Points,
             newColor ?? this.Color,
@@ -83,7 +82,7 @@ public class TriangleShape : IShape
         }
 
         // Return a new shape with the same ID but new points
-        return new TriangleShape(
+        return new FreeHand(
             this.ShapeId,
             newPoints,
             this.Color,
@@ -93,44 +92,31 @@ public class TriangleShape : IShape
     }
     // --- END NEW ---
 
-    private Point[] GetVertices()
-    {
-        if (Points.Count < 2) { return new Point[0]; }
-
-        Point p1 = Points[0]; // Start point
-        Point p2 = Points[1]; // End point
-
-        // Vertices as drawn by the renderer
-        Point vertex1 = new Point(p1.X, p2.Y);
-        Point vertex2 = new Point((p1.X + p2.X) / 2, p1.Y);
-        Point vertex3 = new Point(p2.X, p2.Y);
-        return new[] { vertex1, vertex2, vertex3 };
-    }
-
     public Rectangle GetBoundingBox()
     {
-        if (Points.Count < 2) { return new Rectangle(0, 0, 0, 0); }
+        if (Points.Count == 0) { return new Rectangle(0, 0, 0, 0); }
 
-        int minX = Math.Min(Points[0].X, Points[1].X);
-        int minY = Math.Min(Points[0].Y, Points[1].Y);
-        int width = Math.Abs(Points[0].X - Points[1].X);
-        int height = Math.Abs(Points[0].Y - Points[1].Y);
+        int minX = Points.Min(p => p.X);
+        int minY = Points.Min(p => p.Y);
+        int maxX = Points.Max(p => p.X);
+        int maxY = Points.Max(p => p.Y);
 
-        return new Rectangle(minX, minY, width, height);
+        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
 
     public bool IsHit(Point clickPoint)
     {
-        Point[] vertices = GetVertices();
-        if (vertices.Length == 0) { return false; }
-
+        // Add a tolerance for easier clicking
         double tolerance = (Thickness / 2.0) + 2.0;
 
-        // Check distance to each of the 3 line segments
-        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[0], vertices[1]) <= tolerance) { return true; }
-        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[1], vertices[2]) <= tolerance) { return true; }
-        if (HitTestHelper.GetDistanceToLineSegment(clickPoint, vertices[2], vertices[0]) <= tolerance) { return true; }
-
+        // Check the distance against every segment in the freehand line
+        for (int i = 0; i < Points.Count - 1; i++)
+        {
+            if (HitTestHelper.GetDistanceToLineSegment(clickPoint, Points[i], Points[i + 1]) <= tolerance)
+            {
+                return true;
+            }
+        }
         return false;
     }
     // --- END ADDED ---

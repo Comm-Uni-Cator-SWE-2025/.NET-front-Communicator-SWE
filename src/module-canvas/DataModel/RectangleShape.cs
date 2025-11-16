@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace CanvasDataModel;
+namespace CanvasApp.DataModel;
 
-public class FreeHand : IShape
+public class RectangleShape : IShape
 {
-    public string ShapeId { get; } // ADDED
-    public ShapeType Type => ShapeType.FreeHand;
+    public string ShapeId { get; }
+    public ShapeType Type => ShapeType.Rectangle;
     public List<Point> Points { get; } = new();
     public Color Color { get; }
     public double Thickness { get; }
     public string UserId { get; }
-    public FreeHand(List<Point> points, Color color, double thickness, string userId)
+
+    public RectangleShape(List<Point> points, Color color, double thickness, string userId)
     {
-        ShapeId = Guid.NewGuid().ToString(); // ADDED
+        ShapeId = Guid.NewGuid().ToString();
         Points.AddRange(points);
         Color = color;
         Thickness = thickness;
@@ -26,7 +27,7 @@ public class FreeHand : IShape
     /// <summary>
     /// Private constructor for cloning.
     /// </summary>
-    private FreeHand(string shapeId, List<Point> points, Color color, double thickness, string userId)
+    internal RectangleShape(string shapeId, List<Point> points, Color color, double thickness, string userId)
     {
         ShapeId = shapeId;
         Points.AddRange(points);
@@ -37,7 +38,7 @@ public class FreeHand : IShape
 
     public IShape WithUpdates(Color? newColor, double? newThickness)
     {
-        return new FreeHand(
+        return new RectangleShape(
             this.ShapeId,
             this.Points,
             newColor ?? this.Color,
@@ -50,7 +51,6 @@ public class FreeHand : IShape
     public IShape WithMove(Point offset, Rectangle canvasBounds)
     {
         Rectangle oldBounds = GetBoundingBox();
-        if (oldBounds.Width == 0 && oldBounds.Height == 0) { return this; }
 
         // Calculate target new position
         int newLeft = oldBounds.Left + offset.X;
@@ -82,7 +82,7 @@ public class FreeHand : IShape
         }
 
         // Return a new shape with the same ID but new points
-        return new FreeHand(
+        return new RectangleShape(
             this.ShapeId,
             newPoints,
             this.Color,
@@ -91,31 +91,42 @@ public class FreeHand : IShape
         );
     }
     // --- END NEW ---
+    // --- ADDED ---
+    private Rectangle GetBoundsInternal()
+    {
+        if (Points.Count < 2) { return new Rectangle(0, 0, 0, 0); }
+
+        int minX = Math.Min(Points[0].X, Points[1].X);
+        int minY = Math.Min(Points[0].Y, Points[1].Y);
+        int width = Math.Abs(Points[0].X - Points[1].X);
+        int height = Math.Abs(Points[0].Y - Points[1].Y);
+
+        return new Rectangle(minX, minY, width, height);
+    }
 
     public Rectangle GetBoundingBox()
     {
-        if (Points.Count == 0) { return new Rectangle(0, 0, 0, 0); }
-
-        int minX = Points.Min(p => p.X);
-        int minY = Points.Min(p => p.Y);
-        int maxX = Points.Max(p => p.X);
-        int maxY = Points.Max(p => p.Y);
-
-        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+        return GetBoundsInternal();
     }
 
     public bool IsHit(Point clickPoint)
     {
-        // Add a tolerance for easier clicking
+        if (Points.Count < 2) { return false; }
+
+        Rectangle bounds = GetBoundsInternal();
         double tolerance = (Thickness / 2.0) + 2.0;
 
-        // Check the distance against every segment in the freehand line
-        for (int i = 0; i < Points.Count - 1; i++)
+        // Check if point is inside the filled area
+        if (HitTestHelper.IsPointInRectangle(clickPoint, bounds, 0))
         {
-            if (HitTestHelper.GetDistanceToLineSegment(clickPoint, Points[i], Points[i + 1]) <= tolerance)
-            {
-                return true;
-            }
+            // Check if it's NOT in the "inner" hollow part
+            Rectangle innerBounds = new Rectangle(
+                (int)(bounds.Left + tolerance),
+                (int)(bounds.Top + tolerance),
+                (int)(bounds.Width - 2 * tolerance),
+                (int)(bounds.Height - 2 * tolerance)
+            );
+            return !HitTestHelper.IsPointInRectangle(clickPoint, innerBounds, 0);
         }
         return false;
     }
