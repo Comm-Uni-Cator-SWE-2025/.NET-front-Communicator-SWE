@@ -16,7 +16,7 @@ public class HomePageViewModel : ObservableObject
     private readonly UserProfile _user;
     private readonly IToastService _toastService;
     private readonly INavigationService _navigationService;
-    private readonly Func<UserProfile, MeetingShellViewModel> _meetingShellViewModelFactory;
+    private readonly Func<UserProfile, MeetingSessionViewModel> _meetingSessionViewModelFactory;
 
     public static string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy", CultureInfo.CurrentCulture);
     public string WelcomeMessage => _user.DisplayName ?? "User";
@@ -38,18 +38,18 @@ public class HomePageViewModel : ObservableObject
 
     /// <summary>
     /// Initializes the home page with the authenticated user's profile and commands.
-    /// Uses injected factory to create MeetingShellViewModel.
+    /// Uses injected factory to create MeetingSessionViewModel.
     /// </summary>
     public HomePageViewModel(
         UserProfile user,
         IToastService toastService,
         INavigationService navigationService,
-        Func<UserProfile, MeetingShellViewModel> meetingShellViewModelFactory)
+        Func<UserProfile, MeetingSessionViewModel> meetingSessionViewModelFactory)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
-        _meetingShellViewModelFactory = meetingShellViewModelFactory ?? throw new ArgumentNullException(nameof(meetingShellViewModelFactory));
+        _meetingSessionViewModelFactory = meetingSessionViewModelFactory ?? throw new ArgumentNullException(nameof(meetingSessionViewModelFactory));
 
         _meetingLink = string.Empty;
         JoinMeetingCommand = new RelayCommand(JoinMeeting, CanJoinMeeting);
@@ -73,7 +73,7 @@ public class HomePageViewModel : ObservableObject
         // 1. Parse meeting link to extract meeting ID
         // 2. Call cloud function: await httpClient.GetAsync($"{_cloudConfig.JoinMeetingUrl}?meetingId={meetingId}&userId={_user.Email}");
         // 3. Handle RPC-based features (video, audio, screenshare) initialization
-        // 4. Navigate to meeting shell: _navigationService.NavigateTo(_meetingShellViewModelFactory(_user));
+        // 4. Navigate to meeting session: _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user));
 
         _toastService.ShowInfo("Join meeting functionality pending cloud team implementation");
     }
@@ -104,12 +104,12 @@ public class HomePageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Initiates the meeting workspace by navigating to the meeting shell.
-    /// Uses injected factory to create MeetingShellViewModel with all dependencies.
+    /// Initiates the meeting workspace by navigating to the meeting session.
+    /// Uses injected factory to create MeetingSessionViewModel with all dependencies.
     /// </summary>
     private void OpenMeeting(object? obj)
     {
-        _navigationService.NavigateTo(_meetingShellViewModelFactory(_user));
+        _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user));
     }
 }
 

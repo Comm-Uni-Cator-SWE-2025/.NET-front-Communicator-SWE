@@ -34,6 +34,9 @@ public partial class App : Application
         ConfigureServices(services);
         Services = services.BuildServiceProvider();
 
+        // Initialize RPC connection
+        InitializeRpcConnection(e.Args);
+
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
         themeService.LoadSavedTheme();
@@ -45,6 +48,35 @@ public partial class App : Application
         };
 
         mainView.Show();
+    }
+
+    /// <summary>
+    /// Initializes RPC connection on application startup.
+    /// </summary>
+    private static void InitializeRpcConnection(string[] args)
+    {
+        try
+        {
+            // Default port number
+            int portNumber = 6942;
+
+            // Parse port from command line args if provided
+            if (args.Length > 0 && int.TryParse(args[0], out int parsedPort))
+            {
+                portNumber = parsedPort;
+            }
+
+            IRPC rpc = Services.GetRequiredService<IRPC>();
+            System.Diagnostics.Debug.WriteLine($"[App] Connecting RPC on port {portNumber}...");
+            
+            System.Threading.Thread rpcThread = rpc.Connect(portNumber);
+            System.Diagnostics.Debug.WriteLine("[App] RPC connected successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[App] Warning: Could not initialize RPC: {ex.Message}");
+            // Don't crash the app if RPC fails
+        }
     }
 
     /// <summary>
@@ -78,7 +110,7 @@ public partial class App : Application
         services.AddTransient<Communicator.UX.ViewModels.Auth.AuthViewModel>();
         services.AddTransient<Communicator.UX.ViewModels.Home.HomePageViewModel>();
         services.AddTransient<Communicator.UX.ViewModels.Settings.SettingsViewModel>();
-        services.AddTransient<Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>();
+        services.AddTransient<Communicator.UX.ViewModels.Meeting.MeetingSessionViewModel>();
 
         // Register ToastContainerViewModel as Singleton (single toast container for app)
         services.AddSingleton<Communicator.UX.ViewModels.Common.ToastContainerViewModel>();
@@ -96,8 +128,8 @@ public partial class App : Application
         services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Settings.SettingsViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Meeting.MeetingShellViewModel>(sp, user));
+        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Meeting.MeetingSessionViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Meeting.MeetingSessionViewModel>(sp, user));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

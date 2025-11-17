@@ -270,8 +270,8 @@ public class MainViewModel : ObservableObject
     /// </summary>
     private void UpdateTopBarState(object? viewModel)
     {
-        MeetingToolbar = viewModel is MeetingShellViewModel meetingShell
-            ? meetingShell.Toolbar
+        MeetingToolbar = viewModel is MeetingSessionViewModel meetingSession
+            ? meetingSession.Toolbar
             : null;
         OnPropertyChanged(nameof(ShowBackButton));
         OnPropertyChanged(nameof(ShowForwardButton));

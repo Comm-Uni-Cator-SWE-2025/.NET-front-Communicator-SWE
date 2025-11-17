@@ -1,23 +1,122 @@
-﻿using Communicator.Controller.Meeting;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
-/// Represents the primary meeting session surface, exposing the current user context.
+/// Represents the video session view, displaying all participants with their video streams.
+/// Manages dynamic grid layout and video frame updates.
 /// </summary>
 public class VideoSessionViewModel : ObservableObject
 {
+    private int _gridColumns = 1;
+    private int _gridRows = 1;
+
     /// <summary>
-    /// Initializes the session view model with the supplied user context.
+    /// Initializes the video session view model with the supplied user context
+    /// and shared participants collection.
     /// </summary>
-    public VideoSessionViewModel(UserProfile user)
+    public VideoSessionViewModel(UserProfile user, ObservableCollection<ParticipantViewModel> participants)
     {
         Title = "Meeting";
         CurrentUser = user;
+        Participants = participants;
+
+        // Subscribe to collection changes to update grid layout
+        Participants.CollectionChanged += (s, e) => UpdateGridLayout();
+        UpdateGridLayout();
     }
 
     public string Title { get; }
     public UserProfile CurrentUser { get; }
+
+    /// <summary>
+    /// Collection of all participants with their video streams.
+    /// This is a shared reference from MeetingSessionViewModel.
+    /// </summary>
+    public ObservableCollection<ParticipantViewModel> Participants { get; }
+
+    /// <summary>
+    /// Number of columns in the participant grid.
+    /// </summary>
+    public int GridColumns
+    {
+        get => _gridColumns;
+        private set => SetProperty(ref _gridColumns, value);
+    }
+
+    /// <summary>
+    /// Number of rows in the participant grid.
+    /// </summary>
+    public int GridRows
+    {
+        get => _gridRows;
+        private set => SetProperty(ref _gridRows, value);
+    }
+
+    /// <summary>
+    /// Updates grid layout based on participant count.
+    /// </summary>
+    private void UpdateGridLayout()
+    {
+        int count = Participants?.Count ?? 0;
+        (int columns, int rows) layout = CalculateGridLayout(count);
+        GridColumns = layout.columns;
+        GridRows = layout.rows;
+    }
+
+    /// <summary>
+    /// Calculates optimal grid layout for the given participant count.
+    /// </summary>
+    private static (int columns, int rows) CalculateGridLayout(int count)
+    {
+        if (count == 0)
+        {
+            return (1, 1);
+        }
+
+        if (count == 1)
+        {
+            return (1, 1);
+        }
+
+        if (count == 2)
+        {
+            return (2, 1);
+        }
+
+        if (count <= 4)
+        {
+            return (2, 2);
+        }
+
+        if (count <= 6)
+        {
+            return (3, 2);
+        }
+
+        if (count <= 9)
+        {
+            return (3, 3);
+        }
+
+        if (count <= 12)
+        {
+            return (4, 3);
+        }
+
+        if (count <= 16)
+        {
+            return (4, 4);
+        }
+
+        // For larger counts, calculate dynamically
+        int columns = (int)Math.Ceiling(Math.Sqrt(count));
+        int rows = (int)Math.Ceiling((double)count / columns);
+        return (columns, rows);
+    }
 }
 

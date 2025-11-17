@@ -1,4 +1,4 @@
-<UserControl x:Class="Communicator.UX.Views.Meeting.MeetingShellView"
+<UserControl x:Class="Communicator.UX.Views.Meeting.MeetingSessionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -25,9 +25,11 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Main Content (Current Tab) -->
         <ContentControl Grid.Row="0"
                         Content="{Binding CurrentPage}"/>
 
+        <!-- Bottom Meeting Control Toolbar -->
         <Border Grid.Row="1"
                 Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
@@ -328,7 +330,7 @@
                     </StackPanel>
                 </Button>
                 
-                <!-- Toggle Chat Panel (NEW) -->
+                <!-- Toggle Chat Panel -->
                 <Button Command="{Binding ToggleChatPanelCommand}"
                         ToolTip="Toggle chat"
                         Style="{StaticResource MeetingControlButtonStyle}">
@@ -337,19 +339,24 @@
                         <icons:Icon IconName="message-circle" 
                                     IconSize="20" 
                                     Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock FontSize="12"
-                                   HorizontalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="Chat" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSidePanelOpen}" Value="True">
-                                            <Setter Property="Text" Value="Close Chat" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                        <TextBlock Text="Chat"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Toggle Participants Panel (NEW) -->
+                <Button Command="{Binding ToggleParticipantsPanelCommand}"
+                        ToolTip="Toggle participants"
+                        Style="{StaticResource MeetingControlButtonStyle}">
+                    <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Center">
+                        <icons:Icon IconName="users" 
+                                    IconSize="20" 
+                                    Foreground="{DynamicResource IconBrush}"/>
+                        <TextBlock Text="People"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -389,7 +396,7 @@
                         BorderThickness="0,0,0,1"
                         Padding="16,12">
                     <Grid>
-                        <TextBlock Text="Chat"
+                        <TextBlock Text="{Binding SidePanelTitle}"
                                    FontSize="16"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"
@@ -398,7 +405,7 @@
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                            <!-- Test Recv Button -->
+                            <!-- Test Recv Button (Only visible for Chat) -->
                             <Button Command="{Binding SidePanelContent.TestRecvCommand}"
                                     ToolTip="Test Receive Message"
                                     Background="Transparent"
@@ -406,11 +413,9 @@
                                     Padding="8"
                                     Margin="0,0,4,0"
                                     Cursor="Hand">
-                                <icons:Icon IconName="message-circle" 
-                                            IconSize="16" 
-                                            Foreground="{DynamicResource IconBrush}"/>
                                 <Button.Style>
                                     <Style TargetType="Button">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
@@ -418,8 +423,9 @@
                                                             Background="{TemplateBinding Background}"
                                                             CornerRadius="4"
                                                             Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                          VerticalAlignment="Center"/>
+                                                        <icons:Icon IconName="message-circle" 
+                                                                    IconSize="16" 
+                                                                    Foreground="{DynamicResource IconBrush}"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
@@ -432,6 +438,12 @@
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
+                                        <Style.Triggers>
+                                            <!-- Only show for Chat panel -->
+                                            <DataTrigger Binding="{Binding SidePanelTitle}" Value="Chat">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </Button.Style>
                             </Button>
