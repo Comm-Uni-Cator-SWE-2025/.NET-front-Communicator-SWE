@@ -76,8 +76,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         Participants = new ObservableCollection<ParticipantViewModel>();
 
         // Create sub-ViewModels with shared participant collection
-        VideoSession = new VideoSessionViewModel(_currentUser, Participants);
-        ScreenShare = new ScreenShareViewModel(_currentUser, Participants);
+        VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc);
         Chat = new ChatViewModel(_currentUser, _toastService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
         AIInsights = new AIInsightsViewModel(_currentUser);
@@ -130,14 +129,9 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     public ObservableCollection<ParticipantViewModel> Participants { get; }
 
     /// <summary>
-    /// Sub-ViewModel for video session functionality.
+    /// Sub-ViewModel for video session functionality (includes screen share).
     /// </summary>
     public VideoSessionViewModel VideoSession { get; }
-
-    /// <summary>
-    /// Sub-ViewModel for screen sharing functionality.
-    /// </summary>
-    public ScreenShareViewModel ScreenShare { get; }
 
     /// <summary>
     /// Sub-ViewModel for chat functionality.
@@ -315,8 +309,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     private IEnumerable<MeetingTabViewModel> CreateTabs()
     {
         yield return new MeetingTabViewModel("AI Insights", AIInsights);
-        yield return new MeetingTabViewModel("Video", VideoSession);
-        yield return new MeetingTabViewModel("ScreenShare", ScreenShare);
+        yield return new MeetingTabViewModel("Meeting", VideoSession);
         yield return new MeetingTabViewModel("Canvas", Whiteboard);
     }
 
@@ -337,6 +330,10 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
             // Add current user to participants list
             AddParticipant(_currentUser);
+
+            // TODO: Call RPC to create meeting on backend
+            // Example: await _rpc?.Call("createMeeting", SerializeMeetingInfo(_currentMeeting));
+            // Backend should return meeting ID and initial state
         }
 
         IsMeetingActive = true;
@@ -366,6 +363,9 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         Participants.Add(participantVM);
 
         _toastService.ShowInfo($"{user.DisplayName ?? user.Email} joined the meeting");
+
+        // TODO: Notify backend of new participant (if current user is host)
+        // Example: await _rpc?.Call("addParticipant", SerializeUserProfile(user));
     }
 
     /// <summary>
@@ -378,6 +378,9 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         {
             Participants.Remove(participant);
             _toastService.ShowInfo($"{participant.DisplayName} left the meeting");
+
+            // TODO: Notify backend of participant removal
+            // Example: await _rpc?.Call("removeParticipant", Encoding.UTF8.GetBytes(email));
         }
     }
 
@@ -653,11 +656,29 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     {
         try
         {
-            // TODO: Add RPC-based cleanup for streaming features
+            // TODO: Stop all RPC streaming features before leaving
             // if (_rpc != null)
             // {
-            //     await _rpc.CallAsync(Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
-            //     await _rpc.CallAsync(Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
+            //     // Stop video capture if enabled
+            //     if (IsCameraOn)
+            //     {
+            //         await _rpc.Call(Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
+            //     }
+            //
+            //     // Stop screen share if enabled
+            //     if (IsScreenSharing)
+            //     {
+            //         await _rpc.Call(Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
+            //     }
+            //
+            //     // Stop audio capture if enabled
+            //     if (!IsMuted)
+            //     {
+            //         await _rpc.Call(Utils.STOP_AUDIO_CAPTURE, Array.Empty<byte>());
+            //     }
+            //
+            //     // Notify backend of leaving
+            //     await _rpc.Call("leaveMeeting", Encoding.UTF8.GetBytes(_currentUser.Email ?? ""));
             // }
 
             // Disconnect from HandWave cloud service

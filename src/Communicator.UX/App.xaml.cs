@@ -34,8 +34,9 @@ public partial class App : Application
         ConfigureServices(services);
         Services = services.BuildServiceProvider();
 
-        // Initialize RPC connection
-        InitializeRpcConnection(e.Args);
+        // // Initialize RPC connection
+        // InitializeRpcConnection(e.Args);
+
 
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
@@ -48,6 +49,9 @@ public partial class App : Application
         };
 
         mainView.Show();
+
+        // Initialize RPC connection AFTER showing window (non-blocking)
+        System.Threading.Tasks.Task.Run(() => InitializeRpcConnection(e.Args));
     }
 
     /// <summary>
