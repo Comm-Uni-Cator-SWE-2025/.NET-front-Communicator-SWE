@@ -23,150 +23,33 @@
             </Grid.RowDefinitions>
 
             <!-- Tab Control -->
-            <TabControl Grid.Row="0" Background="Transparent" BorderThickness="0">
-                <TabItem Header="ScreenNVideo" IsSelected="True">
-                    <TabItem.HeaderTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="ScreenNVideo" Padding="10,5"/>
-                        </DataTemplate>
-                    </TabItem.HeaderTemplate>
-                </TabItem>
-                <TabItem Header="Canvas">
-                    <TabItem.HeaderTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="Canvas" Padding="10,5"/>
-                        </DataTemplate>
-                    </TabItem.HeaderTemplate>
-                </TabItem>
-                <TabItem Header="AI Insights">
-                    <TabItem.HeaderTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="AI Insights" Padding="10,5"/>
-                        </DataTemplate>
-                    </TabItem.HeaderTemplate>
-                </TabItem>
-            </TabControl>
+            <controls:TabControlBar Grid.Row="0"/>
 
-            <!-- Main Content Area - Dynamic Participant Display with ScrollViewer -->
-            <ScrollViewer Grid.Row="1" 
-                          x:Name="ParticipantsScrollViewer"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="ParticipantsItemsControl" 
-                              ItemsSource="{Binding Participants}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid x:Name="ParticipantUniformGrid" 
-                                       Rows="1" 
-                                       Columns="1"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#E8E4DD" 
-                                    BorderBrush="#D0CCC4" 
-                                    BorderThickness="1"
-                                    MinHeight="200">
-                                <controls:ParticipantControl 
-                                    Initial="{Binding Initial}" 
-                                    Username="{Binding Username}"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <!-- Main Content Area - Dynamic Participant Display -->
+            <controls:ParticipantsGridControl Grid.Row="1" 
+                                              x:Name="ParticipantsGridControl"
+                                              Participants="{Binding Participants}"/>
 
             <!-- Bottom Control Bar -->
-            <Border Grid.Row="2" Background="#F5F5F5" Padding="10" BorderThickness="0,1,0,0" BorderBrush="#CCCCCC">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="Mute" Width="80" Height="35" Margin="5"/>
-                    <Button Content="Camera" Width="80" Height="35" Margin="5"/>
-                    <Button Content="Share" Width="80" Height="35" Margin="5"/>
-                    <Button Content="Leave" Width="80" Height="35" Margin="5" Background="#DC3545" Foreground="White"/>
-                </StackPanel>
-            </Border>
+            <controls:ControlBar Grid.Row="2"/>
         </Grid>
 
         <!-- Right Section - Chat/Participants Panel -->
         <Grid Grid.Column="1" Background="#F0EBE3">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Chat Header -->
-            <Border Grid.Row="0" Background="#E8E4DD" Padding="10" BorderThickness="0,0,0,1" BorderBrush="#CCCCCC">
-                <TextBlock Text="Chat" FontSize="16" FontWeight="Bold"/>
-            </Border>
+            <!-- Chat Module -->
+            <controls:ChatModule Grid.Row="0"/>
 
-            <!-- Chat Content Area -->
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="10">
-                        <TextBlock Text="Chat Module" FontSize="14" Foreground="#999999" TextAlignment="Center" Margin="0,50,0,5"/>
-                        <TextBlock Text="To be implemented by Chat Team" FontSize="12" Foreground="#AAAAAA" TextAlignment="Center"/>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- Participants Section -->
-                <Border Grid.Row="1" Background="White" Padding="10" BorderThickness="0,1,0,0" BorderBrush="#CCCCCC">
-                    <StackPanel>
-                        <TextBlock Text="Participants" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBlock Foreground="#666666" FontSize="12" Margin="0,0,0,5">
-                            <Run Text="Participants ("/>
-                            <Run Text="{Binding Participants.Count, Mode=OneWay}"/>
-                            <Run Text=")"/>
-                        </TextBlock>
-                        
-                        <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding Participants}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#E8F5E9" Padding="5" CornerRadius="3" Margin="0,2">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontSize="12" VerticalAlignment="Center"/>
-                                                <Button Grid.Column="1" 
-                                                        Content="×" 
-                                                        Width="20" 
-                                                        Height="20" 
-                                                        FontSize="14"
-                                                        Padding="0"
-                                                        Click="RemoveParticipant_Click"
-                                                        Tag="{Binding}">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsMainUser}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                </Button>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                        
-                        <!-- Test buttons -->
-                        <Button Content="Add Test User" Click="AddParticipant_Click" Margin="0,10,0,0" Padding="5"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
+            <!-- Participants List -->
+            <controls:ParticipantsListControl Grid.Row="1"
+                                              x:Name="ParticipantsListControl"
+                                              Participants="{Binding Participants}"
+                                              AddParticipantClick="AddParticipant_Click"
+                                              RemoveParticipantClick="RemoveParticipant_Click"/>
         </Grid>
     </Grid>
 </Window>

@@ -27,102 +27,17 @@ namespace ScreenShare.UX
         public MainWindow()
         {
             InitializeComponent();
-            
+
             // Initialize with the main user
             Participants = new ObservableCollection<ParticipantData>();
-            Participants.Add(new ParticipantData 
-            { 
-                Initial = "Y", 
-                Username = "You", 
-                DisplayName = "You", 
-                IsMainUser = true 
+            Participants.Add(new ParticipantData {
+                Initial = "Y",
+                Username = "You",
+                DisplayName = "You",
+                IsMainUser = true
             });
-            
-            // Listen to collection changes to update grid layout
-            Participants.CollectionChanged += Participants_CollectionChanged;
-            
+
             this.DataContext = this;
-            
-            // Update grid layout after window is loaded
-            this.Loaded += MainWindow_Loaded;
-        }
-
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            UpdateParticipantGridLayout();
-        }
-
-        private void Participants_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            // Update the grid layout when participants are added or removed
-            Dispatcher.InvokeAsync(() => UpdateParticipantGridLayout(), System.Windows.Threading.DispatcherPriority.Loaded);
-        }
-
-        private void UpdateParticipantGridLayout()
-        {
-            // Find the UniformGrid in the visual tree
-            var uniformGrid = FindVisualChild<UniformGrid>(ParticipantsItemsControl);
-            if (uniformGrid != null)
-            {
-                int participantCount = Participants.Count;
-                
-                // Dynamic layout based on participant count
-                // 1 participant: Full screen (1×1)
-                // 2 participants: Split horizontally (1×2)
-                // 3-4 participants: 2×2 grid
-                // 5+ participants: 2×2 grid with scrolling
-                
-                if (participantCount == 1)
-                {
-                    // Single participant: Full screen
-                    uniformGrid.Rows = 1;
-                    uniformGrid.Columns = 1;
-                    ParticipantsScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                }
-                else if (participantCount == 2)
-                {
-                    // Two participants: Split into 2 columns, 1 row
-                    uniformGrid.Rows = 1;
-                    uniformGrid.Columns = 2;
-                    ParticipantsScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                }
-                else if (participantCount >= 3 && participantCount <= 4)
-                {
-                    // 3-4 participants: 2×2 grid (one empty slot for 3 participants)
-                    uniformGrid.Rows = 2;
-                    uniformGrid.Columns = 2;
-                    ParticipantsScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                }
-                else // participantCount > 4
-                {
-                    // More than 4 participants: 2×2 grid with scrolling
-                    uniformGrid.Rows = 0; // Auto-calculate rows based on columns
-                    uniformGrid.Columns = 2;
-                    ParticipantsScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-                }
-            }
-        }
-
-        // Helper method to find child elements in visual tree
-        private T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
-        {
-            if (parent == null) return null;
-            
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T typedChild)
-                {
-                    return typedChild;
-                }
-
-                var foundChild = FindVisualChild<T>(child);
-                if (foundChild != null)
-                {
-                    return foundChild;
-                }
-            }
-            return null;
         }
 
         // Test button to add participants
@@ -132,15 +47,14 @@ namespace ScreenShare.UX
             string initial = GetInitialForParticipant(participantCounter);
             string username = $"username{participantCounter}";
             string displayName = $"displayname{participantCounter}";
-            
-            Participants.Add(new ParticipantData 
-            { 
-                Initial = initial, 
-                Username = username, 
+
+            Participants.Add(new ParticipantData {
+                Initial = initial,
+                Username = username,
                 DisplayName = displayName,
-                IsMainUser = false 
+                IsMainUser = false
             });
-            
+
             participantCounter++;
         }
 
@@ -177,8 +91,7 @@ namespace ScreenShare.UX
         public string Initial
         {
             get => _initial;
-            set
-            {
+            set {
                 if (_initial != value)
                 {
                     _initial = value;
@@ -190,8 +103,7 @@ namespace ScreenShare.UX
         public string Username
         {
             get => _username;
-            set
-            {
+            set {
                 if (_username != value)
                 {
                     _username = value;
@@ -203,8 +115,7 @@ namespace ScreenShare.UX
         public string DisplayName
         {
             get => _displayName;
-            set
-            {
+            set {
                 if (_displayName != value)
                 {
                     _displayName = value;
@@ -216,8 +127,7 @@ namespace ScreenShare.UX
         public bool IsMainUser
         {
             get => _isMainUser;
-            set
-            {
+            set {
                 if (_isMainUser != value)
                 {
                     _isMainUser = value;
