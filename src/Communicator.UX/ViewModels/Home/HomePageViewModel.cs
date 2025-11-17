@@ -68,7 +68,14 @@ public class HomePageViewModel : ObservableObject
             return;
         }
 
-        // TODO: Implement join meeting functionality
+        // TODO: Cloud team needs to implement join meeting cloud function
+        // Once available, add implementation here:
+        // 1. Parse meeting link to extract meeting ID
+        // 2. Call cloud function: await httpClient.GetAsync($"{_cloudConfig.JoinMeetingUrl}?meetingId={meetingId}&userId={_user.Email}");
+        // 3. Handle RPC-based features (video, audio, screenshare) initialization
+        // 4. Navigate to meeting shell: _navigationService.NavigateTo(_meetingShellViewModelFactory(_user));
+
+        _toastService.ShowInfo("Join meeting functionality pending cloud team implementation");
     }
 
     /// <summary>

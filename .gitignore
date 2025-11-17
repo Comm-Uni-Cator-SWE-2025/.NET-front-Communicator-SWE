@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Application configuration files with sensitive data
+# Protect cloud function URLs and secrets
+**/appsettings.json
+!**/appsettings.example.json

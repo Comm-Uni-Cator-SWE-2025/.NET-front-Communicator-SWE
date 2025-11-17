@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
+using Communicator.UX.Services;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
@@ -14,6 +15,8 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
+    private readonly IHandWaveService _handWaveService;
+    private readonly ICloudConfigService _cloudConfig;
     private readonly UserProfile _user;
     private readonly Stack<MeetingTabViewModel> _backStack = new();
     private readonly Stack<MeetingTabViewModel> _forwardStack = new();
@@ -39,10 +42,16 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     /// Builds meeting tabs for the supplied user and initializes navigation state.
     /// Services are now injected via constructor for better testability.
     /// </summary>
-    public MeetingShellViewModel(UserProfile user, IToastService toastService)
+    public MeetingShellViewModel(
+        UserProfile user,
+        IToastService toastService,
+        IHandWaveService handWaveService,
+        ICloudConfigService cloudConfig)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
+        _handWaveService = handWaveService ?? throw new ArgumentNullException(nameof(handWaveService));
+        _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
 
         _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(user));
         _toolbarViewModel.SelectedTabChanged += OnSelectedTabChanged;
@@ -51,15 +60,22 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         {
             CurrentPage = _currentTab.ContentViewModel;
         }
+
+        // Subscribe to HandWave messages
+        _handWaveService.QuickDoubtReceived += OnQuickDoubtReceived;
+
         ToggleMuteCommand = new RelayCommand(_ => ToggleMute());
         ToggleCameraCommand = new RelayCommand(_ => ToggleCamera());
         ToggleHandCommand = new RelayCommand(_ => ToggleHandRaised());
         ToggleScreenShareCommand = new RelayCommand(_ => ToggleScreenShare());
-        LeaveMeetingCommand = new RelayCommand(_ => LeaveMeeting());
+        LeaveMeetingCommand = new RelayCommand(async _ => await LeaveMeetingAsync());
         ToggleChatPanelCommand = new RelayCommand(_ => ToggleChatPanel());
         CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
-        SendQuickDoubtCommand = new RelayCommand(_ => SendQuickDoubt(), _ => CanSendQuickDoubt());
+        SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync(), _ => CanSendQuickDoubt());
         RaiseNavigationStateChanged();
+
+        // Connect to HandWave on initialization
+        _ = ConnectToHandWaveAsync();
     }
 
     public MeetingToolbarViewModel Toolbar => _toolbarViewModel;
@@ -251,30 +267,77 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
 
     private bool CanSendQuickDoubt()
     {
-        return !string.IsNullOrWhiteSpace(QuickDoubtMessage);
+        return !string.IsNullOrWhiteSpace(QuickDoubtMessage) && _handWaveService.IsConnected;
     }
 
-    private void SendQuickDoubt()
+    /// <summary>
+    /// Connects to HandWave cloud service for real-time quick doubt messaging.
+    /// </summary>
+    private async Task ConnectToHandWaveAsync()
+    {
+        try
+        {
+            // TODO: Add RPC-based meeting initialization here (video, audio, screenshare setup)
+            // await _rpc.InitializeMeetingAsync(...);
+
+            await _handWaveService.ConnectAsync(_user.DisplayName ?? "Unknown User").ConfigureAwait(false);
+            _toastService.ShowSuccess("Connected to HandWave service");
+        }
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Failed to connect to HandWave: {ex.Message}");
+        }
+#pragma warning restore CA1031 // Do not catch general exception types
+    }
+
+    /// <summary>
+    /// Handler for receiving quick doubt messages from cloud via SignalR.
+    /// </summary>
+    private void OnQuickDoubtReceived(string message)
+    {
+        // Display received doubt in UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            _toastService.ShowInfo($"Quick Doubt: {message}");
+        });
+    }
+
+    /// <summary>
+    /// Sends quick doubt message via HandWave cloud function.
+    /// </summary>
+    private async Task SendQuickDoubtAsync()
     {
         if (string.IsNullOrWhiteSpace(QuickDoubtMessage))
         {
             return;
         }
 
-        // Capture the sent message and timestamp
-        QuickDoubtSentMessage = QuickDoubtMessage.Trim();
-        QuickDoubtTimestamp = DateTime.Now;
+        try
+        {
+            // Capture the sent message and timestamp
+            QuickDoubtSentMessage = QuickDoubtMessage.Trim();
+            QuickDoubtTimestamp = DateTime.Now;
 
-        // Simulate broadcasting to all participants
-        
-        // In real implementation, this would call:
-        // await _meetingService.BroadcastQuickDoubtAsync(QuickDoubtSentMessage);
+            // Send via cloud function
+            await _handWaveService.SendQuickDoubtAsync(_user.DisplayName ?? "Unknown User", QuickDoubtSentMessage).ConfigureAwait(false);
 
-        // Clear the input field for next message
-        QuickDoubtMessage = string.Empty;
+            // Clear the input field for next message
+            QuickDoubtMessage = string.Empty;
 
-        // Keep the bubble open to show the sent message
-        // User must click "Lower Hand" to dismiss
+            // Keep the bubble open to show the sent message
+            // User must click "Lower Hand" to dismiss
+        }
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Failed to send quick doubt: {ex.Message}");
+            // Restore the message if sending failed
+            QuickDoubtMessage = QuickDoubtSentMessage;
+            QuickDoubtSentMessage = string.Empty;
+            QuickDoubtTimestamp = null;
+        }
+#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     private void ClearQuickDoubt()
@@ -285,9 +348,33 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
         IsQuickDoubtBubbleOpen = false;
     }
 
-    private void LeaveMeeting()
+    /// <summary>
+    /// Leaves the meeting and disconnects from cloud services.
+    /// </summary>
+    private async Task LeaveMeetingAsync()
     {
-        _toastService.ShowWarning("Leave meeting flow is not implemented yet.");
+        try
+        {
+            // TODO: Add RPC-based cleanup for streaming features (video, audio, screenshare)
+            // await _rpc.StopAllStreamsAsync();
+            // await _rpc.LeaveMeetingAsync(...);
+
+            // Disconnect from HandWave cloud service
+            await _handWaveService.DisconnectAsync().ConfigureAwait(false);
+
+            // TODO: Cloud team needs to implement leave meeting cloud function
+            // Once available, call it here:
+            // var httpClient = new HttpClient();
+            // await httpClient.GetAsync($"{_cloudConfig.LeaveMeetingUrl}?userId={_user.Email}");
+
+            _toastService.ShowSuccess("Left the meeting");
+        }
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Error leaving meeting: {ex.Message}");
+        }
+#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>
@@ -346,6 +433,12 @@ public class MeetingShellViewModel : ObservableObject, INavigationScope, IDispos
     {
         if (disposing)
         {
+            // Unsubscribe from HandWave events
+            _handWaveService.QuickDoubtReceived -= OnQuickDoubtReceived;
+
+            // Disconnect from HandWave
+            _ = _handWaveService.DisconnectAsync();
+
             // Dispose managed resources
             _toolbarViewModel.SelectedTabChanged -= OnSelectedTabChanged;
             _backStack.Clear();

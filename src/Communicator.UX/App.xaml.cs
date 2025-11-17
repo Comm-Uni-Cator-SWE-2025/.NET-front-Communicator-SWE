@@ -9,6 +9,7 @@ using Communicator.Core.UX.Services;
 using Communicator.UX.Services;
 using Communicator.UX.ViewModels;
 using Communicator.UX.Views;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Communicator.UX;
@@ -51,12 +52,23 @@ public partial class App : Application
     /// </summary>
     private static void ConfigureServices(IServiceCollection services)
     {
+        // Register Configuration (loads appsettings.json)
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+        services.AddSingleton<IConfiguration>(configuration);
+
         // Register Communicator.Core.UX services (Toast, Theme)
         services.AddUXCoreServices();
 
         // Register Communicator.UX services
         services.AddSingleton<INavigationService, Services.NavigationService>();
         services.AddSingleton<IAuthenticationService, Services.AuthenticationService>();
+
+        // Register Cloud services (HandWave feature)
+        services.AddSingleton<ICloudConfigService, CloudConfigService>();
+        services.AddSingleton<IHandWaveService, HandWaveService>();
 
         // Register RPC Service (for authentication via Controller backend)
         services.AddSingleton<IRPC, RPCService>();
