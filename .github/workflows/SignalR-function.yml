@@ -9,7 +9,7 @@ on:
       - ".github/workflows/SignalR-function.yml"
 env:
   AZURE_FUNCTIONAPP_NAME: SignalR-function
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: src/Communicator.Cloud.SignalR/published
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: src/Communicator.Cloud.SignalR/publish
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 8.0.x
   WORKING_DIRECTORY: src/Communicator.Cloud.SignalR
