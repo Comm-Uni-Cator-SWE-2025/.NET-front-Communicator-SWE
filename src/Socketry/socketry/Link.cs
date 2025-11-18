@@ -61,7 +61,7 @@ namespace socketry
             if (dataRead == 0)
             {
                 // Raise runtime Exception
-                Console.WriteLine("no data received...");
+                // Console.WriteLine("no data received...");
             }
             readBuffer.Position = 0;
             return readBuffer;

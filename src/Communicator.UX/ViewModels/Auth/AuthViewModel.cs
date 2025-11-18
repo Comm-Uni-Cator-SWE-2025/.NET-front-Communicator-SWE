@@ -126,7 +126,7 @@ public class AuthViewModel : ObservableObject
         UserProfile mockUser = new(
             email: $"{username.ToLowerInvariant()}@iitpkd.ac.in",
             displayName: username,
-            role: ParticipantRole.Student,
+            role: ParticipantRole.STUDENT,
             logoUrl: null
         );
 

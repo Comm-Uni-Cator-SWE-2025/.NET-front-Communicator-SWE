@@ -717,7 +717,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
                 UserProfile newUser = new(
                     email: $"{viewerIP}@example.com",
                     displayName: viewerIP,
-                    role: ParticipantRole.Student,
+                    role: ParticipantRole.STUDENT,
                     logoUrl: null
                 );
 

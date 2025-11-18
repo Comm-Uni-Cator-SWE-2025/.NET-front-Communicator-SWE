@@ -87,7 +87,8 @@ namespace packetparser
                     writer.Write(PacketType.ACCEPT);
                     foreach(short port in accept.ports)
                     {
-                        writer.Write(port);
+                        writer.Write((byte)((port >> 8) & 0xFF));
+                        writer.Write((byte)(port & 0xFF));
                     }
                     break;
                 case Packet.Ping ping:
@@ -148,7 +149,8 @@ namespace packetparser
                     writer.Write(PacketType.ACCEPT);
                     foreach (short port in accept.ports)
                     {
-                        writer.Write(port);
+                        writer.Write((byte)((port >> 8) & 0xFF));
+                        writer.Write((byte)(port & 0xFF));
                     }
                     break;
                 case Packet.Ping ping:

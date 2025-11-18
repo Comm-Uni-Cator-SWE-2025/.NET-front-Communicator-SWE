@@ -1,8 +1,11 @@
-﻿namespace Communicator.Controller.Meeting;
+﻿using System.Text.Json.Serialization;
 
+namespace Communicator.Controller.Meeting;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ParticipantRole
 {
-    Instructor,
-    Student,
-    Guest
+    INSTRUCTOR,
+    STUDENT,
+    GUEST
 }

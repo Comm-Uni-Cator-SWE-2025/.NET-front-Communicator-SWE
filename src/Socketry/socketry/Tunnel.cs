@@ -62,7 +62,11 @@ namespace socketry
                     var callIdentifier = new CallIdentifier(resPacket.callId, resPacket.fnId);
                     if(_packets.TryGetValue(callIdentifier, out var resFuture))
                         {
-                            resFuture.TrySetResult(result);
+                            if (resFuture != null)
+                            {
+                                resFuture.TrySetResult(result);
+                            }
+                            _packets.Remove(callIdentifier);
                         }
                     return null;
                 }
@@ -72,7 +76,11 @@ namespace socketry
                         var callIdentifier = new CallIdentifier(errorPacket.callId, errorPacket.fnId);
                         if (_packets.TryGetValue(callIdentifier, out var resFuture))
                         {
-                            resFuture.TrySetException(new Exception(error.ToString()));
+                            if (resFuture != null)
+                            {
+                                resFuture.TrySetException(new Exception(Encoding.UTF8.GetString(error)));
+                            }
+                            _packets.Remove(callIdentifier);
                         }
                         return null;
                     }
@@ -181,8 +189,8 @@ namespace socketry
             CallIdentifier callIdentifier = GetCallIdentifier(fnId);
             TaskCompletionSource<byte[]> resFuture = new TaskCompletionSource<byte[]>();
             Packet.Call packet = new Packet.Call(fnId, callIdentifier.callId,arguments);
-            SendPacket(packet);
             _packets[callIdentifier] = resFuture;
+            SendPacket(packet);
             return resFuture;
         }
     }

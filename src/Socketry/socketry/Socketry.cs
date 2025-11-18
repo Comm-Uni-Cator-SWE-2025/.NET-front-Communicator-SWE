@@ -85,12 +85,17 @@ namespace socketry
                 StartListening();
             }
             catch (Exception e) {
-                // print trace
+                Console.WriteLine($"Exception in ListenLoop: {e}");
             } 
         }
 
         public void StartListening()
         {
+            if (_tunnels == null)
+            {
+                throw new InvalidOperationException("Tunnels not initialized. Cannot start listening.");
+            }
+
             while (true)
             {
                 foreach (Tunnel tunnel in _tunnels) {

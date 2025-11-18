@@ -56,6 +56,7 @@ namespace socketry
 
                         serverSockets.Add(serverSocket);
                         ports.Add(currentPort);
+                        Console.WriteLine($"[SocketryServer] Opened port: {currentPort}");
                         break;
                     }
                 }
@@ -102,6 +103,7 @@ namespace socketry
                     Console.WriteLine(ex.ToString());
                 }
             }
+            this._tunnels = tunnels.ToArray();
         }
 
         private IServerSocket StartAt(int serverPort)
