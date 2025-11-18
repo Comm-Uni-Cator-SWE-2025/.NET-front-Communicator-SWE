@@ -34,52 +34,97 @@ public partial class App : Application
         ConfigureServices(services);
         Services = services.BuildServiceProvider();
 
-        // // Initialize RPC connection
-        // InitializeRpcConnection(e.Args);
-
-
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
         themeService.LoadSavedTheme();
+
+        // Subscribe to RPC methods BEFORE starting connection (like Java)
+        IRPC rpc = Services.GetRequiredService<IRPC>();
+        SubscribeRpcMethods(rpc);
+        
+        // Start RPC connection in background thread (like Java does)
+        // This allows UI to appear while waiting for backend to connect
+        StartRpcConnectionInBackground(rpc);
 
         // Create and show main window with DI
         MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
         var mainView = new MainView {
             DataContext = mainViewModel
         };
-
         mainView.Show();
-
-        // Initialize RPC connection AFTER showing window (non-blocking)
-        Task.Run(() => InitializeRpcConnection(e.Args));
     }
 
     /// <summary>
-    /// Initializes RPC connection on application startup.
+    /// Subscribes to RPC methods that the backend may call.
+    /// Must be called BEFORE Connect(), matching Java frontend pattern.
     /// </summary>
-    private static void InitializeRpcConnection(string[] args)
+    private static void SubscribeRpcMethods(IRPC rpc)
     {
-        try
-        {
-            // Default port number
-            int portNumber = 6942;
-
-            // Parse port from command line args if provided
-            if (args.Length > 0 && int.TryParse(args[0], out int parsedPort))
+        System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
+        
+        // Subscribe to "subscribeAsViewer" - called when a new participant joins
+        // Matches Java: rpc.subscribe(Utils.SUBSCRIBE_AS_VIEWER, ...)
+        rpc.Subscribe("subscribeAsViewer", (byte[] data) => {
+            try
             {
-                portNumber = parsedPort;
+                string viewerIP = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] New viewer subscribed: {viewerIP}");
+                
+                // TODO: Notify meeting view model about new participant
+                // For now, just acknowledge receipt
+                return Array.Empty<byte>();
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in subscribeAsViewer: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        });
+        
+        System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
+    }
 
-            IRPC rpc = Services.GetRequiredService<IRPC>();
-            System.Diagnostics.Debug.WriteLine($"[App] Connecting RPC on port {portNumber}...");
-
-            Thread rpcThread = rpc.Connect(portNumber);
-            System.Diagnostics.Debug.WriteLine("[App] RPC connected successfully");
-        }
-        catch (Exception ex)
+    /// <summary>
+    /// Starts RPC connection in a background thread.
+    /// This matches Java frontend pattern where connect() is called and returns a Thread.
+    /// The UI can appear while we wait for backend to connect.
+    /// </summary>
+    private static void StartRpcConnectionInBackground(IRPC rpc)
+    {
+        System.Diagnostics.Debug.WriteLine("[App] Starting RPC connection in background thread...");
+        
+        // Start RPC server in background thread - matches Java: rpc.connect() returns Thread
+        var rpcTask = Task.Run(() =>
         {
-            System.Diagnostics.Debug.WriteLine($"[App] Warning: Could not initialize RPC: {ex.Message}");
-        }
+            try
+            {
+                int portNumber = 6942;
+                System.Diagnostics.Debug.WriteLine($"[App] RPC thread: Connecting to port {portNumber}...");
+                
+                // This will BLOCK until backend connects and completes handshake
+                // Just like Java: new SocketryServer(portNumber, methods)
+                Thread rpcThread = rpc.Connect(portNumber);
+                
+                System.Diagnostics.Debug.WriteLine("[App] RPC thread: Backend connected, server running");
+                
+                // The rpcThread is now running listenLoop in background
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] RPC thread error: {ex.Message}");
+                Console.Error.WriteLine($"[App] RPC connection failed: {ex}");
+                
+                // Show error on UI thread
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show(
+                        $"Failed to establish RPC connection: {ex.Message}\n\nSome features may not work.",
+                        "Connection Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                });
+            }
+        });
     }
 
     /// <summary>

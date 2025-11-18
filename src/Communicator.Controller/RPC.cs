@@ -89,27 +89,6 @@ public class RPCService : IRPC
 
         rpcThread.Start();
 
-        // Give the server a moment to start
-        Thread.Sleep(100);
-
-        // Discover remote procedures
-        try
-        {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-            Console.WriteLine("[RPC] Discovering remote procedures...");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-            _socketryServer.GetRemoteProceduresNames();
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-            Console.WriteLine("[RPC] Remote procedures discovered successfully");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-        }
-#pragma warning disable CA1031 // Do not catch general exception types
-        catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-        {
-            Console.WriteLine($"[RPC] Warning: Could not discover remote procedures: {ex.Message}");
-        }
-
         return rpcThread;
     }
 
@@ -128,14 +107,23 @@ public class RPCService : IRPC
 
         Console.WriteLine($"[RPC] Calling remote method: {methodName}");
 
-        // Get the remote procedure ID for the method name
-        byte methodId = _socketryServer.GetRemoteProceduresId(methodName);
-        Console.WriteLine($"[RPC] Method '{methodName}' mapped to ID: {methodId}");
+        try
+        {
+            // Get the remote procedure ID for the method name
+            // This will trigger discovery if not already done
+            byte methodId = _socketryServer.GetRemoteProceduresId(methodName);
+            Console.WriteLine($"[RPC] Method '{methodName}' mapped to ID: {methodId}");
 
-        // Make the remote call (using tunnel 0 by default)
-        TaskCompletionSource<byte[]> taskCompletionSource = _socketryServer.MakeRemoteCall(methodId, data, 0);
+            // Make the remote call (using tunnel 0 by default)
+            TaskCompletionSource<byte[]> taskCompletionSource = _socketryServer.MakeRemoteCall(methodId, data, 0);
 
-        // Return the Task from TaskCompletionSource
-        return taskCompletionSource.Task;
+            // Return the Task from TaskCompletionSource
+            return taskCompletionSource.Task;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[RPC] Error calling remote method '{methodName}': {ex.Message}");
+            throw;
+        }
     }
 }
