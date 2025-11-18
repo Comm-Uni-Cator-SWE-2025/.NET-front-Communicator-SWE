@@ -15,11 +15,11 @@ public class CloudConfigService : ICloudConfigService
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    public string NegotiateUrl =>
-        _configuration["CloudFunctions:NegotiateUrl"]
-        ?? throw new InvalidOperationException("NegotiateUrl not configured in appsettings.json");
+    public Uri NegotiateUrl =>
+        new(_configuration["CloudFunctions:NegotiateUrl"]
+        ?? throw new InvalidOperationException("NegotiateUrl not configured in appsettings.json"));
 
-    public string MessageUrl =>
-        _configuration["CloudFunctions:MessageUrl"]
-        ?? throw new InvalidOperationException("MessageUrl not configured in appsettings.json");
+    public Uri MessageUrl =>
+        new(_configuration["CloudFunctions:MessageUrl"]
+        ?? throw new InvalidOperationException("MessageUrl not configured in appsettings.json"));
 }

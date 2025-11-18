@@ -84,4 +84,13 @@ public partial class MeetingSessionView : UserControl
             }
         }
     }
+
+    private void QuickDoubtPopup_CloseRequested(object sender, System.EventArgs e)
+    {
+        if (sender is QuickDoubtPopup popup && DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
+        {
+            string? doubtId = popup.Tag as string;
+            viewModel.DismissQuickDoubtCommand.Execute(doubtId);
+        }
+    }
 }

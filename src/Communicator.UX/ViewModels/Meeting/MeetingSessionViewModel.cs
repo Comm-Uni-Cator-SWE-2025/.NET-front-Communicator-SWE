@@ -22,7 +22,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
-    private readonly IHandWaveService _handWaveService;
+    private readonly ICloudMessageService _cloudMessageService;
     private readonly ICloudConfigService _cloudConfig;
     private readonly UserProfile _currentUser;
     private readonly Stack<MeetingTabViewModel> _backStack = new();
@@ -30,7 +30,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     private MeetingTabViewModel? _currentTab;
     private bool _suppressSelectionNotifications;
     private object? _currentPage;
-    
+
     // Meeting Session State
     private MeetingSession? _currentMeeting;
     private readonly IRPC? _rpc;
@@ -52,6 +52,9 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     private DateTime? _quickDoubtTimestamp;
     private string _quickDoubtSentMessage = string.Empty;
 
+    // Collection of active Quick Doubts for stacking
+    public ObservableCollection<QuickDoubtItem> ActiveQuickDoubts { get; } = new ObservableCollection<QuickDoubtItem>();
+
     // Meeting State
     private bool _isMeetingActive;
 
@@ -62,13 +65,13 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     public MeetingSessionViewModel(
         UserProfile currentUser,
         IToastService toastService,
-        IHandWaveService handWaveService,
+        ICloudMessageService cloudMessageService,
         ICloudConfigService cloudConfig,
         IRPC? rpc = null)
     {
         _currentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
-        _handWaveService = handWaveService ?? throw new ArgumentNullException(nameof(handWaveService));
+        _cloudMessageService = cloudMessageService ?? throw new ArgumentNullException(nameof(cloudMessageService));
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _rpc = rpc;
 
@@ -90,8 +93,8 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             CurrentPage = _currentTab.ContentViewModel;
         }
 
-        // Subscribe to HandWave messages
-        _handWaveService.QuickDoubtReceived += OnQuickDoubtReceived;
+        // Subscribe to cloud message events
+        _cloudMessageService.MessageReceived += OnCloudMessageReceived;
 
         // Initialize commands
         ToggleMuteCommand = new RelayCommand(_ => ToggleMute());
@@ -103,6 +106,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         ToggleParticipantsPanelCommand = new RelayCommand(_ => ToggleParticipantsPanel());
         CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
         SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync(), _ => CanSendQuickDoubt());
+        DismissQuickDoubtCommand = new RelayCommand(param => DismissQuickDoubt(param as string));
 
         RaiseNavigationStateChanged();
 
@@ -234,6 +238,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     public ICommand ToggleParticipantsPanelCommand { get; }
     public ICommand CloseSidePanelCommand { get; }
     public ICommand SendQuickDoubtCommand { get; }
+    public ICommand DismissQuickDoubtCommand { get; }
 
     #endregion
 
@@ -511,16 +516,15 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         {
             // Open participants panel
             var participantsListVM = new ParticipantsListViewModel(Participants);
-            
+
             // Subscribe to participant count changes to update the title dynamically
-            participantsListVM.PropertyChanged += (s, e) =>
-            {
+            participantsListVM.PropertyChanged += (s, e) => {
                 if (e.PropertyName == nameof(ParticipantsListViewModel.ParticipantCount))
                 {
                     UpdateParticipantsPanelTitle(participantsListVM.ParticipantCount);
                 }
             };
-            
+
             SidePanelContent = participantsListVM;
             UpdateParticipantsPanelTitle(participantsListVM.ParticipantCount);
             IsSidePanelOpen = true;
@@ -547,15 +551,15 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
     #endregion
 
-    #region Quick Doubt / HandWave
+    #region Quick Doubt / Cloud Messaging
 
     private bool CanSendQuickDoubt()
     {
-        return !string.IsNullOrWhiteSpace(QuickDoubtMessage) && _handWaveService.IsConnected;
+        return !string.IsNullOrWhiteSpace(QuickDoubtMessage) && _cloudMessageService.IsConnected;
     }
 
     /// <summary>
-    /// Sends quick doubt message via HandWave cloud function.
+    /// Sends quick doubt message via cloud messaging service.
     /// </summary>
     private async Task SendQuickDoubtAsync()
     {
@@ -570,13 +574,17 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             QuickDoubtSentMessage = QuickDoubtMessage.Trim();
             QuickDoubtTimestamp = DateTime.Now;
 
-            // Send via cloud function
-            await _handWaveService.SendQuickDoubtAsync(_currentUser.DisplayName ?? "Unknown User", QuickDoubtSentMessage).ConfigureAwait(false);
+            // Send via cloud message service
+            await _cloudMessageService.SendMessageAsync(
+                CloudMessageType.QuickDoubt,
+                _currentUser.DisplayName ?? "Unknown User",
+                QuickDoubtSentMessage).ConfigureAwait(false);
 
-            // Clear the input field for next message
+            // Clear the input field and hide it
             QuickDoubtMessage = string.Empty;
 
-            // Keep the bubble open to show the sent message
+            // Note: We don't show the popup for the sender - only others will see it via SignalR
+            // Keep the bubble open to show the sent message (no textbox)
         }
 #pragma warning disable CA1031 // Do not catch general exception types
         catch (Exception ex)
@@ -591,14 +599,73 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     }
 
     /// <summary>
-    /// Handler for receiving quick doubt messages from cloud via SignalR.
+    /// Handler for receiving cloud messages via SignalR.
+    /// Routes to appropriate handler based on message type.
     /// </summary>
-    private void OnQuickDoubtReceived(string message)
+    private void OnCloudMessageReceived(object? sender, CloudMessageEventArgs e)
     {
-        // Display received doubt in UI thread
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        System.Diagnostics.Debug.WriteLine($"[MeetingSession] Received {e.MessageType}: Sender='{e.SenderName}', Message='{e.Message}'");
+
+        switch (e.MessageType)
         {
-            _toastService.ShowInfo($"Quick Doubt: {message}");
+            case CloudMessageType.UserJoined:
+                HandleUserJoined(e.SenderName);
+                break;
+
+            case CloudMessageType.QuickDoubt:
+                HandleQuickDoubt(e.SenderName, e.Message);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handles user joined notifications by showing a toast.
+    /// </summary>
+    private void HandleUserJoined(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] HandleUserJoined: Username is empty, ignoring");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleUserJoined: Showing toast for '{username}'");
+
+        // Show simple toast notification - no popup
+        _toastService.ShowInfo($"{username} joined!");
+    }
+
+    /// <summary>
+    /// Handles quick doubt messages by showing popup notification.
+    /// </summary>
+    private void HandleQuickDoubt(string senderName, string message)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleQuickDoubt: Sender='{senderName}', Message='{message}'");
+
+        if (string.IsNullOrWhiteSpace(senderName))
+        {
+            senderName = "Unknown";
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] HandleQuickDoubt: Sender name was empty, using 'Unknown'");
+        }
+
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] HandleQuickDoubt: WARNING - Message is empty!");
+            message = "(no message)";
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleQuickDoubt: Adding doubt item to ActiveQuickDoubts collection");
+
+        // Add to collection in UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>{
+            var doubtItem = new QuickDoubtItem {
+                Id = Guid.NewGuid().ToString(),
+                SenderName = senderName,
+                Message = message,
+                Timestamp = DateTime.Now
+            };
+            ActiveQuickDoubts.Add(doubtItem);
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleQuickDoubt: Successfully added doubt. Total active doubts: {ActiveQuickDoubts.Count}");
         });
     }
 
@@ -610,24 +677,42 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         IsQuickDoubtBubbleOpen = false;
     }
 
+    private void DismissQuickDoubt(string? doubtId)
+    {
+        if (string.IsNullOrEmpty(doubtId))
+        {
+            return;
+        }
+
+        QuickDoubtItem? doubtToRemove = ActiveQuickDoubts.FirstOrDefault(d => d.Id == doubtId);
+        if (doubtToRemove != null)
+        {
+            ActiveQuickDoubts.Remove(doubtToRemove);
+        }
+    }
+
     #endregion
 
     #region Service Initialization
 
     /// <summary>
-    /// Initializes RPC and HandWave cloud services.
+    /// Initializes RPC and cloud messaging services.
     /// </summary>
     private async Task InitializeServicesAsync()
     {
         try
         {
-            // Connect to HandWave cloud service
-            await _handWaveService.ConnectAsync(_currentUser.DisplayName ?? "Unknown User").ConfigureAwait(false);
-            _toastService.ShowSuccess("Connected to HandWave service");
+            // Connect to cloud messaging service
+            await _cloudMessageService.ConnectAsync(_currentUser.DisplayName ?? "Unknown User").ConfigureAwait(false);
+            _toastService.ShowSuccess("Connected to cloud messaging service");
+
+            // Notify other participants that this user has joined
+            await _cloudMessageService.SendMessageAsync(
+                CloudMessageType.UserJoined,
+                _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(false);
 
             // Subscribe to RPC events for new participants
-            _rpc?.Subscribe(Utils.SUBSCRIBE_AS_VIEWER, (args) =>
-            {
+            _rpc?.Subscribe(Utils.SUBSCRIBE_AS_VIEWER, (args) => {
                 string viewerIP = System.Text.Encoding.UTF8.GetString(args);
                 UserProfile newUser = new(
                     email: $"{viewerIP}@example.com",
@@ -681,8 +766,8 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             //     await _rpc.Call("leaveMeeting", Encoding.UTF8.GetBytes(_currentUser.Email ?? ""));
             // }
 
-            // Disconnect from HandWave cloud service
-            await _handWaveService.DisconnectAsync().ConfigureAwait(false);
+            // Disconnect from cloud messaging service
+            await _cloudMessageService.DisconnectAsync().ConfigureAwait(false);
 
             // Clear meeting state
             _currentMeeting = null;
@@ -713,11 +798,11 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     {
         if (disposing)
         {
-            // Unsubscribe from HandWave events
-            _handWaveService.QuickDoubtReceived -= OnQuickDoubtReceived;
+            // Unsubscribe from cloud message events
+            _cloudMessageService.MessageReceived -= OnCloudMessageReceived;
 
-            // Disconnect from HandWave
-            _ = _handWaveService.DisconnectAsync();
+            // Disconnect from cloud messaging service
+            _ = _cloudMessageService.DisconnectAsync();
 
             // Dispose managed resources
             _toolbarViewModel.SelectedTabChanged -= OnSelectedTabChanged;

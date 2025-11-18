@@ -8,10 +8,10 @@ public interface ICloudConfigService
     /// <summary>
     /// Gets the SignalR negotiate endpoint URL.
     /// </summary>
-    string NegotiateUrl { get; }
+    Uri NegotiateUrl { get; }
 
     /// <summary>
     /// Gets the message broadcast endpoint URL.
     /// </summary>
-    string MessageUrl { get; }
+    Uri MessageUrl { get; }
 }

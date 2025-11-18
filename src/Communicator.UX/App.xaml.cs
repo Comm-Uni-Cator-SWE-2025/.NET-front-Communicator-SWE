@@ -51,7 +51,7 @@ public partial class App : Application
         mainView.Show();
 
         // Initialize RPC connection AFTER showing window (non-blocking)
-        System.Threading.Tasks.Task.Run(() => InitializeRpcConnection(e.Args));
+        Task.Run(() => InitializeRpcConnection(e.Args));
     }
 
     /// <summary>
@@ -72,14 +72,13 @@ public partial class App : Application
 
             IRPC rpc = Services.GetRequiredService<IRPC>();
             System.Diagnostics.Debug.WriteLine($"[App] Connecting RPC on port {portNumber}...");
-            
-            System.Threading.Thread rpcThread = rpc.Connect(portNumber);
+
+            Thread rpcThread = rpc.Connect(portNumber);
             System.Diagnostics.Debug.WriteLine("[App] RPC connected successfully");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[App] Warning: Could not initialize RPC: {ex.Message}");
-            // Don't crash the app if RPC fails
         }
     }
 
@@ -102,38 +101,38 @@ public partial class App : Application
         services.AddSingleton<INavigationService, Services.NavigationService>();
         services.AddSingleton<IAuthenticationService, Services.AuthenticationService>();
 
-        // Register Cloud services (HandWave feature)
+        // Register Cloud services (Cloud messaging for real-time features)
         services.AddSingleton<ICloudConfigService, CloudConfigService>();
-        services.AddSingleton<IHandWaveService, HandWaveService>();
+        services.AddSingleton<ICloudMessageService, CloudMessageService>();
 
         // Register RPC Service (for authentication via Controller backend)
         services.AddSingleton<IRPC, RPCService>();
 
         // Register ViewModels
         services.AddTransient<MainViewModel>();
-        services.AddTransient<Communicator.UX.ViewModels.Auth.AuthViewModel>();
-        services.AddTransient<Communicator.UX.ViewModels.Home.HomePageViewModel>();
-        services.AddTransient<Communicator.UX.ViewModels.Settings.SettingsViewModel>();
-        services.AddTransient<Communicator.UX.ViewModels.Meeting.MeetingSessionViewModel>();
+        services.AddTransient<ViewModels.Auth.AuthViewModel>();
+        services.AddTransient<ViewModels.Home.HomePageViewModel>();
+        services.AddTransient<ViewModels.Settings.SettingsViewModel>();
+        services.AddTransient<ViewModels.Meeting.MeetingSessionViewModel>();
 
         // Register ToastContainerViewModel as Singleton (single toast container for app)
-        services.AddSingleton<Communicator.UX.ViewModels.Common.ToastContainerViewModel>();
+        services.AddSingleton<ViewModels.Common.ToastContainerViewModel>();
 
         // Register ViewModel Factories
         // Factory for creating AuthViewModel instances (used in MainViewModel)
-        services.AddTransient<Func<Communicator.UX.ViewModels.Auth.AuthViewModel>>(sp =>
-            () => sp.GetRequiredService<Communicator.UX.ViewModels.Auth.AuthViewModel>());
+        services.AddTransient<Func<ViewModels.Auth.AuthViewModel>>(sp =>
+            () => sp.GetRequiredService<ViewModels.Auth.AuthViewModel>());
 
         // Factory for creating ViewModels with UserProfile parameter
         // Using ActivatorUtilities.CreateInstance for automatic dependency resolution
-        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Home.HomePageViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Home.HomePageViewModel>(sp, user));
+        services.AddTransient<Func<UserProfile, ViewModels.Home.HomePageViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<ViewModels.Home.HomePageViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Settings.SettingsViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Settings.SettingsViewModel>(sp, user));
+        services.AddTransient<Func<UserProfile, ViewModels.Settings.SettingsViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, Communicator.UX.ViewModels.Meeting.MeetingSessionViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<Communicator.UX.ViewModels.Meeting.MeetingSessionViewModel>(sp, user));
+        services.AddTransient<Func<UserProfile, ViewModels.Meeting.MeetingSessionViewModel>>(sp =>
+            user => ActivatorUtilities.CreateInstance<ViewModels.Meeting.MeetingSessionViewModel>(sp, user));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

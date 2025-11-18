@@ -114,7 +114,7 @@
                         <!-- Hand Raised -->
                         <icons:Icon IconName="hand-paper"
                                     IconSize="14"
-                                    Foreground="#FFA500"
+                                    Foreground="{DynamicResource WarningBrush}"
                                     Margin="4,0,0,0"
                                     ToolTip="Hand raised">
                             <icons:Icon.Style>
@@ -132,7 +132,7 @@
                         <!-- Screen Sharing -->
                         <icons:Icon IconName="monitor"
                                     IconSize="14"
-                                    Foreground="#4CAF50"
+                                    Foreground="{DynamicResource SuccessBrush}"
                                     Margin="4,0,0,0"
                                     ToolTip="Screen sharing">
                             <icons:Icon.Style>
@@ -150,7 +150,7 @@
                         <!-- Microphone Muted -->
                         <icons:Icon IconName="microphone-off"
                                     IconSize="14"
-                                    Foreground="#F44336"
+                                    Foreground="{DynamicResource ErrorBrush}"
                                     Margin="4,0,0,0"
                                     ToolTip="Muted">
                             <icons:Icon.Style>

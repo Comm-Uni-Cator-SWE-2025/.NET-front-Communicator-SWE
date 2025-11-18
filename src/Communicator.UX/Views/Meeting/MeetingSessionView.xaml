@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
+             xmlns:local="clr-namespace:Communicator.UX.Views"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="900"
@@ -28,6 +29,35 @@
         <!-- Main Content (Current Tab) -->
         <ContentControl Grid.Row="0"
                         Content="{Binding CurrentPage}"/>
+
+        <!-- Quick Doubt Popup Container - Left Bottom with modern stacking -->
+        <ScrollViewer Grid.Row="0"
+                      x:Name="QuickDoubtScrollViewer"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Bottom"
+                      Margin="16,0,0,16"
+                      Panel.ZIndex="999"
+                      MaxHeight="500"
+                      MaxWidth="400"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="QuickDoubtPopupContainer"
+                          ItemsSource="{Binding ActiveQuickDoubts}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel VerticalAlignment="Bottom"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <local:QuickDoubtPopup SenderName="{Binding SenderName}"
+                                               Message="{Binding Message}"
+                                               Tag="{Binding Id}"
+                                               CloseRequested="QuickDoubtPopup_CloseRequested"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
 
         <!-- Bottom Meeting Control Toolbar -->
         <Border Grid.Row="1"
@@ -142,9 +172,10 @@
                            PlacementTarget="{Binding ElementName=RaiseHandButton}"
                            Placement="Top"
                            AllowsTransparency="True"
-                           StaysOpen="True"
+                           StaysOpen="False"
                            HorizontalOffset="0"
-                           VerticalOffset="-20">
+                           VerticalOffset="-20"
+                           x:Name="QuickDoubtPopup">
                         <Border x:Name="BubbleBorder"
                                 Background="{DynamicResource SurfaceBrush}"
                                 BorderBrush="{DynamicResource AccentBrush}"
@@ -225,7 +256,7 @@
                                     </StackPanel>
                                 </Border>
                                 
-                                <!-- Input TextBox -->
+                                <!-- Input TextBox - Only show when no message has been sent -->
                                 <TextBox Text="{Binding QuickDoubtMessage, UpdateSourceTrigger=PropertyChanged}"
                                          x:Name="QuickDoubtTextBox"
                                          MinHeight="60"
@@ -237,7 +268,8 @@
                                          FontSize="13"
                                          Margin="0,0,0,8"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
-                                         CaretBrush="{DynamicResource TextPrimaryBrush}">
+                                         CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                         Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=True}">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">
                                             <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
@@ -267,12 +299,21 @@
                                     </TextBox.Style>
                                 </TextBox>
                                 
-                                <!-- Hint Text -->
+                                <!-- Hint Text - Only show when textbox is visible -->
                                 <TextBlock Text="Press Enter to send to everyone"
                                            FontSize="11"
                                            Opacity="0.7"
                                            TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=True}"/>
+                                
+                                <!-- Lower Hand Action Hint - Show when message is sent -->
+                                <TextBlock Text="Lower your hand or click outside to close"
+                                           FontSize="11"
+                                           Opacity="0.7"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                             </StackPanel>
                         </Border>
                     </Popup>
