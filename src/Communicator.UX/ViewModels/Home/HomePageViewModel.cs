@@ -38,7 +38,6 @@ public class HomePageViewModel : ObservableObject
 
     public ICommand JoinMeetingCommand { get; }
     public ICommand CreateMeetingCommand { get; }
-    public ICommand OpenMeetingCommand { get; }
 
     /// <summary>
     /// Initializes the home page with the authenticated user's profile and commands.
@@ -60,7 +59,6 @@ public class HomePageViewModel : ObservableObject
         _meetingLink = string.Empty;
         JoinMeetingCommand = new RelayCommand(JoinMeeting, CanJoinMeeting);
         CreateMeetingCommand = new RelayCommand(CreateMeeting, CanCreateMeeting);
-        OpenMeetingCommand = new RelayCommand(OpenMeeting);
     }
 
     /// <summary>
@@ -109,11 +107,11 @@ public class HomePageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Ensures a meeting link was supplied before enabling the join command.
+    /// Always enable the join command. Validation happens in the execution.
     /// </summary>
     private bool CanJoinMeeting(object? obj)
     {
-        return !string.IsNullOrWhiteSpace(MeetingLink);
+        return true;
     }
 
     /// <summary>
@@ -157,16 +155,6 @@ public class HomePageViewModel : ObservableObject
     private bool CanCreateMeeting(object? obj)
     {
         return true;
-    }
-
-    /// <summary>
-    /// Initiates the meeting workspace by navigating to the meeting session.
-    /// Uses injected factory to create MeetingSessionViewModel with all dependencies.
-    /// </summary>
-    private void OpenMeeting(object? obj)
-    {
-        // For "Open Meeting" (debug/offline mode), we just create a local session
-        _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user, null));
     }
 }
 

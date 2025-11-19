@@ -50,7 +50,6 @@ public class AuthViewModel : ObservableObject
     }
 
     public ICommand SignInWithGoogleCommand { get; }
-    public ICommand SkipToHomeCommand { get; }
 
     public AuthViewModel(IRPC rpc, IToastService toastService)
     {
@@ -58,7 +57,6 @@ public class AuthViewModel : ObservableObject
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
 
         SignInWithGoogleCommand = new RelayCommand(SignInWithGoogle, _ => !IsLoading);
-        SkipToHomeCommand = new RelayCommand(SkipToHome, _ => !IsLoading);
     }
 
     /// <summary>
@@ -106,34 +104,6 @@ public class AuthViewModel : ObservableObject
                 _toastService.ShowError($"Authentication failed: {ex.Message}");
             });
         }
-    }
-
-    /// <summary>
-    /// Skips authentication and navigates directly to home screen with a mock user.
-    /// This is a temporary bypass for testing purposes while backend is unavailable.
-    /// Generates a random username each time for testing HandWave feature with multiple users.
-    /// </summary>
-    private void SkipToHome(object? obj)
-    {
-        System.Diagnostics.Debug.WriteLine("[AuthViewModel] Skipping to home with mock user");
-
-        // Generate a random user ID for testing (useful for testing HandWave with multiple instances)
-        Random random = new();
-        int userId = random.Next(1, 1000);
-        string username = $"TestUser{userId}";
-
-        // Create a mock user for testing
-        UserProfile mockUser = new(
-            email: $"{username.ToLowerInvariant()}@iitpkd.ac.in",
-            displayName: username,
-            role: ParticipantRole.STUDENT,
-            logoUrl: null
-        );
-
-        _toastService.ShowInfo($"Logged in as: {username}");
-
-        // Trigger the LoggedIn event to navigate to home screen
-        LoggedIn?.Invoke(this, new UserProfileEventArgs(mockUser));
     }
 
     /// <summary>

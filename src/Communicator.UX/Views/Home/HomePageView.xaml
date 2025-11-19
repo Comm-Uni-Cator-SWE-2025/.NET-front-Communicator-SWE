@@ -107,22 +107,6 @@
                                 </StackPanel>
                             </Button>
                         </Grid>
-
-                        <!-- Open Meeting Workspace Button -->
-                        <Button Command="{Binding OpenMeetingCommand}"
-                                Height="48"
-                                Margin="0,24,0,0"
-                                Style="{StaticResource SecondaryButtonStyle}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="&#xE8BD;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="16"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,0"/>
-                                <TextBlock Text="Open Meeting Workspace"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
                     </StackPanel>
                 </Border>
                 
