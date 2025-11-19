@@ -356,7 +356,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             if (_currentMeeting == null)
             {
                 // Fallback: Create a new meeting session locally if none provided
-                _currentMeeting = new MeetingSession(_currentUser.Email ?? "unknown", SessionMode.Class);
+                _currentMeeting = new MeetingSession(_currentUser.Email ?? "unknown", SessionMode.CLASS);
                 _currentMeeting.AddParticipant(_currentUser);
             }
 

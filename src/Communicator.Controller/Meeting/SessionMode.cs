@@ -1,7 +1,10 @@
-﻿namespace Communicator.Controller.Meeting;
+﻿using System.Text.Json.Serialization;
 
+namespace Communicator.Controller.Meeting;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SessionMode
 {
-    Test,
-    Class
+    TEST,
+    CLASS
 }

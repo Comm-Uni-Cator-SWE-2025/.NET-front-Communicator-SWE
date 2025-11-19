@@ -92,7 +92,7 @@ public class HomePageViewModel : ObservableObject
                 meetingId: meetingId,
                 createdBy: "unknown", // We don't know who created it yet
                 createdAt: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                sessionMode: SessionMode.Class
+                sessionMode: SessionMode.CLASS
             );
 
             // 4. Navigate to meeting session
