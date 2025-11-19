@@ -27,6 +27,14 @@ public static class Utils
     /// </summary>
     public const string STOP_SCREEN_CAPTURE = "stopScreenCapture";
     /// <summary>
+    /// Key constant for start_audio_capture.
+    /// </summary>
+    public const string START_AUDIO_CAPTURE = "startAudioCapture";
+    /// <summary>
+    /// Key constant for stop_audio_capture.
+    /// </summary>
+    public const string STOP_AUDIO_CAPTURE = "stopAudioCapture";
+    /// <summary>
     /// Key constant for subscribe_as_viewer.
     /// </summary>
     public const string SUBSCRIBE_AS_VIEWER = "subscribeAsViewer";

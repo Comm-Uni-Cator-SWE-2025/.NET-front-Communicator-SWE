@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Globalization;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Communicator.Controller.Meeting;
+using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.UX.ViewModels.Meeting;
@@ -16,7 +19,8 @@ public class HomePageViewModel : ObservableObject
     private readonly UserProfile _user;
     private readonly IToastService _toastService;
     private readonly INavigationService _navigationService;
-    private readonly Func<UserProfile, MeetingSessionViewModel> _meetingSessionViewModelFactory;
+    private readonly IRPC _rpc;
+    private readonly Func<UserProfile, MeetingSession?, MeetingSessionViewModel> _meetingSessionViewModelFactory;
 
     public static string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy", CultureInfo.CurrentCulture);
     public string WelcomeMessage => _user.DisplayName ?? "User";
@@ -44,11 +48,13 @@ public class HomePageViewModel : ObservableObject
         UserProfile user,
         IToastService toastService,
         INavigationService navigationService,
-        Func<UserProfile, MeetingSessionViewModel> meetingSessionViewModelFactory)
+        IRPC rpc,
+        Func<UserProfile, MeetingSession?, MeetingSessionViewModel> meetingSessionViewModelFactory)
     {
         _user = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _rpc = rpc ?? throw new ArgumentNullException(nameof(rpc));
         _meetingSessionViewModelFactory = meetingSessionViewModelFactory ?? throw new ArgumentNullException(nameof(meetingSessionViewModelFactory));
 
         _meetingLink = string.Empty;
@@ -58,24 +64,48 @@ public class HomePageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Placeholder for joining a meeting via link with basic input validation.
+    /// Joins a meeting using the provided Meeting ID.
     /// </summary>
-    private void JoinMeeting(object? obj)
+    private async void JoinMeeting(object? obj)
     {
         if (string.IsNullOrWhiteSpace(MeetingLink))
         {
-            _toastService.ShowWarning("Please enter a meeting link to join");
+            _toastService.ShowWarning("Please enter a meeting ID to join");
             return;
         }
 
-        // TODO: Cloud team needs to implement join meeting cloud function
-        // Once available, add implementation here:
-        // 1. Parse meeting link to extract meeting ID
-        // 2. Call cloud function: await httpClient.GetAsync($"{_cloudConfig.JoinMeetingUrl}?meetingId={meetingId}&userId={_user.Email}");
-        // 3. Handle RPC-based features (video, audio, screenshare) initialization
-        // 4. Navigate to meeting session: _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user));
+        string meetingId = MeetingLink.Trim();
 
-        _toastService.ShowInfo("Join meeting functionality pending cloud team implementation");
+        try
+        {
+            // 1. Serialize meeting ID to JSON string, then to bytes
+            // Java backend expects: DataSerializer.deserialize(meetId, String.class)
+            string jsonId = JsonSerializer.Serialize(meetingId);
+            byte[] payload = System.Text.Encoding.UTF8.GetBytes(jsonId);
+
+            // 2. Call RPC to join meeting
+            // Backend returns the meeting ID if successful
+            await _rpc.Call("core/joinMeeting", payload);
+
+            // 3. Create a local session object with this ID
+            // We don't have the full session details yet, but we can start with basic info.
+            // The backend will sync participants later via 'subscribeAsViewer' or other events.
+            var session = new MeetingSession(
+                meetingId: meetingId,
+                createdBy: "unknown", // We don't know who created it yet
+                createdAt: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                sessionMode: SessionMode.Class
+            );
+
+            // 4. Navigate to meeting session
+            _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user, session));
+            
+            _toastService.ShowSuccess($"Joined meeting {meetingId}");
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Error joining meeting: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -87,12 +117,38 @@ public class HomePageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Placeholder for meeting creation.
-    /// No role restrictions - all users can create meetings.
+    /// Creates a new meeting via RPC.
     /// </summary>
-    private void CreateMeeting(object? obj)
+    private async void CreateMeeting(object? obj)
     {
-        // TODO: Implement Create Meeting logic
+        try
+        {
+            // 1. Call RPC to create meeting
+            // The backend expects a byte[] for meetMode, but ignores it. We can send empty.
+            byte[] response = await _rpc.Call("core/createMeeting", Array.Empty<byte>());
+
+            // 2. Deserialize response to MeetingSession
+            string json = System.Text.Encoding.UTF8.GetString(response);
+            
+            // Use case-insensitive options as Java might use camelCase while C# expects PascalCase (or vice versa depending on config)
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            MeetingSession? session = JsonSerializer.Deserialize<MeetingSession>(json, options);
+
+            if (session != null)
+            {
+                // 3. Navigate to meeting session
+                _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user, session));
+                _toastService.ShowSuccess($"Created meeting {session.MeetingId}");
+            }
+            else
+            {
+                _toastService.ShowError("Failed to create meeting: Invalid response from server");
+            }
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Error creating meeting: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -109,7 +165,8 @@ public class HomePageViewModel : ObservableObject
     /// </summary>
     private void OpenMeeting(object? obj)
     {
-        _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user));
+        // For "Open Meeting" (debug/offline mode), we just create a local session
+        _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user, null));
     }
 }
 

@@ -447,7 +447,7 @@
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
                             <!-- Test Recv Button (Only visible for Chat) -->
-                            <Button Command="{Binding SidePanelContent.TestRecvCommand}"
+                            <!-- <Button Command="{Binding SidePanelContent.TestRecvCommand}"
                                     ToolTip="Test Receive Message"
                                     Background="Transparent"
                                     BorderThickness="0"
@@ -480,14 +480,13 @@
                                             </Setter.Value>
                                         </Setter>
                                         <Style.Triggers>
-                                            <!-- Only show for Chat panel -->
                                             <DataTrigger Binding="{Binding SidePanelTitle}" Value="Chat">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
-                            </Button>
+                            </Button> -->
                             
                             <!-- Close Panel Button -->
                             <Button Command="{Binding CloseSidePanelCommand}"

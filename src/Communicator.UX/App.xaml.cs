@@ -40,11 +40,12 @@ public partial class App : Application
 
         // Subscribe to RPC methods BEFORE starting connection (like Java)
         IRPC rpc = Services.GetRequiredService<IRPC>();
-        SubscribeRpcMethods(rpc);
+        IRpcEventService rpcEventService = Services.GetRequiredService<IRpcEventService>();
+        SubscribeRpcMethods(rpc, rpcEventService);
         
         // Start RPC connection in background thread (like Java does)
         // This allows UI to appear while waiting for backend to connect
-        StartRpcConnectionInBackground(rpc);
+        StartRpcConnectionInBackground(rpc, e.Args);
 
         // Create and show main window with DI
         MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
@@ -58,7 +59,7 @@ public partial class App : Application
     /// Subscribes to RPC methods that the backend may call.
     /// Must be called BEFORE Connect(), matching Java frontend pattern.
     /// </summary>
-    private static void SubscribeRpcMethods(IRPC rpc)
+    private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService)
     {
         System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
         
@@ -70,8 +71,8 @@ public partial class App : Application
                 string viewerIP = System.Text.Encoding.UTF8.GetString(data);
                 System.Diagnostics.Debug.WriteLine($"[App] New viewer subscribed: {viewerIP}");
                 
-                // TODO: Notify meeting view model about new participant
-                // For now, just acknowledge receipt
+                rpcEventService.RaiseParticipantJoined(viewerIP);
+                
                 return Array.Empty<byte>();
             }
             catch (Exception ex)
@@ -79,6 +80,32 @@ public partial class App : Application
                 System.Diagnostics.Debug.WriteLine($"[App] Error in subscribeAsViewer: {ex.Message}");
                 return Array.Empty<byte>();
             }
+        });
+
+        // Subscribe to UPDATE_UI to receive video/screen frames
+        rpc.Subscribe(Communicator.ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
+            try
+            {
+                rpcEventService.RaiseFrameReceived(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in UPDATE_UI: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
+
+        // Subscribe to STOP_SHARE to clear screen frames
+        rpc.Subscribe(Communicator.ScreenShare.Utils.STOP_SHARE, (byte[] data) => {
+            try
+            {
+                rpcEventService.RaiseStopShareReceived(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in STOP_SHARE: {ex.Message}");
+            }
+            return Array.Empty<byte>();
         });
         
         System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
@@ -89,7 +116,7 @@ public partial class App : Application
     /// This matches Java frontend pattern where connect() is called and returns a Thread.
     /// The UI can appear while we wait for backend to connect.
     /// </summary>
-    private static void StartRpcConnectionInBackground(IRPC rpc)
+    private static void StartRpcConnectionInBackground(IRPC rpc, string[] args)
     {
         System.Diagnostics.Debug.WriteLine("[App] Starting RPC connection in background thread...");
         
@@ -99,6 +126,11 @@ public partial class App : Application
             try
             {
                 int portNumber = 6942;
+                if (args.Length > 0 && int.TryParse(args[0], out int parsedPort))
+                {
+                    portNumber = parsedPort;
+                }
+
                 System.Diagnostics.Debug.WriteLine($"[App] RPC thread: Connecting to port {portNumber}...");
                 
                 // This will BLOCK until backend connects and completes handshake
@@ -150,6 +182,9 @@ public partial class App : Application
         services.AddSingleton<ICloudConfigService, CloudConfigService>();
         services.AddSingleton<ICloudMessageService, CloudMessageService>();
 
+        // Register RPC Event Service
+        services.AddSingleton<IRpcEventService, RpcEventService>();
+
         // Register RPC Service (for authentication via Controller backend)
         services.AddSingleton<IRPC, RPCService>();
 
@@ -176,8 +211,9 @@ public partial class App : Application
         services.AddTransient<Func<UserProfile, ViewModels.Settings.SettingsViewModel>>(sp =>
             user => ActivatorUtilities.CreateInstance<ViewModels.Settings.SettingsViewModel>(sp, user));
 
-        services.AddTransient<Func<UserProfile, ViewModels.Meeting.MeetingSessionViewModel>>(sp =>
-            user => ActivatorUtilities.CreateInstance<ViewModels.Meeting.MeetingSessionViewModel>(sp, user));
+        // Factory for creating MeetingSessionViewModel with UserProfile and optional MeetingSession
+        services.AddTransient<Func<UserProfile, MeetingSession?, ViewModels.Meeting.MeetingSessionViewModel>>(sp =>
+            (user, session) => ActivatorUtilities.CreateInstance<ViewModels.Meeting.MeetingSessionViewModel>(sp, user, session));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

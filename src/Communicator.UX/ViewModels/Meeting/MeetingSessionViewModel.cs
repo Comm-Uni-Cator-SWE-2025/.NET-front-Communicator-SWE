@@ -34,6 +34,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     // Meeting Session State
     private MeetingSession? _currentMeeting;
     private readonly IRPC? _rpc;
+    private readonly IRpcEventService? _rpcEventService;
 
     // Toolbar State
     private bool _isMuted;
@@ -64,22 +65,26 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     /// </summary>
     public MeetingSessionViewModel(
         UserProfile currentUser,
+        MeetingSession? meetingSession,
         IToastService toastService,
         ICloudMessageService cloudMessageService,
         ICloudConfigService cloudConfig,
-        IRPC? rpc = null)
+        IRPC? rpc = null,
+        IRpcEventService? rpcEventService = null)
     {
         _currentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
+        _currentMeeting = meetingSession; // Initialize with passed session if available
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
         _cloudMessageService = cloudMessageService ?? throw new ArgumentNullException(nameof(cloudMessageService));
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _rpc = rpc;
+        _rpcEventService = rpcEventService;
 
         // Initialize participants collection
         Participants = new ObservableCollection<ParticipantViewModel>();
 
         // Create sub-ViewModels with shared participant collection
-        VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc);
+        VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc, _rpcEventService);
         Chat = new ChatViewModel(_currentUser, _toastService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
         AIInsights = new AIInsightsViewModel(_currentUser);
@@ -113,8 +118,27 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         // Start the meeting session
         StartMeeting();
 
+        // Subscribe to RPC events via service (avoids late subscription error)
+        if (_rpcEventService != null)
+        {
+            _rpcEventService.ParticipantJoined += OnParticipantJoined;
+        }
+
         // Connect to HandWave and RPC
         _ = InitializeServicesAsync();
+    }
+
+    private void OnParticipantJoined(object? sender, string viewerIP)
+    {
+        UserProfile newUser = new(
+            email: $"{viewerIP}@example.com",
+            displayName: viewerIP,
+            role: ParticipantRole.STUDENT,
+            logoUrl: null
+        );
+
+        // Update collection on UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
     }
 
     #region Properties
@@ -329,16 +353,21 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     {
         if (_currentUser != null)
         {
-            // Create a new meeting session
-            _currentMeeting = new MeetingSession(_currentUser.Email ?? "unknown", SessionMode.Class);
-            _currentMeeting.AddParticipant(_currentUser);
+            if (_currentMeeting == null)
+            {
+                // Fallback: Create a new meeting session locally if none provided
+                _currentMeeting = new MeetingSession(_currentUser.Email ?? "unknown", SessionMode.Class);
+                _currentMeeting.AddParticipant(_currentUser);
+            }
 
-            // Add current user to participants list
+            // Add current user to participants list if not already there
             AddParticipant(_currentUser);
 
-            // TODO: Call RPC to create meeting on backend
-            // Example: await _rpc?.Call("createMeeting", SerializeMeetingInfo(_currentMeeting));
-            // Backend should return meeting ID and initial state
+            // Add existing participants from the session (if any)
+            foreach (UserProfile participant in _currentMeeting.Participants.Values)
+            {
+                AddParticipant(participant);
+            }
         }
 
         IsMeetingActive = true;
@@ -364,7 +393,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         _currentMeeting.AddParticipant(user);
 
         // Create ViewModel wrapper and add to UI collection
-        var participantVM = new ParticipantViewModel(user);
+        ParticipantViewModel participantVM = new ParticipantViewModel(user);
         Participants.Add(participantVM);
 
         _toastService.ShowInfo($"{user.DisplayName ?? user.Email} joined the meeting");
@@ -393,7 +422,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
     #region Toolbar Actions
 
-    private void ToggleMute()
+    private async void ToggleMute()
     {
         if (_currentMeeting == null || _rpc == null)
         {
@@ -403,8 +432,8 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
         IsMuted = !IsMuted;
 
-        // TODO: Call RPC to toggle audio
-        // _rpc.CallAsync(IsMuted ? Utils.STOP_AUDIO_CAPTURE : "START_AUDIO_CAPTURE", Array.Empty<byte>());
+        // Call RPC to toggle audio
+        await _rpc.Call(IsMuted ? Utils.STOP_AUDIO_CAPTURE : Utils.START_AUDIO_CAPTURE, Array.Empty<byte>());
 
         // Update current user's participant state
         ParticipantViewModel? currentParticipant = Participants.FirstOrDefault(p => p.User.Email == _currentUser.Email);
@@ -414,7 +443,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         }
     }
 
-    private void ToggleCamera()
+    private async void ToggleCamera()
     {
         if (_currentMeeting == null || _rpc == null)
         {
@@ -424,8 +453,8 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
         IsCameraOn = !IsCameraOn;
 
-        // TODO: Call RPC to toggle video
-        // _rpc.CallAsync(IsCameraOn ? Utils.START_VIDEO_CAPTURE : Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
+        // Call RPC to toggle video
+        await _rpc.Call(IsCameraOn ? Utils.START_VIDEO_CAPTURE : Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
 
         // Update current user's participant state
         ParticipantViewModel? currentParticipant = Participants.FirstOrDefault(p => p.User.Email == _currentUser.Email);
@@ -458,7 +487,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         }
     }
 
-    private void ToggleScreenShare()
+    private async void ToggleScreenShare()
     {
         if (_currentMeeting == null || _rpc == null)
         {
@@ -468,8 +497,8 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
         IsScreenSharing = !IsScreenSharing;
 
-        // TODO: Call RPC to toggle screen share
-        // _rpc.CallAsync(IsScreenSharing ? Utils.START_SCREEN_CAPTURE : Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
+        // Call RPC to toggle screen share
+        await _rpc.Call(IsScreenSharing ? Utils.START_SCREEN_CAPTURE : Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
 
         // Update current user's participant state
         ParticipantViewModel? currentParticipant = Participants.FirstOrDefault(p => p.User.Email == _currentUser.Email);
@@ -710,21 +739,6 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.UserJoined,
                 _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(false);
-
-            // Subscribe to RPC events for new participants
-            _rpc?.Subscribe(Utils.SUBSCRIBE_AS_VIEWER, (args) => {
-                string viewerIP = System.Text.Encoding.UTF8.GetString(args);
-                UserProfile newUser = new(
-                    email: $"{viewerIP}@example.com",
-                    displayName: viewerIP,
-                    role: ParticipantRole.STUDENT,
-                    logoUrl: null
-                );
-
-                // Update collection on UI thread
-                System.Windows.Application.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
-                return Array.Empty<byte>();
-            });
         }
 #pragma warning disable CA1031 // Do not catch general exception types
         catch (Exception ex)
@@ -741,30 +755,30 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     {
         try
         {
-            // TODO: Stop all RPC streaming features before leaving
-            // if (_rpc != null)
-            // {
-            //     // Stop video capture if enabled
-            //     if (IsCameraOn)
-            //     {
-            //         await _rpc.Call(Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
-            //     }
-            //
-            //     // Stop screen share if enabled
-            //     if (IsScreenSharing)
-            //     {
-            //         await _rpc.Call(Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
-            //     }
-            //
-            //     // Stop audio capture if enabled
-            //     if (!IsMuted)
-            //     {
-            //         await _rpc.Call(Utils.STOP_AUDIO_CAPTURE, Array.Empty<byte>());
-            //     }
-            //
-            //     // Notify backend of leaving
-            //     await _rpc.Call("leaveMeeting", Encoding.UTF8.GetBytes(_currentUser.Email ?? ""));
-            // }
+            // Stop all RPC streaming features before leaving
+            if (_rpc != null)
+            {
+                // Stop video capture if enabled
+                if (IsCameraOn)
+                {
+                    await _rpc.Call(Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
+                }
+
+                // Stop screen share if enabled
+                if (IsScreenSharing)
+                {
+                    await _rpc.Call(Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
+                }
+
+                // Stop audio capture if enabled
+                if (!IsMuted)
+                {
+                    await _rpc.Call(Utils.STOP_AUDIO_CAPTURE, Array.Empty<byte>());
+                }
+
+                // Notify backend of leaving
+                // await _rpc.Call("leaveMeeting", Encoding.UTF8.GetBytes(_currentUser.Email ?? ""));
+            }
 
             // Disconnect from cloud messaging service
             await _cloudMessageService.DisconnectAsync().ConfigureAwait(false);
@@ -798,6 +812,12 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
     {
         if (disposing)
         {
+            // Unsubscribe from RPC events
+            if (_rpcEventService != null)
+            {
+                _rpcEventService.ParticipantJoined -= OnParticipantJoined;
+            }
+
             // Unsubscribe from cloud message events
             _cloudMessageService.MessageReceived -= OnCloudMessageReceived;
 
@@ -805,6 +825,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             _ = _cloudMessageService.DisconnectAsync();
 
             // Dispose managed resources
+            VideoSession.Dispose();
             _toolbarViewModel.SelectedTabChanged -= OnSelectedTabChanged;
             _backStack.Clear();
             _forwardStack.Clear();
