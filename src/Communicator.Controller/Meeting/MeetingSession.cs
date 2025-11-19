@@ -8,19 +8,28 @@ namespace Communicator.Controller.Meeting;
 public class MeetingSession
 {
     [JsonPropertyName("meetingId")]
-    public string MeetingId { get; }
+    public string MeetingId { get; set; }
 
     [JsonPropertyName("createdBy")]
-    public string CreatedBy { get; }
+    public string CreatedBy { get; set; }
 
     [JsonPropertyName("createdAt")]
-    public long CreatedAt { get; }
+    public long CreatedAt { get; set; }
 
     [JsonPropertyName("sessionMode")]
-    public SessionMode SessionMode { get; }
+    public SessionMode SessionMode { get; set; }
 
     [JsonPropertyName("participants")]
     public ConcurrentDictionary<string, UserProfile> Participants { get; } = new();
+
+    /// <summary>
+    /// Default constructor for serialization.
+    /// </summary>
+    public MeetingSession()
+    {
+        MeetingId = string.Empty;
+        CreatedBy = string.Empty;
+    }
 
     /// <summary>
     /// Creates a new meeting with a unique ID.
@@ -33,13 +42,12 @@ public class MeetingSession
         CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     }
 
-    [JsonConstructor]
     public MeetingSession(
         string meetingId,
         string createdBy,
         long createdAt,
         SessionMode sessionMode,
-        IDictionary<string, UserProfile>? participants = null)
+        ConcurrentDictionary<string, UserProfile>? participants = null)
     {
         MeetingId = meetingId;
         CreatedBy = createdBy;
@@ -48,7 +56,7 @@ public class MeetingSession
 
         if (participants != null)
         {
-            Participants = new ConcurrentDictionary<string, UserProfile>(participants);
+            Participants = participants;
         }
     }
 

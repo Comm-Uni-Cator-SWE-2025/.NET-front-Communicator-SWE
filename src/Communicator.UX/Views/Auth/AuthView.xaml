@@ -99,29 +99,6 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Skip to Home Button (Dev Mode) -->
-                <Button Command="{Binding SkipToHomeCommand}"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Height="50"
-                        Padding="16,0"
-                        Margin="0,0,0,20"
-                        Background="#FF6B35"
-                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <icons:Icon IconName="arrow-right"
-                                    IconSize="20"
-                                    Foreground="White"
-                                    Margin="0,0,12,0"
-                                    VerticalAlignment="Center"/>
-                        
-                        <TextBlock Text="Skip to Home (Dev Mode)"
-                                   FontSize="15"
-                                   FontWeight="Medium"
-                                   Foreground="White"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
                 <!-- Info Text -->
                 <TextBlock Text="By signing in, you agree to use Google authentication for secure access to IIT Palakkad Meet."
                            FontSize="12"

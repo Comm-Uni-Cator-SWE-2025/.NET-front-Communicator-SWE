@@ -25,6 +25,11 @@ namespace socket
 
         public int Read(MemoryStream dst)
         {
+            if (!_osSocket.Blocking && !_osSocket.Poll(0, SelectMode.SelectRead))
+            {
+                return 0;
+            }
+
             byte[] temp =new byte[1024];
             int r = 0; 
             try
@@ -32,9 +37,17 @@ namespace socket
                 r = _osSocket.Receive(temp);
                 dst.Write(temp, 0, r);
             }
-            catch (SocketException e) {
+            catch (SocketException e) 
+            {
+                if (e.SocketErrorCode != SocketError.WouldBlock)
+                {
+                    Console.WriteLine($"Socket Exception: {e.Message}");
+                }
             }
-            Console.WriteLine($"Received message ({r} bytes):");
+            if (r > 0)
+            {
+                Console.WriteLine($"Received message ({r} bytes):");
+            }
             return r;
         }
 

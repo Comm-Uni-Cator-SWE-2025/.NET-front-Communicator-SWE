@@ -7,7 +7,7 @@ namespace Communicator.UX.Views.Meeting;
 /// <summary>
 /// Container view that frames all meeting sub-pages and surfaces the active tab content.
 /// </summary>
-public partial class MeetingShellView : UserControl
+public partial class MeetingSessionView : UserControl
 {
     private const double DefaultSidePanelWidth = 320;
     private const double MinSidePanelWidth = 250;
@@ -17,7 +17,7 @@ public partial class MeetingShellView : UserControl
     /// <summary>
     /// Initializes shell components declared in XAML.
     /// </summary>
-    public MeetingShellView()
+    public MeetingSessionView()
     {
         InitializeComponent();
         Loaded += OnLoaded;
@@ -35,7 +35,7 @@ public partial class MeetingShellView : UserControl
         {
             e.Handled = true; // Prevent new line
             
-            if (DataContext is ViewModels.Meeting.MeetingShellViewModel viewModel)
+            if (DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
             {
                 if (viewModel.SendQuickDoubtCommand.CanExecute(null))
                 {
@@ -47,7 +47,7 @@ public partial class MeetingShellView : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (DataContext is ViewModels.Meeting.MeetingShellViewModel viewModel)
+        if (DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
         {
             viewModel.PropertyChanged += ViewModel_PropertyChanged;
         }
@@ -55,9 +55,9 @@ public partial class MeetingShellView : UserControl
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ViewModels.Meeting.MeetingShellViewModel.IsSidePanelOpen))
+        if (e.PropertyName == nameof(ViewModels.Meeting.MeetingSessionViewModel.IsSidePanelOpen))
         {
-            if (DataContext is ViewModels.Meeting.MeetingShellViewModel viewModel)
+            if (DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
             {
                 ColumnDefinition columnDefinition = ((Grid)Content).ColumnDefinitions[2];
 
@@ -82,6 +82,15 @@ public partial class MeetingShellView : UserControl
                     columnDefinition.MaxWidth = 0;
                 }
             }
+        }
+    }
+
+    private void QuickDoubtPopup_CloseRequested(object sender, System.EventArgs e)
+    {
+        if (sender is QuickDoubtPopup popup && DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
+        {
+            string? doubtId = popup.Tag as string;
+            viewModel.DismissQuickDoubtCommand.Execute(doubtId);
         }
     }
 }

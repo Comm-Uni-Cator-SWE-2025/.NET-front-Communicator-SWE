@@ -39,8 +39,8 @@
             <DataTemplate DataType="{x:Type meetingVm:MeetingToolbarViewModel}">
                 <meetingViews:MeetingToolbarView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type meetingVm:MeetingShellViewModel}">
-                <meetingViews:MeetingShellView />
+            <DataTemplate DataType="{x:Type meetingVm:MeetingSessionViewModel}">
+                <meetingViews:MeetingSessionView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type meetingVm:AIInsightsViewModel}">
                 <meetingViews:AIInsightsView />
@@ -56,6 +56,9 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type meetingVm:ChatViewModel}">
                 <meetingViews:ChatView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type meetingVm:ParticipantsListViewModel}">
+                <meetingViews:ParticipantsListView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

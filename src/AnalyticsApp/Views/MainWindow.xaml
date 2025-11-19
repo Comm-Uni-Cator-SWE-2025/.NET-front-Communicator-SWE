@@ -1,0 +1,97 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wpf="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="AnalyticsApp.Views.MainWindow"
+        Title="Analytics Dashboard"
+        Width="1200" Height="800">
+
+    <Grid Margin="10">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+
+        <!-- GRAPH 1 -->
+        <TextBlock Text="AI GRAPH" FontWeight="Bold"/>
+        <wpf:CartesianChart
+            Grid.Row="0" Grid.Column="0"
+            Series="{Binding Graph1_AI.Series}"
+            XAxes="{Binding Graph1_AI.XAxes}"
+            YAxes="{Binding Graph1_AI.YAxes}"
+            ZoomMode="X" />
+
+
+        <!-- GRAPH 2 -->
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Canvas Graph -->
+            <TextBlock Text="CANVAS" FontWeight="Bold"/>
+            <wpf:CartesianChart
+                        Grid.Row="0"
+                        Series="{Binding Graph2_Canvas.Series}"
+                        XAxes="{Binding Graph2_Canvas.XAxes}"
+                        YAxes="{Binding Graph2_Canvas.YAxes}" />
+
+            <!-- Scroll Buttons
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+        <Button Width="60" Margin="5" Content="← Left"
+                Click="CanvasScrollLeft"/>
+        <Button Width="60" Margin="5" Content="Right →"
+                Click="CanvasScrollRight"/>
+    </StackPanel> -->
+
+            <!-- Legend Box -->
+            <Border Background="#EEEEEE" CornerRadius="6" Padding="5"
+            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
+                <StackPanel>
+                    <TextBlock Text="Legend" FontWeight="Bold"/>
+                    <TextBlock Text="■ FreeHand" Foreground="Red"/>
+                    <TextBlock Text="■ Straight Line" Foreground="Orange"/>
+                    <TextBlock Text="■ Rectangle" Foreground="Green"/>
+                    <TextBlock Text="■ Ellipse" Foreground="Blue"/>
+                    <TextBlock Text="■ Triangle" Foreground="Purple"/>
+                </StackPanel>
+            </Border>
+
+        </Grid>
+
+
+
+        <!-- GRAPH 3 (Messages) -->
+
+
+        <ListBox x:Name="AI_Message" 
+                 TextBlock.FontFamily="Microsoft Yi Baiti"
+                 Grid.Row="1" Grid.Column="0"
+                 ItemsSource="{Binding MessageList}"
+                 FontSize="16"
+                 Background="#F7F7F7"
+                 BorderBrush="Gray"
+                 BorderThickness="1"
+                 Padding="10"/>
+
+
+        <!-- GRAPH 4 -->
+        <Border Grid.Row="1" Grid.Column="1"
+                BorderBrush="Gray" BorderThickness="1">
+            <TextBlock Text="SCREEN SHARE (Graph 4)"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontSize="22"/>
+        </Border>
+
+    </Grid>
+
+</Window>
