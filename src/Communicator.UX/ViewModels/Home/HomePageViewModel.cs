@@ -76,16 +76,7 @@ public class HomePageViewModel : ObservableObject
 
         try
         {
-            // 1. Serialize meeting ID to JSON string, then to bytes
-            // Java backend expects: DataSerializer.deserialize(meetId, String.class)
-            string jsonId = JsonSerializer.Serialize(meetingId);
-            byte[] payload = System.Text.Encoding.UTF8.GetBytes(jsonId);
-
-            // 2. Call RPC to join meeting
-            // Backend returns the meeting ID if successful
-            await _rpc.Call("core/joinMeeting", payload);
-
-            // 3. Create a local session object with this ID
+            // 1. Create a local session object with this ID
             // We don't have the full session details yet, but we can start with basic info.
             // The backend will sync participants later via 'subscribeAsViewer' or other events.
             var session = new MeetingSession(
@@ -95,14 +86,28 @@ public class HomePageViewModel : ObservableObject
                 sessionMode: SessionMode.CLASS
             );
 
-            // 4. Navigate to meeting session
-            _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user, session));
+            // 2. Create ViewModel and Navigate to meeting session
+            // IMPORTANT: We must create the ViewModel (which subscribes to events) BEFORE calling joinMeeting
+            // to ensure we don't miss any initial participant events from the backend.
+            MeetingSessionViewModel meetingVm = _meetingSessionViewModelFactory(_user, session);
+            _navigationService.NavigateTo(meetingVm);
+
+            // 3. Serialize meeting ID to JSON string, then to bytes
+            // Java backend expects: DataSerializer.deserialize(meetId, String.class)
+            string jsonId = JsonSerializer.Serialize(meetingId);
+            byte[] payload = System.Text.Encoding.UTF8.GetBytes(jsonId);
+
+            // 4. Call RPC to join meeting
+            // Backend returns the meeting ID if successful
+            await _rpc.Call("core/joinMeeting", payload);
             
             _toastService.ShowSuccess($"Joined meeting {meetingId}");
         }
         catch (Exception ex)
         {
             _toastService.ShowError($"Error joining meeting: {ex.Message}");
+            // If join failed, we should probably leave the meeting view
+            // But for now, user can manually leave
         }
     }
 
