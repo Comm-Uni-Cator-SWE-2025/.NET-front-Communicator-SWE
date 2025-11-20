@@ -122,6 +122,8 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         if (_rpcEventService != null)
         {
             _rpcEventService.ParticipantJoined += OnParticipantJoined;
+            _rpcEventService.ParticipantLeft += OnParticipantLeft;
+            _rpcEventService.ParticipantsListUpdated += OnParticipantsListUpdated;
         }
 
         // Connect to HandWave and RPC
@@ -139,6 +141,82 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
         // Update collection on UI thread
         System.Windows.Application.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
+    }
+
+    private void OnParticipantLeft(object? sender, string viewerIP)
+    {
+        // Update collection on UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() => {
+            // Find participant by email (which we constructed as IP@example.com)
+            string email = $"{viewerIP}@example.com";
+            RemoveParticipant(email);
+        });
+    }
+
+    private void OnParticipantsListUpdated(object? sender, string participantsJson)
+    {
+        try
+        {
+            // Deserialize the list of participants
+            // Expected format: [{"ip": "...", "email": "..."}, ...]
+            var participants = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(participantsJson);
+            
+            if (participants == null) return;
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() => {
+                // Sync our list with the backend list
+                
+                // 1. Add new participants
+                foreach (var p in participants)
+                {
+                    if (p.TryGetValue("email", out string? email) && !string.IsNullOrEmpty(email))
+                    {
+                        string ip = p.ContainsKey("ip") ? p["ip"] : "";
+                        string displayName = !string.IsNullOrEmpty(ip) ? ip : email;
+                        
+                        // Check if we already have this participant
+                        if (!Participants.Any(existing => existing.User.Email == email))
+                        {
+                            UserProfile newUser = new(
+                                email: email,
+                                displayName: displayName,
+                                role: ParticipantRole.STUDENT,
+                                logoUrl: null
+                            );
+                            AddParticipant(newUser);
+                        }
+                    }
+                }
+
+                // 2. Remove participants not in the list (except self)
+                var emailsInBackend = participants
+                    .Select(p => p.TryGetValue("email", out string? e) ? e : null)
+                    .Where(e => e != null)
+                    .ToHashSet();
+                
+                // Don't remove ourselves
+                if (_currentUser.Email != null)
+                {
+                    emailsInBackend.Add(_currentUser.Email);
+                }
+
+                var toRemove = Participants
+                    .Where(p => p.User.Email != null && !emailsInBackend.Contains(p.User.Email))
+                    .ToList();
+
+                foreach (var p in toRemove)
+                {
+                    if (p.User.Email != null)
+                    {
+                        RemoveParticipant(p.User.Email);
+                    }
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Error parsing participant list: {ex.Message}");
+        }
     }
 
     #region Properties

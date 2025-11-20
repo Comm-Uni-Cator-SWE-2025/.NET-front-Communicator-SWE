@@ -108,6 +108,42 @@ public partial class App : Application
             return Array.Empty<byte>();
         });
         
+        // Subscribe to "core/setIpToMailMap" - called when participant list updates
+        rpc.Subscribe("core/setIpToMailMap", (byte[] data) => {
+            try
+            {
+                string json = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] Participant list updated: {json}");
+                
+                rpcEventService.RaiseParticipantsListUpdated(json);
+                
+                return Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/setIpToMailMap: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        });
+
+        // Subscribe to "unSubscribeAsViewer" - called when a participant leaves
+        rpc.Subscribe("unSubscribeAsViewer", (byte[] data) => {
+            try
+            {
+                string viewerIP = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] Viewer left: {viewerIP}");
+                
+                rpcEventService.RaiseParticipantLeft(viewerIP);
+                
+                return Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in unSubscribeAsViewer: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        });
+        
         System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
     }
 

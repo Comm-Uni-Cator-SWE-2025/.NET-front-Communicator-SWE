@@ -41,7 +41,7 @@ public static class Utils
     /// <summary>
     /// Key constant for unsubscribe_as_viewer.
     /// </summary>
-    /// 
+    public const string UNSUBSCRIBE_AS_VIEWER = "unSubscribeAsViewer";
 
     public const string STOP_SHARE = "stopShare";
 
