@@ -6,8 +6,10 @@
 * Description = Unit test for NegotiateFunction Azure Function.
 *****************************************************************************/
 
+using System.Collections.Specialized;
 using System.Net;
 using System.Text.Json;
+using Communicator.Cloud.SignalR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.SignalRService;
@@ -15,7 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Communicator.Cloud.SignalR;
 using Xunit;
 
 namespace Communicator.Cloud.SignalR.Tests;
@@ -60,6 +61,11 @@ public class NegotiateFunctionTests
             Url = "https://fake.service.com",
             AccessToken = "fake_access_token"
         };
+
+        var query = new NameValueCollection {
+            { "meetingId", "ABC123" }
+        };
+        _mockRequest.Setup(r => r.Query).Returns(query);
 
         var responseStream = new MemoryStream();
         var mockResponse = new Mock<HttpResponseData>(_mockContext.Object);

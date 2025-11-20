@@ -58,8 +58,9 @@ public class MessageSignalR
     {
         _logger.LogInformation("MessageSignalR trigger invoked.");
 
-        // Extract message from query parameters
+        // Extract meeting id and message from query parameters
         NameValueCollection query = req.Query;
+        string? meetingId = query["meetingId"];
         string? rawMessage = query["message"];
         string message = string.IsNullOrEmpty(rawMessage) ? "New Doubt Raised!" : rawMessage!;
 
@@ -67,7 +68,9 @@ public class MessageSignalR
         var signalRMessage = new SignalRMessageAction(
             target: "ReceiveDoubt",
             arguments: new object[] { message }
-        );
+        ) {
+            GroupName = meetingId
+        };
 
         // Create HTTP response acknowledging the send operation
         HttpResponseData response = req.CreateResponse(HttpStatusCode.OK);

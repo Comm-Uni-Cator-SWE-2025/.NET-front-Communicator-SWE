@@ -43,7 +43,7 @@ public class NegotiateFunction
     [Function("negotiate")]
     public async Task<HttpResponseData> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
-        [SignalRConnectionInfoInput(HubName = "meetingHub")] SignalRConnectionInfo connectionInfo)
+        [SignalRConnectionInfoInput(HubName = "meetingHub", UserId = "{meetingId}")] SignalRConnectionInfo connectionInfo)
     {
         _logger.LogInformation("Negotiation request received.");
 
