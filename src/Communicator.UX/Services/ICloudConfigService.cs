@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ICloudConfigService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 namespace Communicator.UX.Services;
 
 /// <summary>
@@ -15,3 +24,4 @@ public interface ICloudConfigService
     /// </summary>
     Uri MessageUrl { get; }
 }
+

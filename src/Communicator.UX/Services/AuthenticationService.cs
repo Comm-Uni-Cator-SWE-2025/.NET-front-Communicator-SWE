@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: AuthenticationService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 
@@ -7,7 +16,7 @@ namespace Communicator.UX.Services;
 /// <summary>
 /// Implementation of authentication service that manages user session state.
 /// </summary>
-public class AuthenticationService : ObservableObject, IAuthenticationService
+public sealed class AuthenticationService : ObservableObject, IAuthenticationService
 {
     private UserProfile? _currentUser;
 
@@ -39,3 +48,5 @@ public class AuthenticationService : ObservableObject, IAuthenticationService
         UserLoggedOut?.Invoke(this, EventArgs.Empty);
     }
 }
+
+

@@ -1,11 +1,20 @@
-﻿using System.Windows.Controls;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: HomePageView.xaml.cs
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows.Controls;
 
 namespace Communicator.UX.Views.Home;
 
 /// <summary>
 /// Landing page shown after authentication, presenting meeting shortcuts and user context.
 /// </summary>
-public partial class HomePageView : UserControl
+public sealed partial class HomePageView : UserControl
 {
     /// <summary>
     /// Initializes the home page UI defined in XAML.
@@ -15,4 +24,6 @@ public partial class HomePageView : UserControl
         InitializeComponent();
     }
 }
+
+
 

@@ -1,4 +1,13 @@
-﻿using System.Globalization;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: SettingsViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Globalization;
 using System.Windows.Input;
 using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
@@ -11,7 +20,7 @@ namespace Communicator.UX.ViewModels.Settings;
 /// ViewModel for the Settings Page
 /// Manages user preferences including theme selection
 /// </summary>
-public class SettingsViewModel : ObservableObject
+public sealed class SettingsViewModel : ObservableObject
 {
     private readonly UserProfile _user;
     private readonly IThemeService _themeService;
@@ -49,4 +58,6 @@ public class SettingsViewModel : ObservableObject
         _isDarkMode = _themeService.CurrentTheme == AppTheme.Dark;
     }
 }
+
+
 

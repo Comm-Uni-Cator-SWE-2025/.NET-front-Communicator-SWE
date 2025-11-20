@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ChatView.xaml.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System.IO;
 using System.Windows.Controls;
 using Communicator.UX.ViewModels.Meeting;
@@ -8,7 +17,7 @@ namespace Communicator.UX.Views.Meeting;
 /// <summary>
 /// Interaction logic for ChatView.xaml
 /// </summary>
-public partial class ChatView : UserControl
+public sealed partial class ChatView : UserControl
 {
     public ChatView()
     {
@@ -34,10 +43,9 @@ public partial class ChatView : UserControl
     /// <summary>
     /// Shows a file selection dialog and returns the selected file
     /// </summary>
-    private FileInfo? OnRequestFileSelection()
+    private void OnRequestFileSelection(object? sender, RequestFileSelectionEventArgs e)
     {
-        var dialog = new OpenFileDialog
-        {
+        var dialog = new OpenFileDialog {
             Title = "Select a file to send",
             Filter = "All Files (*.*)|*.*|" +
                      "Images (*.jpg;*.jpeg;*.png;*.gif;*.bmp)|*.jpg;*.jpeg;*.png;*.gif;*.bmp|" +
@@ -49,9 +57,9 @@ public partial class ChatView : UserControl
 
         if (dialog.ShowDialog() == true)
         {
-            return new FileInfo(dialog.FileName);
+            e.SelectedFile = new FileInfo(dialog.FileName);
         }
-
-        return null;
     }
 }
+
+

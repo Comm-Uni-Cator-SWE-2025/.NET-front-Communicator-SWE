@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ICloudMessageService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 namespace Communicator.UX.Services;
 
 /// <summary>
@@ -12,7 +21,7 @@ public enum CloudMessageType
 /// <summary>
 /// Event args for cloud message received events.
 /// </summary>
-public class CloudMessageEventArgs : EventArgs
+public sealed class CloudMessageEventArgs : EventArgs
 {
     public CloudMessageType MessageType { get; init; }
     public string SenderName { get; init; } = string.Empty;
@@ -55,3 +64,5 @@ public interface ICloudMessageService
     /// </summary>
     Task DisconnectAsync();
 }
+
+

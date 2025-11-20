@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ScreenShareViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Communicator.Controller.Meeting;
@@ -10,7 +19,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// Describes the screen share view, displaying participants and their screen share streams.
 /// Manages dynamic grid layout for screen sharing participants.
 /// </summary>
-public class ScreenShareViewModel : ObservableObject
+public sealed class ScreenShareViewModel : ObservableObject
 {
     private int _gridColumns = 1;
     private int _gridRows = 1;
@@ -119,4 +128,6 @@ public class ScreenShareViewModel : ObservableObject
         return (columns, rows);
     }
 }
+
+
 

@@ -1,4 +1,13 @@
-﻿using Communicator.Controller.Meeting;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: AIInsightsViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Meeting;
@@ -6,7 +15,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>
 /// Provides AI-powered insights and analytics for the meeting experience.
 /// </summary>
-public class AIInsightsViewModel : ObservableObject
+public sealed class AIInsightsViewModel : ObservableObject
 {
     /// <summary>
     /// Initializes AI Insights with the active user context.
@@ -20,3 +29,5 @@ public class AIInsightsViewModel : ObservableObject
     public string Title { get; }
     public UserProfile CurrentUser { get; }
 }
+
+

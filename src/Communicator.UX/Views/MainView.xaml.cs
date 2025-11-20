@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MainView.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,7 +25,7 @@ namespace Communicator.UX.Views;
 /// <summary>
 /// Primary application window that hosts navigation, toast notifications, and custom chrome behaviors.
 /// </summary>
-public partial class MainView : Window
+public sealed partial class MainView : Window
 {
     private readonly IToastService _toastService;
     private HwndSource? _hwndSource;
@@ -98,14 +107,14 @@ public partial class MainView : Window
         if (msg == WM_GETMINMAXINFO)
         {
             // Get the monitor information for the window
-            MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO))!;
+            MINMAXINFO mmi = Marshal.PtrToStructure<MINMAXINFO>(lParam);
 
             IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 
             if (monitor != IntPtr.Zero)
             {
                 MONITORINFO monitorInfo = new() {
-                    cbSize = Marshal.SizeOf(typeof(MONITORINFO))
+                    cbSize = Marshal.SizeOf<MONITORINFO>()
                 };
 
                 if (GetMonitorInfo(monitor, ref monitorInfo))
@@ -268,11 +277,13 @@ public partial class MainView : Window
 
     // Windows API for monitor information
     [DllImport("user32.dll")]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
     private const uint MONITOR_DEFAULTTONEAREST = 2;
 
     [DllImport("user32.dll")]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
@@ -311,3 +322,5 @@ public partial class MainView : Window
         public POINT ptMaxTrackSize;
     }
 }
+
+

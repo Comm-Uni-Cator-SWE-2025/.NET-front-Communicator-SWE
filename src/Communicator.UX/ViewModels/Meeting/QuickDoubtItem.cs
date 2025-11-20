@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: QuickDoubtItem.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 
 namespace Communicator.UX.ViewModels.Meeting;
@@ -5,7 +14,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>
 /// Represents a single Quick Doubt message item.
 /// </summary>
-public class QuickDoubtItem
+public sealed class QuickDoubtItem
 {
     /// <summary>
     /// Unique identifier for this doubt.
@@ -27,3 +36,5 @@ public class QuickDoubtItem
     /// </summary>
     public DateTime Timestamp { get; set; }
 }
+
+

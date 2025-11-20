@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ThemeService.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -144,3 +153,4 @@ public class ThemeService : IThemeService
         return Path.Combine(appFolder, SettingsFileName);
     }
 }
+

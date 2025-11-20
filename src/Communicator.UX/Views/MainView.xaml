@@ -1,12 +1,16 @@
-<Window x:Class="Communicator.UX.Views.MainView"
+﻿<Window x:Class="Communicator.UX.Views.MainView" x:ClassModifier="public"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:homeViews="clr-namespace:Communicator.UX.Views.Home"
         xmlns:meetingViews="clr-namespace:Communicator.UX.Views.Meeting"
         xmlns:settingsViews="clr-namespace:Communicator.UX.Views.Settings"
         xmlns:commonVm="clr-namespace:Communicator.UX.ViewModels.Common"
         xmlns:mainVm="clr-namespace:Communicator.UX.ViewModels"
+        xmlns:commonViews="clr-namespace:Communicator.UX.Views.Common"
+        mc:Ignorable="d"
         Title="Comm-Uni-Cate"
         Width="1024"
         Height="640"
@@ -261,6 +265,12 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
+
+                <!-- Loading Overlay -->
+                <commonViews:LoadingControl DataContext="{Binding LoadingViewModel}"
+                                            Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Panel.ZIndex="1000"
+                                            d:Visibility="Visible"/>
             </Grid>
         </Grid>
     </Border>

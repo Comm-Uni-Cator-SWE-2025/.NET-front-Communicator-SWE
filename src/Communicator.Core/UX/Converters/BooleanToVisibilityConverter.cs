@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: BooleanToVisibilityConverter.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
@@ -32,3 +41,4 @@ public class BooleanToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+

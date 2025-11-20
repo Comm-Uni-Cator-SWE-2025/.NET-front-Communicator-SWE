@@ -1,3 +1,13 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ParticipantsListViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+
 using System.Collections.ObjectModel;
 using Communicator.Core.UX;
 
@@ -7,7 +17,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// ViewModel for the participants list displayed in the side panel.
 /// Shows a list of all meeting participants with their status.
 /// </summary>
-public class ParticipantsListViewModel : ObservableObject
+internal sealed class ParticipantsListViewModel : ObservableObject
 {
     private int _participantCount;
 
@@ -43,3 +53,5 @@ public class ParticipantsListViewModel : ObservableObject
         ParticipantCount = Participants?.Count ?? 0;
     }
 }
+
+

@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ToastRequestedEventArgs.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 
 namespace Communicator.Core.UX.Models;
 
@@ -14,3 +23,4 @@ public class ToastRequestedEventArgs : EventArgs
         Message = message ?? throw new ArgumentNullException(nameof(message));
     }
 }
+

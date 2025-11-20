@@ -1,23 +1,94 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ChatViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Communicator.Chat;
 using Communicator.Controller.Meeting;
+using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
+using Communicator.UX.Services;
 
 namespace Communicator.UX.ViewModels.Meeting;
+
+public class RequestFileSelectionEventArgs : EventArgs
+{
+    public FileInfo? SelectedFile { get; set; }
+}
+
+// DTOs for RPC communication
+public class ChatMessageDto
+{
+    [JsonPropertyName("messageId")]
+    public string MessageId { get; set; } = "";
+
+    [JsonPropertyName("userId")]
+    public string UserId { get; set; } = "";
+
+    [JsonPropertyName("senderDisplayName")]
+    public string SenderDisplayName { get; set; } = "";
+
+    [JsonPropertyName("content")]
+    public string Content { get; set; } = "";
+
+    [JsonPropertyName("replyToMessageId")]
+    public string ReplyToMessageId { get; set; } = "";
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = ""; // ISO string or similar
+}
+
+public class FileMessageDto
+{
+    [JsonPropertyName("messageId")]
+    public string MessageId { get; set; } = "";
+
+    [JsonPropertyName("userId")]
+    public string UserId { get; set; } = "";
+
+    [JsonPropertyName("senderDisplayName")]
+    public string SenderDisplayName { get; set; } = "";
+
+    [JsonPropertyName("caption")]
+    public string Caption { get; set; } = "";
+
+    [JsonPropertyName("fileName")]
+    public string FileName { get; set; } = "";
+
+    [JsonPropertyName("filePath")]
+    public string FilePath { get; set; } = "";
+
+    [JsonPropertyName("replyToMessageId")]
+    public string ReplyToMessageId { get; set; } = "";
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = "";
+
+    [JsonPropertyName("fileContent")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "DTO")]
+    public byte[]? FileContent { get; set; }
+}
 
 /// <summary>
 /// ViewModel for chat functionality with file sharing support.
 /// Manages chat messages, replies, file attachments, and communication with backend via RPC.
 /// </summary>
-public class ChatViewModel : ObservableObject
+public sealed class ChatViewModel : ObservableObject
 {
     // --- Constants ---
     private const long MaxFileSizeBytes = 50 * 1024 * 1024; // 50 MB
@@ -25,8 +96,9 @@ public class ChatViewModel : ObservableObject
     // --- Dependencies ---
     private readonly UserProfile _currentUser;
     private readonly IToastService _toastService;
-    // private readonly AbstractRPC _rpc; // TODO: Wire up when RPC is available
-    
+    private readonly IRPC? _rpc;
+    private readonly IRpcEventService? _rpcEventService;
+
     // --- State ---
     private string _messageInput = string.Empty;
     private string _replyQuoteText = string.Empty;
@@ -40,8 +112,7 @@ public class ChatViewModel : ObservableObject
     public string MessageInput
     {
         get => _messageInput;
-        set
-        {
+        set {
             if (SetProperty(ref _messageInput, value))
             {
                 // Notify the SendMessageCommand to re-evaluate CanExecute
@@ -53,8 +124,7 @@ public class ChatViewModel : ObservableObject
     public string ReplyQuoteText
     {
         get => _replyQuoteText;
-        set
-        {
+        set {
             if (SetProperty(ref _replyQuoteText, value))
             {
                 OnPropertyChanged(nameof(IsReplying));
@@ -65,8 +135,7 @@ public class ChatViewModel : ObservableObject
     public string AttachmentText
     {
         get => _attachmentText;
-        set
-        {
+        set {
             if (SetProperty(ref _attachmentText, value))
             {
                 OnPropertyChanged(nameof(HasAttachment));
@@ -88,13 +157,19 @@ public class ChatViewModel : ObservableObject
     public ICommand DeleteMessageCommand { get; }
 
     // --- Events for View ---
-    public event Func<FileInfo?>? RequestFileSelection;
+    public event EventHandler<RequestFileSelectionEventArgs>? RequestFileSelection;
 
     // --- Constructor ---
-    public ChatViewModel(UserProfile user, IToastService toastService)
+    public ChatViewModel(
+        UserProfile user,
+        IToastService toastService,
+        IRPC? rpc = null,
+        IRpcEventService? rpcEventService = null)
     {
         _currentUser = user ?? throw new ArgumentNullException(nameof(user));
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
+        _rpc = rpc;
+        _rpcEventService = rpcEventService;
 
         // Initialize commands
         SendMessageCommand = new RelayCommand(_ => OnSendMessage(), _ => CanSendMessage());
@@ -106,10 +181,144 @@ public class ChatViewModel : ObservableObject
         DownloadFileCommand = new RelayCommand(param => DownloadFile(param as ChatMessage));
         DeleteMessageCommand = new RelayCommand(param => DeleteMessage(param as ChatMessage));
 
-        // TODO: Subscribe to RPC events when available
-        // _rpc.Subscribe("chat:new-message", HandleBackendTextMessage);
-        // _rpc.Subscribe("chat:file-metadata-received", HandleBackendFileMetadata);
-        // etc.
+        if (_rpcEventService != null)
+        {
+            SubscribeToRpcEvents();
+        }
+    }
+
+    private void SubscribeToRpcEvents()
+    {
+        if (_rpcEventService == null)
+        {
+            return;
+        }
+
+        _rpcEventService.ChatMessageReceived += OnChatMessageReceived;
+        _rpcEventService.FileMetadataReceived += OnFileMetadataReceived;
+        _rpcEventService.FileSaveSuccess += OnFileSaveSuccess;
+        _rpcEventService.FileSaveError += OnFileSaveError;
+        _rpcEventService.MessageDeleted += OnMessageDeleted;
+    }
+
+    // --- RPC Handlers ---
+
+    private void OnChatMessageReceived(object? sender, RpcDataEventArgs e)
+    {
+        HandleBackendTextMessage(e.Data.ToArray());
+    }
+
+    private void OnFileMetadataReceived(object? sender, RpcDataEventArgs e)
+    {
+        HandleBackendFileMetadata(e.Data.ToArray());
+    }
+
+    private void OnFileSaveSuccess(object? sender, RpcDataEventArgs e)
+    {
+        HandleFileSaveSuccess(e.Data.ToArray());
+    }
+
+    private void OnFileSaveError(object? sender, RpcDataEventArgs e)
+    {
+        HandleFileSaveError(e.Data.ToArray());
+    }
+
+    private void OnMessageDeleted(object? sender, RpcDataEventArgs e)
+    {
+        HandleBackendDelete(e.Data.ToArray());
+    }
+
+    private void HandleBackendTextMessage(byte[] data)
+    {
+        try
+        {
+            string json = Encoding.UTF8.GetString(data);
+            ChatMessageDto? messageDto = JsonSerializer.Deserialize<ChatMessageDto>(json);
+
+            if (messageDto != null)
+            {
+                Application.Current.Dispatcher.Invoke(() => {
+                    HandleIncomingMessage(
+                        messageDto.MessageId,
+                        messageDto.UserId,
+                        messageDto.SenderDisplayName,
+                        FormatTimestamp(messageDto.Timestamp),
+                        messageDto.ReplyToMessageId,
+                        messageDto.Content,
+                        null, 0, null
+                    );
+                });
+            }
+        }
+        catch (Exception ex) when (ex is JsonException || ex is ArgumentException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error handling text message: {ex.Message}");
+        }
+    }
+
+    private void HandleBackendFileMetadata(byte[] data)
+    {
+        try
+        {
+            string json = Encoding.UTF8.GetString(data);
+            FileMessageDto? messageDto = JsonSerializer.Deserialize<FileMessageDto>(json);
+
+            if (messageDto != null)
+            {
+                long compressedSize = messageDto.FileContent?.Length ?? 0;
+
+                Application.Current.Dispatcher.Invoke(() => {
+                    HandleIncomingMessage(
+                        messageDto.MessageId,
+                        messageDto.UserId,
+                        messageDto.SenderDisplayName,
+                        FormatTimestamp(messageDto.Timestamp),
+                        messageDto.ReplyToMessageId,
+                        messageDto.Caption,
+                        messageDto.FileName,
+                        compressedSize,
+                        null
+                    );
+                });
+            }
+        }
+        catch (Exception ex) when (ex is JsonException || ex is ArgumentException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error handling file metadata: {ex.Message}");
+        }
+    }
+
+    private void HandleFileSaveSuccess(byte[] data)
+    {
+        string message = Encoding.UTF8.GetString(data);
+        Application.Current.Dispatcher.Invoke(() => _toastService.ShowSuccess($"File saved: {message}"));
+    }
+
+    private void HandleFileSaveError(byte[] data)
+    {
+        string message = Encoding.UTF8.GetString(data);
+        Application.Current.Dispatcher.Invoke(() => _toastService.ShowError($"File save error: {message}"));
+    }
+
+    private void HandleBackendDelete(byte[] data)
+    {
+        string messageId = Encoding.UTF8.GetString(data);
+        Application.Current.Dispatcher.Invoke(() => {
+            ChatMessage? msg = Messages.FirstOrDefault(m => m.MessageId == messageId);
+            if (msg != null)
+            {
+                Messages.Remove(msg);
+            }
+        });
+    }
+
+    private static string FormatTimestamp(string timestamp)
+    {
+        if (DateTime.TryParse(timestamp, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dt))
+        {
+            return dt.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        return DateTime.Now.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     // --- User Actions ---
@@ -134,32 +343,38 @@ public class ChatViewModel : ObservableObject
         CancelAttachment();
     }
 
-    private void SendTextMessage(string messageText)
+    private async void SendTextMessage(string messageText)
     {
         string messageId = Guid.NewGuid().ToString();
         string timestamp = DateTime.Now.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
-        // Create and add message optimistically
-        ChatMessage message = new ChatMessage(
+        // Optimistic update
+        HandleIncomingMessage(
             messageId,
+            _currentUser.Email ?? "unknown", // Using Email as ID for now
             _currentUser.DisplayName ?? "User",
-            messageText,
-            string.Empty, // fileName
-            0, // compressedFileSize
-            Array.Empty<byte>(), // fileContent
             timestamp,
-            true, // isSentByMe
-            GetQuotedContent(_currentReplyId) ?? string.Empty
+            _currentReplyId,
+            messageText,
+            null, 0, null
         );
 
-        Messages.Add(message);
+        if (_rpc != null)
+        {
+            var dto = new ChatMessageDto {
+                MessageId = messageId,
+                UserId = _currentUser.Email ?? "unknown",
+                SenderDisplayName = _currentUser.DisplayName ?? "User",
+                Content = messageText,
+                ReplyToMessageId = _currentReplyId ?? ""
+            };
 
-        // TODO: Send via RPC
-        // var messageBytes = Encoding.UTF8.GetBytes(SerializeMessage(message));
-        // await _rpc.CallAsync("chat:send-text", messageBytes);
+            string json = JsonSerializer.Serialize(dto);
+            await _rpc.Call("chat:send-text", Encoding.UTF8.GetBytes(json)).ConfigureAwait(true);
+        }
     }
 
-    private void SendFileMessage(FileInfo file, string caption)
+    private async void SendFileMessage(FileInfo file, string caption)
     {
         if (!file.Exists)
         {
@@ -176,24 +391,34 @@ public class ChatViewModel : ObservableObject
         string messageId = Guid.NewGuid().ToString();
         string timestamp = DateTime.Now.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
-        // Create and add message optimistically
-        ChatMessage message = new ChatMessage(
+        // Optimistic update
+        HandleIncomingMessage(
             messageId,
+            _currentUser.Email ?? "unknown",
             _currentUser.DisplayName ?? "User",
+            timestamp,
+            _currentReplyId,
             caption ?? $"Sent {file.Name}",
             file.Name,
             file.Length,
-            Array.Empty<byte>(), // We don't load file content here
-            timestamp,
-            true, // isSentByMe
-            GetQuotedContent(_currentReplyId) ?? string.Empty
+            null
         );
 
-        Messages.Add(message);
+        if (_rpc != null)
+        {
+            var dto = new FileMessageDto {
+                MessageId = messageId,
+                UserId = _currentUser.Email ?? "unknown",
+                SenderDisplayName = _currentUser.DisplayName ?? "User",
+                Caption = caption ?? "",
+                FileName = file.Name,
+                FilePath = file.FullName, // Sending path as per Java impl
+                ReplyToMessageId = _currentReplyId ?? ""
+            };
 
-        // TODO: Send via RPC
-        // var messageBytes = Encoding.UTF8.GetBytes(SerializeFileMessage(message, file.FullName));
-        // await _rpc.CallAsync("chat:send-file", messageBytes);
+            string json = JsonSerializer.Serialize(dto);
+            await _rpc.Call("chat:send-file", Encoding.UTF8.GetBytes(json)).ConfigureAwait(true);
+        }
     }
 
     public void StartReply(ChatMessage? messageToReply)
@@ -220,7 +445,10 @@ public class ChatViewModel : ObservableObject
 
     public void OnAttachFile()
     {
-        FileInfo? selectedFile = RequestFileSelection?.Invoke();
+        var args = new RequestFileSelectionEventArgs();
+        RequestFileSelection?.Invoke(this, args);
+        FileInfo? selectedFile = args.SelectedFile;
+
         if (selectedFile != null && selectedFile.Exists)
         {
             if (selectedFile.Length > MaxFileSizeBytes)
@@ -230,7 +458,7 @@ public class ChatViewModel : ObservableObject
             }
 
             _attachedFile = selectedFile;
-            AttachmentText = $"📎 {selectedFile.Name}";
+            AttachmentText = $"ðŸ“Ž {selectedFile.Name}";
         }
     }
 
@@ -240,7 +468,7 @@ public class ChatViewModel : ObservableObject
         AttachmentText = string.Empty;
     }
 
-    public void DownloadFile(ChatMessage? fileMessage)
+    public async void DownloadFile(ChatMessage? fileMessage)
     {
         if (fileMessage == null || !fileMessage.IsFileMessage)
         {
@@ -248,12 +476,14 @@ public class ChatViewModel : ObservableObject
             return;
         }
 
-        // TODO: Implement file download via RPC
-        // var messageIdBytes = Encoding.UTF8.GetBytes(fileMessage.MessageId);
-        // await _rpc.CallAsync("chat:save-file-to-disk", messageIdBytes);
+        if (_rpc != null)
+        {
+            _toastService.ShowInfo("Requesting file download...");
+            await _rpc.Call("chat:save-file-to-disk", Encoding.UTF8.GetBytes(fileMessage.MessageId)).ConfigureAwait(true);
+        }
     }
 
-    public void DeleteMessage(ChatMessage? messageToDelete)
+    public async void DeleteMessage(ChatMessage? messageToDelete)
     {
         if (messageToDelete == null || !messageToDelete.IsSentByMe)
         {
@@ -269,9 +499,10 @@ public class ChatViewModel : ObservableObject
             CancelReply();
         }
 
-        // TODO: Send delete request via RPC
-        // var messageIdBytes = Encoding.UTF8.GetBytes(messageToDelete.MessageId);
-        // await _rpc.CallAsync("chat:delete-message", messageIdBytes);
+        if (_rpc != null)
+        {
+            await _rpc.Call("chat:delete-message", Encoding.UTF8.GetBytes(messageToDelete.MessageId)).ConfigureAwait(true);
+        }
     }
 
     public void SimulateIncomingMessage()
@@ -279,22 +510,49 @@ public class ChatViewModel : ObservableObject
         string messageId = Guid.NewGuid().ToString();
         string timestamp = DateTime.Now.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
+        HandleIncomingMessage(
+            messageId,
+            "test-user",
+            "Test User",
+            timestamp,
+            null,
+            "Hello! This is a simulated incoming message.",
+            null, 0, null
+        );
+    }
+
+    // --- Helper Methods ---
+
+    private void HandleIncomingMessage(
+        string messageId, string userId, string senderDisplayName,
+        string formattedTime, string? replyToId,
+        string content, string? fileName, long compressedFileSize, byte[]? fileContent)
+    {
+        if (Messages.Any(m => m.MessageId == messageId))
+        {
+            return;
+        }
+
+        bool isSentByMe = userId == (_currentUser.Email ?? "unknown"); // Or check ID if available
+        string username = isSentByMe ? "You" : senderDisplayName;
+
+        string quotedContent = GetQuotedContent(replyToId) ?? string.Empty;
+
         ChatMessage message = new ChatMessage(
             messageId,
-            "Test User",
-            "Hello! This is a simulated incoming message.",
-            string.Empty,
-            0,
-            Array.Empty<byte>(),
-            timestamp,
-            false, // not sent by me
-            string.Empty
+            username,
+            content,
+            fileName ?? string.Empty,
+            compressedFileSize,
+            fileContent ?? Array.Empty<byte>(),
+            formattedTime,
+            isSentByMe,
+            quotedContent
         );
 
         Messages.Add(message);
     }
 
-    // --- Helper Methods ---
     private string? GetQuotedContent(string? replyToId)
     {
         if (string.IsNullOrEmpty(replyToId))
@@ -313,7 +571,7 @@ public class ChatViewModel : ObservableObject
             ? $"File: {repliedToMessage.FileName}"
             : TruncateText(repliedToMessage.Content, 30);
 
-        return $"↩ {sender}: {contentSnippet}";
+        return $"â†© {sender}: {contentSnippet}";
     }
 
     private static string TruncateText(string text, int maxLength)
@@ -326,3 +584,5 @@ public class ChatViewModel : ObservableObject
         return string.Concat(text.AsSpan(0, maxLength), "...");
     }
 }
+
+

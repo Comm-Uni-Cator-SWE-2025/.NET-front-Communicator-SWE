@@ -1,4 +1,13 @@
-﻿using System.Windows;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: Icon.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -90,3 +99,4 @@ public class Icon : Control
         Glyph = unicode ?? string.Empty;
     }
 }
+

@@ -1,11 +1,20 @@
-﻿using System.Windows.Controls;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: VideoSessionView.xaml.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows.Controls;
 
 namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Provides the main meeting content area where participants interact.
 /// </summary>
-public partial class VideoSessionView : UserControl
+public sealed partial class VideoSessionView : UserControl
 {
     /// <summary>
     /// Initializes session UI from its XAML definition.
@@ -15,4 +24,6 @@ public partial class VideoSessionView : UserControl
         InitializeComponent();
     }
 }
+
+
 

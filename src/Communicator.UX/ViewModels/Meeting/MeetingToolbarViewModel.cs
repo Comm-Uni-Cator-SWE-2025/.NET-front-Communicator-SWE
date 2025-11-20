@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MeetingToolbarViewModel.cs
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,7 +18,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>
 /// Event arguments for selected tab changes.
 /// </summary>
-public class TabChangedEventArgs : EventArgs
+public sealed class TabChangedEventArgs : EventArgs
 {
     public MeetingTabViewModel? Tab { get; }
 
@@ -22,7 +31,7 @@ public class TabChangedEventArgs : EventArgs
 /// <summary>
 /// Represents the meeting tab strip, tracking available tabs and the currently selected one.
 /// </summary>
-public class MeetingToolbarViewModel : ObservableObject
+public sealed class MeetingToolbarViewModel : ObservableObject
 {
     private MeetingTabViewModel? _selectedTab;
 
@@ -55,4 +64,6 @@ public class MeetingToolbarViewModel : ObservableObject
     /// </summary>
     public event EventHandler<TabChangedEventArgs>? SelectedTabChanged;
 }
+
+
 

@@ -1,4 +1,13 @@
-﻿using System.Text;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MainWindow.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -14,10 +23,12 @@ namespace Communicator.UX;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     public MainWindow()
     {
         InitializeComponent();
     }
 }
+
+

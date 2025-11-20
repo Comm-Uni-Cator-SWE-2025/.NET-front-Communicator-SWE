@@ -1,11 +1,20 @@
-﻿using System.Windows.Controls;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: SettingsView.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows.Controls;
 
 namespace Communicator.UX.Views.Settings;
 
 /// <summary>
 /// Hosts application preferences such as theme selection and account details.
 /// </summary>
-public partial class SettingsView : UserControl
+public sealed partial class SettingsView : UserControl
 {
     /// <summary>
     /// Initializes the settings view defined in XAML.
@@ -15,4 +24,6 @@ public partial class SettingsView : UserControl
         InitializeComponent();
     }
 }
+
+
 

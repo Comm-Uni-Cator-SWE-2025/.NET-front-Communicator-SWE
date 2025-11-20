@@ -1,11 +1,20 @@
-﻿using System.Windows.Controls;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: WhiteboardView.xaml.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows.Controls;
 
 namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Provides a collaborative whiteboard surface for meeting participants.
 /// </summary>
-public partial class WhiteboardView : UserControl
+public sealed partial class WhiteboardView : UserControl
 {
     /// <summary>
     /// Initializes the whiteboard UI defined via XAML.
@@ -15,4 +24,6 @@ public partial class WhiteboardView : UserControl
         InitializeComponent();
     }
 }
+
+
 

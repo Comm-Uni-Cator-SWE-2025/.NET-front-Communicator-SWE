@@ -1,11 +1,20 @@
-﻿using System.Windows.Controls;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ScreenShareView.xaml.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows.Controls;
 
 namespace Communicator.UX.Views.Meeting;
 
 /// <summary>
 /// Presents shared screen content within the meeting workflow.
 /// </summary>
-public partial class ScreenShareView : UserControl
+public sealed partial class ScreenShareView : UserControl
 {
     /// <summary>
     /// Loads the screen share layout defined in XAML.
@@ -15,4 +24,6 @@ public partial class ScreenShareView : UserControl
         InitializeComponent();
     }
 }
+
+
 

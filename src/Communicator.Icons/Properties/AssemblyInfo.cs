@@ -1,4 +1,13 @@
-﻿using System.Windows;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: AssemblyInfo.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows;
 using System.Windows.Markup;
 
 // Tell WPF where to find the generic theme dictionary
@@ -10,3 +19,4 @@ using System.Windows.Markup;
 // XML namespace mappings
 [assembly: XmlnsDefinition("http://uxcore/icons", "UX.Icons")]
 [assembly: XmlnsPrefix("http://uxcore/icons", "icons")]
+

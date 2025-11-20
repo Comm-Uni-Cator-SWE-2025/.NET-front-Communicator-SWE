@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ToastService.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using Communicator.Core.UX.Models;
 
 namespace Communicator.Core.UX.Services;
@@ -41,3 +50,4 @@ public class ToastService : IToastService
         handler?.Invoke(this, new ToastRequestedEventArgs(message));
     }
 }
+

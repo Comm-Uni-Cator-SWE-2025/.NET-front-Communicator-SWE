@@ -1,6 +1,6 @@
 ﻿/*
  * -----------------------------------------------------------------------------
- *  File: ParticipantsListView.xaml.cs
+ *  File: LoadingControl.xaml.cs
  *  Owner: Geetheswar V
  *  Roll Number : 142201025
  *  Module : UX
@@ -9,14 +9,11 @@
  */
 using System.Windows.Controls;
 
-namespace Communicator.UX.Views.Meeting;
+namespace Communicator.UX.Views.Common;
 
-/// <summary>
-/// Interaction logic for ParticipantsListView.xaml
-/// </summary>
-public sealed partial class ParticipantsListView : UserControl
+public sealed partial class LoadingControl : UserControl
 {
-    public ParticipantsListView()
+    public LoadingControl()
     {
         InitializeComponent();
     }

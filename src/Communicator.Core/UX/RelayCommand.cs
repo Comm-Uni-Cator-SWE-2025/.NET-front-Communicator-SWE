@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: RelayCommand.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Windows.Input;
 
 namespace Communicator.Core.UX;
@@ -47,3 +56,4 @@ public sealed class RelayCommand : ICommand
         CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }
+

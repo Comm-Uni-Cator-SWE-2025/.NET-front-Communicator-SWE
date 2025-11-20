@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: IToastService.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using Communicator.Core.UX.Models;
 
 namespace Communicator.Core.UX.Services;
@@ -33,3 +42,4 @@ public interface IToastService
     /// </summary>
     void ShowInfo(string message, int duration = 3000);
 }
+

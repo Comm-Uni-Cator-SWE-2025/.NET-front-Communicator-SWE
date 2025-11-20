@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: CloudConfigService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using Microsoft.Extensions.Configuration;
 
 namespace Communicator.UX.Services;
@@ -6,7 +15,7 @@ namespace Communicator.UX.Services;
 /// Loads cloud function URLs from appsettings.json.
 /// This keeps sensitive URLs out of source control.
 /// </summary>
-public class CloudConfigService : ICloudConfigService
+public sealed class CloudConfigService : ICloudConfigService
 {
     private readonly IConfiguration _configuration;
 
@@ -23,3 +32,5 @@ public class CloudConfigService : ICloudConfigService
         new(_configuration["CloudFunctions:MessageUrl"]
         ?? throw new InvalidOperationException("MessageUrl not configured in appsettings.json"));
 }
+
+
