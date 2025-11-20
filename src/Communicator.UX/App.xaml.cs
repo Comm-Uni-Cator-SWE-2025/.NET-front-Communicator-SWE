@@ -176,14 +176,16 @@ public partial class App : Application
                 // Connection successful, switch to MainView on UI thread
                 Application.Current?.Dispatcher.Invoke(() =>
                 {
-                    loadingView.Close();
-                    
                     // Create and show main window with DI
                     MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
                     var mainView = new MainView {
                         DataContext = mainViewModel
                     };
                     mainView.Show();
+                    
+                    // Close loading view AFTER showing main view to prevent app shutdown
+                    // (ShutdownMode defaults to OnLastWindowClose)
+                    loadingView.Close();
                 });
                 
                 // The rpcThread is now running listenLoop in background

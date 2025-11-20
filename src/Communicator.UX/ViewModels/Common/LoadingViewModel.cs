@@ -5,7 +5,7 @@ namespace Communicator.UX.ViewModels.Common;
 public class LoadingViewModel : ObservableObject
 {
     private string _message = "Loading...";
-    private bool _isBusy = true;
+    private bool _isBusy = false;
 
     public string Message
     {
