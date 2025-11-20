@@ -1,11 +1,22 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: LoadingControl.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System.Windows.Controls;
 
 namespace Communicator.UX.Views.Common;
 
-public partial class LoadingControl : UserControl
+public sealed partial class LoadingControl : UserControl
 {
     public LoadingControl()
     {
         InitializeComponent();
     }
 }
+
+

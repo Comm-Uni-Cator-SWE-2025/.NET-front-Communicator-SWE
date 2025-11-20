@@ -1,4 +1,13 @@
-﻿using System.Windows;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: DemoApp.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows;
 
 namespace Communicator.Icons;
 
@@ -16,3 +25,4 @@ public class DemoApp
         app.Run(window);
     }
 }
+

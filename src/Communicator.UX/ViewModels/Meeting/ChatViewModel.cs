@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ChatViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -13,11 +22,16 @@ using Communicator.Core.UX.Services;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
+public class RequestFileSelectionEventArgs : EventArgs
+{
+    public FileInfo? SelectedFile { get; set; }
+}
+
 /// <summary>
 /// ViewModel for chat functionality with file sharing support.
 /// Manages chat messages, replies, file attachments, and communication with backend via RPC.
 /// </summary>
-public class ChatViewModel : ObservableObject
+public sealed class ChatViewModel : ObservableObject
 {
     // --- Constants ---
     private const long MaxFileSizeBytes = 50 * 1024 * 1024; // 50 MB
@@ -26,7 +40,7 @@ public class ChatViewModel : ObservableObject
     private readonly UserProfile _currentUser;
     private readonly IToastService _toastService;
     // private readonly AbstractRPC _rpc; // TODO: Wire up when RPC is available
-    
+
     // --- State ---
     private string _messageInput = string.Empty;
     private string _replyQuoteText = string.Empty;
@@ -40,8 +54,7 @@ public class ChatViewModel : ObservableObject
     public string MessageInput
     {
         get => _messageInput;
-        set
-        {
+        set {
             if (SetProperty(ref _messageInput, value))
             {
                 // Notify the SendMessageCommand to re-evaluate CanExecute
@@ -53,8 +66,7 @@ public class ChatViewModel : ObservableObject
     public string ReplyQuoteText
     {
         get => _replyQuoteText;
-        set
-        {
+        set {
             if (SetProperty(ref _replyQuoteText, value))
             {
                 OnPropertyChanged(nameof(IsReplying));
@@ -65,8 +77,7 @@ public class ChatViewModel : ObservableObject
     public string AttachmentText
     {
         get => _attachmentText;
-        set
-        {
+        set {
             if (SetProperty(ref _attachmentText, value))
             {
                 OnPropertyChanged(nameof(HasAttachment));
@@ -88,7 +99,7 @@ public class ChatViewModel : ObservableObject
     public ICommand DeleteMessageCommand { get; }
 
     // --- Events for View ---
-    public event Func<FileInfo?>? RequestFileSelection;
+    public event EventHandler<RequestFileSelectionEventArgs>? RequestFileSelection;
 
     // --- Constructor ---
     public ChatViewModel(UserProfile user, IToastService toastService)
@@ -220,7 +231,10 @@ public class ChatViewModel : ObservableObject
 
     public void OnAttachFile()
     {
-        FileInfo? selectedFile = RequestFileSelection?.Invoke();
+        var args = new RequestFileSelectionEventArgs();
+        RequestFileSelection?.Invoke(this, args);
+        FileInfo? selectedFile = args.SelectedFile;
+
         if (selectedFile != null && selectedFile.Exists)
         {
             if (selectedFile.Length > MaxFileSizeBytes)
@@ -230,7 +244,7 @@ public class ChatViewModel : ObservableObject
             }
 
             _attachedFile = selectedFile;
-            AttachmentText = $"📎 {selectedFile.Name}";
+            AttachmentText = $"ðŸ“Ž {selectedFile.Name}";
         }
     }
 
@@ -313,7 +327,7 @@ public class ChatViewModel : ObservableObject
             ? $"File: {repliedToMessage.FileName}"
             : TruncateText(repliedToMessage.Content, 30);
 
-        return $"↩ {sender}: {contentSnippet}";
+        return $"â†© {sender}: {contentSnippet}";
     }
 
     private static string TruncateText(string text, int maxLength)
@@ -326,3 +340,5 @@ public class ChatViewModel : ObservableObject
         return string.Concat(text.AsSpan(0, maxLength), "...");
     }
 }
+
+

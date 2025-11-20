@@ -1,11 +1,20 @@
-﻿using Communicator.Core.UX;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MeetingTabViewModel.cs
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Meeting;
 
 /// <summary>
 /// Simple holder for a meeting tab header and its corresponding page view model.
 /// </summary>
-public class MeetingTabViewModel : ObservableObject
+public sealed class MeetingTabViewModel : ObservableObject
 {
     private string _header;
 
@@ -29,4 +38,6 @@ public class MeetingTabViewModel : ObservableObject
     /// </summary>
     public object ContentViewModel { get; }
 }
+
+
 

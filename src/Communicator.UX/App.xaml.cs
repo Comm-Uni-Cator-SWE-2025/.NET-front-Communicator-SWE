@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: App.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Windows;
 using System.Windows.Threading;
 using Communicator.Controller;
@@ -14,7 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Communicator.UX;
 
-public partial class App : Application
+public sealed partial class App : Application
 {
     // Dependency Injection Service Provider
     public static IServiceProvider Services { get; private set; } = null!;
@@ -27,6 +36,8 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        ArgumentNullException.ThrowIfNull(e);
+
         base.OnStartup(e);
 
         // Configure Dependency Injection
@@ -42,7 +53,7 @@ public partial class App : Application
         IRPC rpc = Services.GetRequiredService<IRPC>();
         IRpcEventService rpcEventService = Services.GetRequiredService<IRpcEventService>();
         SubscribeRpcMethods(rpc, rpcEventService);
-        
+
         // Start RPC connection in background thread (like Java does)
         // This allows UI to appear while waiting for backend to connect
         StartRpcConnectionInBackground(rpc, e.Args);
@@ -55,7 +66,7 @@ public partial class App : Application
     private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService)
     {
         System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
-        
+
         // Subscribe to "subscribeAsViewer" - called when a new participant joins
         // Matches Java: rpc.subscribe(Utils.SUBSCRIBE_AS_VIEWER, ...)
         rpc.Subscribe("subscribeAsViewer", (byte[] data) => {
@@ -63,12 +74,12 @@ public partial class App : Application
             {
                 string viewerIP = System.Text.Encoding.UTF8.GetString(data);
                 System.Diagnostics.Debug.WriteLine($"[App] New viewer subscribed: {viewerIP}");
-                
-                rpcEventService.RaiseParticipantJoined(viewerIP);
-                
+
+                rpcEventService.TriggerParticipantJoined(viewerIP);
+
                 return Array.Empty<byte>();
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[App] Error in subscribeAsViewer: {ex.Message}");
                 return Array.Empty<byte>();
@@ -79,9 +90,9 @@ public partial class App : Application
         rpc.Subscribe(Communicator.ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
             try
             {
-                rpcEventService.RaiseFrameReceived(data);
+                rpcEventService.TriggerFrameReceived(data);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[App] Error in UPDATE_UI: {ex.Message}");
             }
@@ -92,29 +103,34 @@ public partial class App : Application
         rpc.Subscribe(Communicator.ScreenShare.Utils.STOP_SHARE, (byte[] data) => {
             try
             {
-                rpcEventService.RaiseStopShareReceived(data);
+                rpcEventService.TriggerStopShareReceived(data);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[App] Error in STOP_SHARE: {ex.Message}");
             }
             return Array.Empty<byte>();
         });
-        
+
         // Subscribe to "core/setIpToMailMap" - called when participant list updates
         rpc.Subscribe("core/setIpToMailMap", (byte[] data) => {
             try
             {
                 string json = System.Text.Encoding.UTF8.GetString(data);
                 System.Diagnostics.Debug.WriteLine($"[App] Participant list updated: {json}");
-                
-                rpcEventService.RaiseParticipantsListUpdated(json);
-                
+
+                rpcEventService.TriggerParticipantsListUpdated(json);
+
                 return Array.Empty<byte>();
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[App] Error in core/setIpToMailMap: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/setIpToMailMap: {ex.Message}");
                 return Array.Empty<byte>();
             }
         });
@@ -125,18 +141,18 @@ public partial class App : Application
             {
                 string viewerIP = System.Text.Encoding.UTF8.GetString(data);
                 System.Diagnostics.Debug.WriteLine($"[App] Viewer left: {viewerIP}");
-                
-                rpcEventService.RaiseParticipantLeft(viewerIP);
-                
+
+                rpcEventService.TriggerParticipantLeft(viewerIP);
+
                 return Array.Empty<byte>();
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[App] Error in unSubscribeAsViewer: {ex.Message}");
                 return Array.Empty<byte>();
             }
         });
-        
+
         System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
     }
 
@@ -148,15 +164,14 @@ public partial class App : Application
     private static void StartRpcConnectionInBackground(IRPC rpc, string[] args)
     {
         System.Diagnostics.Debug.WriteLine("[App] Starting RPC connection in background thread...");
-        
+
         // Show loading screen
         var loadingViewModel = new ViewModels.Common.LoadingViewModel { Message = "Connecting to backend..." };
         var loadingView = new Views.Common.LoadingView { DataContext = loadingViewModel };
         loadingView.Show();
 
         // Start RPC server in background thread - matches Java: rpc.connect() returns Thread
-        var rpcTask = Task.Run(() =>
-        {
+        var rpcTask = Task.Run(() => {
             try
             {
                 int portNumber = 6942;
@@ -166,56 +181,63 @@ public partial class App : Application
                 }
 
                 System.Diagnostics.Debug.WriteLine($"[App] RPC thread: Connecting to port {portNumber}...");
-                
+
                 // This will BLOCK until backend connects and completes handshake
                 // Just like Java: new SocketryServer(portNumber, methods)
                 Thread rpcThread = rpc.Connect(portNumber);
-                
+
                 System.Diagnostics.Debug.WriteLine("[App] RPC thread: Backend connected, server running");
-                
+
                 // Connection successful, switch to MainView on UI thread
-                Application.Current?.Dispatcher.Invoke(() =>
-                {
+                Application.Current?.Dispatcher.Invoke(() => {
                     // Create and show main window with DI
                     MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
                     var mainView = new MainView {
                         DataContext = mainViewModel
                     };
                     mainView.Show();
-                    
+
                     // Close loading view AFTER showing main view to prevent app shutdown
                     // (ShutdownMode defaults to OnLastWindowClose)
                     loadingView.Close();
                 });
-                
+
                 // The rpcThread is now running listenLoop in background
             }
-            catch (Exception ex)
+            catch (System.Net.Sockets.SocketException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] RPC thread error: {ex.Message}");
-                Console.Error.WriteLine($"[App] RPC connection failed: {ex}");
-                
-                // Show error on UI thread
-                Application.Current?.Dispatcher.Invoke(() =>
-                {
-                    loadingViewModel.Message = $"Connection Failed: {ex.Message}";
-                    loadingViewModel.IsBusy = false;
-                    
-                    MessageBox.Show(
-                        $"Failed to establish RPC connection: {ex.Message}\n\nSome features may not work.",
-                        "Connection Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                        
-                    // Allow proceeding even if connection failed (for testing/offline)
-                    loadingView.Close();
-                    MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
-                    var mainView = new MainView {
-                        DataContext = mainViewModel
-                    };
-                    mainView.Show();
-                });
+                HandleRpcConnectionError(ex, loadingViewModel, loadingView);
             }
+            catch (System.IO.IOException ex)
+            {
+                HandleRpcConnectionError(ex, loadingViewModel, loadingView);
+            }
+        });
+    }
+
+    private static void HandleRpcConnectionError(Exception ex, ViewModels.Common.LoadingViewModel loadingViewModel, Views.Common.LoadingView loadingView)
+    {
+        System.Diagnostics.Debug.WriteLine($"[App] RPC thread error: {ex.Message}");
+        Console.Error.WriteLine($"[App] RPC connection failed: {ex}");
+
+        // Show error on UI thread
+        Application.Current?.Dispatcher.Invoke(() => {
+            loadingViewModel.Message = $"Connection Failed: {ex.Message}";
+            loadingViewModel.IsBusy = false;
+
+            MessageBox.Show(
+                $"Failed to establish RPC connection: {ex.Message}\n\nSome features may not work.",
+                "Connection Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            // Allow proceeding even if connection failed (for testing/offline)
+            loadingView.Close();
+            MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
+            var mainView = new MainView {
+                DataContext = mainViewModel
+            };
+            mainView.Show();
         });
     }
 
@@ -257,7 +279,7 @@ public partial class App : Application
 
         // Register ToastContainerViewModel as Singleton (single toast container for app)
         services.AddSingleton<ViewModels.Common.ToastContainerViewModel>();
-        
+
         // Register LoadingViewModel as Singleton
         services.AddSingleton<ViewModels.Common.LoadingViewModel>();
 
@@ -276,7 +298,7 @@ public partial class App : Application
 
         // Factory for creating MeetingSessionViewModel with UserProfile and optional MeetingSession
         services.AddTransient<Func<UserProfile, MeetingSession?, ViewModels.Meeting.MeetingSessionViewModel>>(sp =>
-            (user, session) => ActivatorUtilities.CreateInstance<ViewModels.Meeting.MeetingSessionViewModel>(sp, user, session));
+            (user, session) => ActivatorUtilities.CreateInstance<ViewModels.Meeting.MeetingSessionViewModel>(sp, user, session!));
     }
 
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -299,4 +321,6 @@ public partial class App : Application
         MessageBox.Show(exception.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }
+
+
 

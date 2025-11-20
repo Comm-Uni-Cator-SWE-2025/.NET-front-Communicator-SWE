@@ -1,52 +1,81 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: RpcEventService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 
 namespace Communicator.UX.Services;
 
+public class RpcDataEventArgs : EventArgs
+{
+    public ReadOnlyMemory<byte> Data { get; }
+    public RpcDataEventArgs(ReadOnlyMemory<byte> data)
+    {
+        Data = data;
+    }
+}
+
+public class RpcStringEventArgs : EventArgs
+{
+    public string Value { get; }
+    public RpcStringEventArgs(string value)
+    {
+        Value = value;
+    }
+}
+
 public interface IRpcEventService
 {
-    event EventHandler<byte[]>? FrameReceived;
-    event EventHandler<byte[]>? StopShareReceived;
-    event EventHandler<string>? ParticipantJoined;
-    event EventHandler<string>? ParticipantLeft;
-    event EventHandler<string>? ParticipantsListUpdated;
+    event EventHandler<RpcDataEventArgs>? FrameReceived;
+    event EventHandler<RpcDataEventArgs>? StopShareReceived;
+    event EventHandler<RpcStringEventArgs>? ParticipantJoined;
+    event EventHandler<RpcStringEventArgs>? ParticipantLeft;
+    event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
 
-    void RaiseFrameReceived(byte[] data);
-    void RaiseStopShareReceived(byte[] data);
-    void RaiseParticipantJoined(string viewerIp);
-    void RaiseParticipantLeft(string viewerIp);
-    void RaiseParticipantsListUpdated(string participantsJson);
+    void TriggerFrameReceived(byte[] data);
+    void TriggerStopShareReceived(byte[] data);
+    void TriggerParticipantJoined(string viewerIp);
+    void TriggerParticipantLeft(string viewerIp);
+    void TriggerParticipantsListUpdated(string participantsJson);
 }
 
-public class RpcEventService : IRpcEventService
+public sealed class RpcEventService : IRpcEventService
 {
-    public event EventHandler<byte[]>? FrameReceived;
-    public event EventHandler<byte[]>? StopShareReceived;
-    public event EventHandler<string>? ParticipantJoined;
-    public event EventHandler<string>? ParticipantLeft;
-    public event EventHandler<string>? ParticipantsListUpdated;
+    public event EventHandler<RpcDataEventArgs>? FrameReceived;
+    public event EventHandler<RpcDataEventArgs>? StopShareReceived;
+    public event EventHandler<RpcStringEventArgs>? ParticipantJoined;
+    public event EventHandler<RpcStringEventArgs>? ParticipantLeft;
+    public event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
 
-    public void RaiseFrameReceived(byte[] data)
+    public void TriggerFrameReceived(byte[] data)
     {
-        FrameReceived?.Invoke(this, data);
+        FrameReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 
-    public void RaiseStopShareReceived(byte[] data)
+    public void TriggerStopShareReceived(byte[] data)
     {
-        StopShareReceived?.Invoke(this, data);
+        StopShareReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 
-    public void RaiseParticipantJoined(string viewerIp)
+    public void TriggerParticipantJoined(string viewerIp)
     {
-        ParticipantJoined?.Invoke(this, viewerIp);
+        ParticipantJoined?.Invoke(this, new RpcStringEventArgs(viewerIp));
     }
 
-    public void RaiseParticipantLeft(string viewerIp)
+    public void TriggerParticipantLeft(string viewerIp)
     {
-        ParticipantLeft?.Invoke(this, viewerIp);
+        ParticipantLeft?.Invoke(this, new RpcStringEventArgs(viewerIp));
     }
 
-    public void RaiseParticipantsListUpdated(string participantsJson)
+    public void TriggerParticipantsListUpdated(string participantsJson)
     {
-        ParticipantsListUpdated?.Invoke(this, participantsJson);
+        ParticipantsListUpdated?.Invoke(this, new RpcStringEventArgs(participantsJson));
     }
 }
+
+

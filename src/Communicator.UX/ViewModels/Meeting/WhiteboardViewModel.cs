@@ -1,4 +1,13 @@
-﻿using Communicator.Controller.Meeting;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: WhiteboardViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Meeting;
@@ -6,7 +15,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// <summary>
 /// Represents the collaborative whiteboard tab state for the active meeting.
 /// </summary>
-public class WhiteboardViewModel : ObservableObject
+public sealed class WhiteboardViewModel : ObservableObject
 {
     /// <summary>
     /// Initializes the whiteboard model with the given user context.
@@ -20,4 +29,6 @@ public class WhiteboardViewModel : ObservableObject
     public string Title { get; }
     public UserProfile CurrentUser { get; }
 }
+
+
 

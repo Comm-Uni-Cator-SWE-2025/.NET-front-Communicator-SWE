@@ -1,4 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ServiceCollectionExtensions.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using Microsoft.Extensions.DependencyInjection;
 using Communicator.Core.UX.Services;
 
 namespace Communicator.Core.UX;
@@ -22,3 +31,4 @@ public static class ServiceCollectionExtensions
         return services;
     }
 }
+

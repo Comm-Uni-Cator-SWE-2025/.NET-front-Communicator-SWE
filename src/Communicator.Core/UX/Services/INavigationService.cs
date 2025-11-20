@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: INavigationService.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 
 namespace Communicator.Core.UX.Services;
 
@@ -47,3 +56,4 @@ public interface INavigationService
     /// </summary>
     void ClearHistory();
 }
+

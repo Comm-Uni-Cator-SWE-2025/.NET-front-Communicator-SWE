@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: HomePageViewModel.cs
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -14,7 +23,7 @@ namespace Communicator.UX.ViewModels.Home;
 /// <summary>
 /// Provides welcome content and meeting shortcuts displayed after authentication.
 /// </summary>
-public class HomePageViewModel : ObservableObject
+public sealed class HomePageViewModel : ObservableObject
 {
     private readonly UserProfile _user;
     private readonly IToastService _toastService;
@@ -26,6 +35,8 @@ public class HomePageViewModel : ObservableObject
     public static string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy", CultureInfo.CurrentCulture);
     public string WelcomeMessage => _user.DisplayName ?? "User";
     public static string SubHeading => "Ready to connect and collaborate? Join an existing meeting or create a new one to get started.";
+
+    private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private string _meetingLink;
     public string MeetingLink
@@ -96,7 +107,7 @@ public class HomePageViewModel : ObservableObject
             // IMPORTANT: We must create the ViewModel (which subscribes to events) BEFORE calling joinMeeting
             // to ensure we don't miss any initial participant events from the backend.
             MeetingSessionViewModel meetingVm = _meetingSessionViewModelFactory(_user, session);
-            
+
             // 3. Serialize meeting ID to JSON string, then to bytes
             // Java backend expects: DataSerializer.deserialize(meetId, String.class)
             string jsonId = JsonSerializer.Serialize(meetingId);
@@ -104,14 +115,14 @@ public class HomePageViewModel : ObservableObject
 
             // 4. Call RPC to join meeting
             // Backend returns the meeting ID if successful
-            await _rpc.Call("core/joinMeeting", payload);
-            
+            await _rpc.Call("core/joinMeeting", payload).ConfigureAwait(true);
+
             // 5. Navigate to meeting session
             _navigationService.NavigateTo(meetingVm);
-            
+
             _toastService.ShowSuccess($"Joined meeting {meetingId}");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is JsonException)
         {
             _toastService.ShowError($"Error joining meeting: {ex.Message}");
             // If join failed, we should probably leave the meeting view
@@ -143,14 +154,13 @@ public class HomePageViewModel : ObservableObject
 
             // 1. Call RPC to create meeting
             // The backend expects a byte[] for meetMode, but ignores it. We can send empty.
-            byte[] response = await _rpc.Call("core/createMeeting", Array.Empty<byte>());
+            byte[] response = await _rpc.Call("core/createMeeting", Array.Empty<byte>()).ConfigureAwait(true);
 
             // 2. Deserialize response to MeetingSession
             string json = System.Text.Encoding.UTF8.GetString(response);
-            
+
             // Use case-insensitive options as Java might use camelCase while C# expects PascalCase (or vice versa depending on config)
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            MeetingSession? session = JsonSerializer.Deserialize<MeetingSession>(json, options);
+            MeetingSession? session = JsonSerializer.Deserialize<MeetingSession>(json, _jsonOptions);
 
             if (session != null)
             {
@@ -163,7 +173,7 @@ public class HomePageViewModel : ObservableObject
                 _toastService.ShowError("Failed to create meeting: Invalid response from server");
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is JsonException)
         {
             _toastService.ShowError($"Error creating meeting: {ex.Message}");
         }
@@ -181,4 +191,6 @@ public class HomePageViewModel : ObservableObject
         return true;
     }
 }
+
+
 

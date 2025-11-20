@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ThemeChangedEventArgs.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 
 namespace Communicator.Core.UX.Models;
 
@@ -14,3 +23,4 @@ public class ThemeChangedEventArgs : EventArgs
         Theme = theme;
     }
 }
+

@@ -1,4 +1,13 @@
-﻿using System.Windows;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MeetingSessionView.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -7,7 +16,7 @@ namespace Communicator.UX.Views.Meeting;
 /// <summary>
 /// Container view that frames all meeting sub-pages and surfaces the active tab content.
 /// </summary>
-public partial class MeetingSessionView : UserControl
+public sealed partial class MeetingSessionView : UserControl
 {
     private const double DefaultSidePanelWidth = 320;
     private const double MinSidePanelWidth = 250;
@@ -21,7 +30,7 @@ public partial class MeetingSessionView : UserControl
     {
         InitializeComponent();
         Loaded += OnLoaded;
-        
+
         // Wire up Enter key handler for Quick Doubt TextBox
         if (FindName("QuickDoubtTextBox") is TextBox quickDoubtTextBox)
         {
@@ -34,7 +43,7 @@ public partial class MeetingSessionView : UserControl
         if (e.Key == Key.Enter && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
         {
             e.Handled = true; // Prevent new line
-            
+
             if (DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
             {
                 if (viewModel.SendQuickDoubtCommand.CanExecute(null))
@@ -94,3 +103,5 @@ public partial class MeetingSessionView : UserControl
         }
     }
 }
+
+

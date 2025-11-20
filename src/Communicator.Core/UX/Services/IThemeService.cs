@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: IThemeService.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using Communicator.Core.UX.Models;
 
 namespace Communicator.Core.UX.Services;
@@ -33,3 +42,4 @@ public interface IThemeService
     /// </summary>
     void SaveThemePreference();
 }
+

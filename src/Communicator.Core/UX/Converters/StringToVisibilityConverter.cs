@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: StringToVisibilityConverter.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Globalization;
 using System.Windows;
@@ -17,12 +26,12 @@ public class StringToVisibilityConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         bool hasValue = !string.IsNullOrEmpty(value as string);
-        
+
         if (parameter != null)
         {
             hasValue = !hasValue;
         }
-        
+
         return hasValue ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -34,3 +43,4 @@ public class StringToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+

@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: NavigationService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using Communicator.Core.UX.Services;
 
@@ -7,7 +16,7 @@ namespace Communicator.UX.Services;
 /// <summary>
 /// Stack-based navigation service that tracks back and forward history for shell-wide view model transitions.
 /// </summary>
-public class NavigationService : Communicator.Core.UX.Services.INavigationService
+public sealed class NavigationService : Communicator.Core.UX.Services.INavigationService
 {
     private readonly Stack<object> _backStack = new();
     private readonly Stack<object> _forwardStack = new();
@@ -101,4 +110,6 @@ public class NavigationService : Communicator.Core.UX.Services.INavigationServic
         }
     }
 }
+
+
 

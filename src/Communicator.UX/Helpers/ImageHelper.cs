@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ImageHelper.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -7,7 +16,7 @@ namespace Communicator.UX.Helpers;
 /// <summary>
 /// Helper class for image conversions between RPC frame data and WPF image formats.
 /// </summary>
-public static class ImageHelper
+internal static class ImageHelper
 {
     /// <summary>
     /// Converts int[][] pixel array from RImage to WPF BitmapSource.
@@ -130,3 +139,4 @@ public static class ImageHelper
         return bitmap;
     }
 }
+

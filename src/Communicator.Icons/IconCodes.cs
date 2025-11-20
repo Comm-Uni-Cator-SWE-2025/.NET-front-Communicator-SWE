@@ -1,4 +1,13 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: IconCodes.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Collections.Generic;
 
 namespace Communicator.Icons;
 
@@ -6090,3 +6099,4 @@ internal static class IconCodes
         return Icons.Keys.Where(k => k.EndsWith("-filled"));
     }
 }
+

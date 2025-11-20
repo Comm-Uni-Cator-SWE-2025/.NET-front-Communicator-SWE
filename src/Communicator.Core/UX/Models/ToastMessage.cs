@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ToastMessage.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 
 namespace Communicator.Core.UX.Models;
 
@@ -28,3 +37,4 @@ public class ToastMessage
         Duration = duration;
     }
 }
+

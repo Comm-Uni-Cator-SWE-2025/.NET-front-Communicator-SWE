@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MainViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Windows.Input;
 using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
@@ -15,7 +24,7 @@ namespace Communicator.UX.ViewModels;
 /// Shell view model that coordinates authentication, navigation, meeting toolbar state, and toast presentation.
 /// Refactored to use Dependency Injection and AuthenticationService for better separation of concerns.
 /// </summary>
-public class MainViewModel : ObservableObject
+public sealed class MainViewModel : ObservableObject
 {
     private Communicator.UX.ViewModels.Auth.AuthViewModel? _authViewModel;
     private readonly INavigationService _navigationService;
@@ -290,4 +299,6 @@ public class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowForwardButton));
     }
 }
+
+
 

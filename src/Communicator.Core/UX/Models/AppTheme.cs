@@ -1,4 +1,13 @@
-﻿namespace Communicator.Core.UX.Models;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: AppTheme.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+namespace Communicator.Core.UX.Models;
 
 /// <summary>
 /// Represents the available application themes.
@@ -8,3 +17,4 @@ public enum AppTheme
     Light,
     Dark
 }
+

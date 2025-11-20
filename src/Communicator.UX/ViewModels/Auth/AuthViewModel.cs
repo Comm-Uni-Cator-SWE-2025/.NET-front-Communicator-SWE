@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: AuthViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Communicator.Controller;
@@ -15,7 +24,7 @@ namespace Communicator.UX.ViewModels.Auth;
 /// Handles Google OAuth authentication flow using RPC.
 /// Matches Java's LoginViewModel implementation.
 /// </summary>
-public class AuthViewModel : ObservableObject
+public sealed class AuthViewModel : ObservableObject
 {
     private readonly IRPC _rpc;
     private readonly IToastService _toastService;
@@ -77,7 +86,7 @@ public class AuthViewModel : ObservableObject
 
             // Call RPC method "core/register" with empty data
             // This matches Java: rpc.call("core/register", new byte[0]).get()
-            byte[] responseData = await _rpc.Call("core/register", Array.Empty<byte>()).ConfigureAwait(false);
+            byte[] responseData = await _rpc.Call("core/register", Array.Empty<byte>()).ConfigureAwait(true);
 
             System.Diagnostics.Debug.WriteLine($"[AuthViewModel] Response data length: {responseData.Length}");
 
@@ -89,11 +98,9 @@ public class AuthViewModel : ObservableObject
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
                 CurrentUser = user;
                 IsLoading = false;
-            });
+            }).Task.ConfigureAwait(true);
         }
-#pragma warning disable CA1031 // Do not catch general exception types - UI code should gracefully handle all exceptions
-        catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
+        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is System.Text.Json.JsonException)
         {
             System.Diagnostics.Debug.WriteLine($"[AuthViewModel] Error: {ex.Message}");
 
@@ -102,7 +109,7 @@ public class AuthViewModel : ObservableObject
                 ErrorMessage = $"Authentication failed: {ex.Message}";
                 IsLoading = false;
                 _toastService.ShowError($"Authentication failed: {ex.Message}");
-            });
+            }).Task.ConfigureAwait(true);
         }
     }
 
@@ -116,3 +123,5 @@ public class AuthViewModel : ObservableObject
         CurrentUser = null;
     }
 }
+
+

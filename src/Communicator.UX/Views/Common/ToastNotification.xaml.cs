@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ToastNotification.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -10,7 +19,7 @@ namespace Communicator.UX.Views;
 /// <summary>
 /// Visual container for toast messages, handling styling, animations, and lifetime management.
 /// </summary>
-public partial class ToastNotification : UserControl
+public sealed partial class ToastNotification : UserControl
 {
     private DispatcherTimer? _timer;
     public event EventHandler? CloseRequested;
@@ -132,5 +141,7 @@ public partial class ToastNotification : UserControl
         AnimateOut();
     }
 }
+
+
 
 

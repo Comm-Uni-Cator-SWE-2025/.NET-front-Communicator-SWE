@@ -1,4 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ToastContainerViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Collections.ObjectModel;
 using System.Windows;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Models;
@@ -9,7 +18,7 @@ namespace Communicator.UX.ViewModels.Common;
 /// <summary>
 /// Collects toast messages from <see cref="IToastService"/> and exposes them to the view for rendering.
 /// </summary>
-public class ToastContainerViewModel : ObservableObject
+public sealed class ToastContainerViewModel : ObservableObject
 {
     private readonly IToastService _toastService;
 
@@ -44,4 +53,6 @@ public class ToastContainerViewModel : ObservableObject
         });
     }
 }
+
+
 

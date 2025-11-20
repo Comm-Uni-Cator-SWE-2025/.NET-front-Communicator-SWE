@@ -1,6 +1,15 @@
-using Microsoft.AspNetCore.SignalR.Client;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: CloudMessageService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System.Net.Http;
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Communicator.UX.Services;
 
@@ -8,7 +17,7 @@ namespace Communicator.UX.Services;
 /// Implementation of cloud-based messaging using Azure SignalR.
 /// Handles real-time communication for various message types via cloud functions.
 /// </summary>
-public class CloudMessageService : ICloudMessageService, IDisposable
+public sealed class CloudMessageService : ICloudMessageService, IDisposable
 {
     private readonly ICloudConfigService _cloudConfig;
     private readonly HttpClient _httpClient;
@@ -43,16 +52,16 @@ public class CloudMessageService : ICloudMessageService, IDisposable
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Calling negotiate endpoint: {_cloudConfig.NegotiateUrl}");
             string negotiateJson = await _httpClient.GetStringAsync(_cloudConfig.NegotiateUrl).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Negotiate response: {negotiateJson}");
-            
+
             JsonDocument doc = JsonDocument.Parse(negotiateJson);
-            
+
             // Extract URL (try both lowercase and uppercase property names)
             string? url = TryGetPropertyString(doc.RootElement, "url", "Url");
             if (string.IsNullOrEmpty(url))
             {
                 throw new InvalidOperationException($"Response does not contain 'url' or 'Url' property. Response: {negotiateJson}");
             }
-            
+
             // Extract access token (try both lowercase and uppercase property names)
             string? accessToken = TryGetPropertyString(doc.RootElement, "accessToken", "AccessToken");
             if (string.IsNullOrEmpty(accessToken))
@@ -82,7 +91,7 @@ public class CloudMessageService : ICloudMessageService, IDisposable
         {
             throw new InvalidOperationException($"Failed to parse negotiate response as JSON: {ex.Message}", ex);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidOperationException || ex is UriFormatException)
         {
             throw new InvalidOperationException($"Failed to connect to cloud message service: {ex.Message}", ex);
         }
@@ -110,9 +119,13 @@ public class CloudMessageService : ICloudMessageService, IDisposable
             string url = $"{_cloudConfig.MessageUrl}?message={encodedMessage}";
 
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Sending {messageType}: {formattedMessage}");
-            await _httpClient.GetAsync(url).ConfigureAwait(false);
+            await _httpClient.GetAsync(new Uri(url)).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Failed to send {messageType} message: {ex.Message}", ex);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException || ex is UriFormatException)
         {
             throw new InvalidOperationException($"Failed to send {messageType} message: {ex.Message}", ex);
         }
@@ -130,12 +143,10 @@ public class CloudMessageService : ICloudMessageService, IDisposable
                 await _hubConnection.StopAsync().ConfigureAwait(false);
                 await _hubConnection.DisposeAsync().ConfigureAwait(false);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException || ex is OperationCanceledException || ex is TimeoutException)
             {
-                // Ignore disposal errors
+                System.Diagnostics.Debug.WriteLine($"Error disconnecting: {ex.Message}");
             }
-#pragma warning restore CA1031 // Do not catch general exception types
             finally
             {
                 _hubConnection = null;
@@ -172,10 +183,10 @@ public class CloudMessageService : ICloudMessageService, IDisposable
     private void OnReceiveDoubt(string msg)
     {
         System.Diagnostics.Debug.WriteLine($"[CloudMessage] Received doubt: {msg}");
-        
+
         // Decode URL-encoded messages
         string decoded = System.Net.WebUtility.UrlDecode(msg);
-        
+
         // Cloud function sends everything to ReceiveDoubt channel
         // Check if it's actually a UserJoined message
         if (decoded.StartsWith("[USER_JOINED]", StringComparison.OrdinalIgnoreCase))
@@ -183,17 +194,16 @@ public class CloudMessageService : ICloudMessageService, IDisposable
             // Extract username and route to UserJoined handler
             string username = decoded.Substring("[USER_JOINED]".Length).Trim();
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Routing UserJoined to correct handler: {username}");
-            
+
             // Skip if this is our own message
             if (string.Equals(username, _currentUsername, StringComparison.OrdinalIgnoreCase))
             {
                 System.Diagnostics.Debug.WriteLine($"[CloudMessage] Skipping own user joined from {username}");
                 return;
             }
-            
+
             // Raise UserJoined event
-            var userJoinedArgs = new CloudMessageEventArgs
-            {
+            var userJoinedArgs = new CloudMessageEventArgs {
                 MessageType = CloudMessageType.UserJoined,
                 SenderName = username,
                 Message = string.Empty
@@ -201,32 +211,31 @@ public class CloudMessageService : ICloudMessageService, IDisposable
             MessageReceived?.Invoke(this, userJoinedArgs);
             return;
         }
-        
+
         // It's an actual quick doubt - parse normally
         (string senderName, string doubtMessage) = ParseMessageFormat(decoded);
-        
+
         // Skip if this is our own message
         if (string.Equals(senderName, _currentUsername, StringComparison.OrdinalIgnoreCase))
         {
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Skipping own doubt from {senderName}");
             return;
         }
-        
+
         // Ensure we have valid sender and message
         if (string.IsNullOrWhiteSpace(senderName))
         {
             senderName = "Unknown";
         }
-        
+
         if (string.IsNullOrWhiteSpace(doubtMessage))
         {
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] WARNING: Received empty doubt message from {senderName}. Raw: '{msg}', Decoded: '{decoded}'");
             doubtMessage = "(no message)";
         }
-        
+
         // Raise the event
-        var args = new CloudMessageEventArgs
-        {
+        var args = new CloudMessageEventArgs {
             MessageType = CloudMessageType.QuickDoubt,
             SenderName = senderName,
             Message = doubtMessage
@@ -237,23 +246,22 @@ public class CloudMessageService : ICloudMessageService, IDisposable
     private void OnUserJoined(string msg)
     {
         System.Diagnostics.Debug.WriteLine($"[CloudMessage] User joined: {msg}");
-        
+
         // Decode URL-encoded messages
         string decoded = System.Net.WebUtility.UrlDecode(msg);
-        
+
         // Parse format: "[USER_JOINED] Username" or just "Username"
         string username = ExtractUsernameFromUserJoined(decoded);
-        
+
         // Skip if this is our own message
         if (string.Equals(username, _currentUsername, StringComparison.OrdinalIgnoreCase))
         {
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Skipping own user joined from {username}");
             return;
         }
-        
+
         // Raise the event with username in SenderName and empty message
-        var args = new CloudMessageEventArgs
-        {
+        var args = new CloudMessageEventArgs {
             MessageType = CloudMessageType.UserJoined,
             SenderName = username,
             Message = string.Empty
@@ -308,7 +316,7 @@ public class CloudMessageService : ICloudMessageService, IDisposable
     private static (string senderName, string message) ParseMessageFormat(string rawMessage)
     {
         System.Diagnostics.Debug.WriteLine($"[CloudMessage] ParseMessageFormat - Input: '{rawMessage}'");
-        
+
         if (string.IsNullOrWhiteSpace(rawMessage))
         {
             System.Diagnostics.Debug.WriteLine("[CloudMessage] ParseMessageFormat - Input is null/empty");
@@ -330,7 +338,7 @@ public class CloudMessageService : ICloudMessageService, IDisposable
                 return (senderName, message);
             }
         }
-        
+
         // If no brackets found, treat entire message as content
         System.Diagnostics.Debug.WriteLine($"[CloudMessage] ParseMessageFormat - No brackets, treating as message: '{rawMessage}'");
         return (string.Empty, rawMessage.Trim());
@@ -341,8 +349,7 @@ public class CloudMessageService : ICloudMessageService, IDisposable
     /// </summary>
     private static string FormatMessageForCloud(CloudMessageType messageType, string username, string message)
     {
-        return messageType switch
-        {
+        return messageType switch {
             CloudMessageType.UserJoined => $"[USER_JOINED] {username}",
             CloudMessageType.QuickDoubt => $"[{username}] {message}",
             _ => $"[{username}] {message}",
@@ -366,3 +373,5 @@ public class CloudMessageService : ICloudMessageService, IDisposable
 
     #endregion
 }
+
+

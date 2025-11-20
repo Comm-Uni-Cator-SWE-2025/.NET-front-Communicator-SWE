@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: INavigationScope.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 
 namespace Communicator.Core.UX;
 
@@ -32,3 +41,4 @@ public interface INavigationScope
     /// </summary>
     event EventHandler? NavigationStateChanged;
 }
+

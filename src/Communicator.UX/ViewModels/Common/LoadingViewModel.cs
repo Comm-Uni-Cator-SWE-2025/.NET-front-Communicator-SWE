@@ -1,11 +1,20 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: LoadingViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using Communicator.Core.UX;
 
 namespace Communicator.UX.ViewModels.Common;
 
-public class LoadingViewModel : ObservableObject
+public sealed class LoadingViewModel : ObservableObject
 {
     private string _message = "Loading...";
-    private bool _isBusy = false;
+    private bool _isBusy;
 
     public string Message
     {
@@ -19,3 +28,5 @@ public class LoadingViewModel : ObservableObject
         set => SetProperty(ref _isBusy, value);
     }
 }
+
+

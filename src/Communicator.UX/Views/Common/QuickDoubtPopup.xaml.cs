@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: QuickDoubtPopup.xaml.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,7 +18,7 @@ namespace Communicator.UX.Views;
 /// Visual control for displaying Quick Doubt messages at the top-center of the meeting view.
 /// Can be dismissed by clicking the close button or clicking outside the popup.
 /// </summary>
-public partial class QuickDoubtPopup : UserControl
+public sealed partial class QuickDoubtPopup : UserControl
 {
     public event EventHandler? CloseRequested;
 
@@ -59,16 +68,14 @@ public partial class QuickDoubtPopup : UserControl
     /// </summary>
     private void AnimateIn()
     {
-        var slideIn = new DoubleAnimation
-        {
+        var slideIn = new DoubleAnimation {
             From = -100,
             To = 0,
             Duration = TimeSpan.FromMilliseconds(350),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
 
-        var fadeIn = new DoubleAnimation
-        {
+        var fadeIn = new DoubleAnimation {
             From = 0,
             To = 1,
             Duration = TimeSpan.FromMilliseconds(300)
@@ -86,21 +93,18 @@ public partial class QuickDoubtPopup : UserControl
     /// </summary>
     private void AnimateOut()
     {
-        var slideOut = new DoubleAnimation
-        {
+        var slideOut = new DoubleAnimation {
             To = -100,
             Duration = TimeSpan.FromMilliseconds(300),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
         };
 
-        var fadeOut = new DoubleAnimation
-        {
+        var fadeOut = new DoubleAnimation {
             To = 0,
             Duration = TimeSpan.FromMilliseconds(250)
         };
 
-        slideOut.Completed += (s, e) =>
-        {
+        slideOut.Completed += (s, e) => {
             CloseRequested?.Invoke(this, EventArgs.Empty);
         };
 
@@ -119,3 +123,5 @@ public partial class QuickDoubtPopup : UserControl
         AnimateOut();
     }
 }
+
+

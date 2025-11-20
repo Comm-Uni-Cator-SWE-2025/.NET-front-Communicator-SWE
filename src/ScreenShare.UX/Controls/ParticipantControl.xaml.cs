@@ -9,11 +9,11 @@ namespace ScreenShare.UX.Controls
     public partial class ParticipantControl : UserControl
     {
         public static readonly DependencyProperty InitialProperty =
-            DependencyProperty.Register("Initial", typeof(string), typeof(ParticipantControl), 
+            DependencyProperty.Register("Initial", typeof(string), typeof(ParticipantControl),
                 new PropertyMetadata("Y", OnInitialChanged));
 
         public static readonly DependencyProperty UsernameProperty =
-            DependencyProperty.Register("Username", typeof(string), typeof(ParticipantControl), 
+            DependencyProperty.Register("Username", typeof(string), typeof(ParticipantControl),
                 new PropertyMetadata("You", OnUsernameChanged));
 
         public string Initial

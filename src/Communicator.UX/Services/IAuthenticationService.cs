@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: IAuthenticationService.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using Communicator.Controller.Meeting;
 
 namespace Communicator.UX.Services;
@@ -6,7 +15,7 @@ namespace Communicator.UX.Services;
 /// <summary>
 /// Event arguments for user authentication events.
 /// </summary>
-public class UserProfileEventArgs : EventArgs
+public sealed class UserProfileEventArgs : EventArgs
 {
     public UserProfile User { get; }
 
@@ -52,3 +61,5 @@ public interface IAuthenticationService
     /// </summary>
     void Logout();
 }
+
+

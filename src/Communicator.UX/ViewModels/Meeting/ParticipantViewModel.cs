@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ParticipantViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Windows.Media.Imaging;
 using Communicator.Controller.Meeting;
@@ -9,7 +18,7 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// Represents a participant in the meeting with UI-specific state.
 /// Wraps UserProfile with bindable properties for video frames, mute state, etc.
 /// </summary>
-public class ParticipantViewModel : ObservableObject
+public sealed class ParticipantViewModel : ObservableObject
 {
     private BitmapSource? _videoFrame;
     private BitmapSource? _screenFrame;
@@ -37,8 +46,7 @@ public class ParticipantViewModel : ObservableObject
     public BitmapSource? VideoFrame
     {
         get => _videoFrame;
-        set
-        {
+        set {
             if (SetProperty(ref _videoFrame, value))
             {
                 OnPropertyChanged(nameof(HasVideoFrame));
@@ -52,8 +60,7 @@ public class ParticipantViewModel : ObservableObject
     public BitmapSource? ScreenFrame
     {
         get => _screenFrame;
-        set
-        {
+        set {
             if (SetProperty(ref _screenFrame, value))
             {
                 OnPropertyChanged(nameof(HasScreenFrame));
@@ -105,7 +112,7 @@ public class ParticipantViewModel : ObservableObject
     /// <summary>
     /// First letter of display name for avatar initial.
     /// </summary>
-    public string Initial => string.IsNullOrEmpty(DisplayName) ? "?" : DisplayName.Substring(0, 1).ToUpper();
+    public string Initial => string.IsNullOrEmpty(DisplayName) ? "?" : DisplayName.Substring(0, 1).ToUpper(System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Whether this participant has a video frame to display.
@@ -122,3 +129,5 @@ public class ParticipantViewModel : ObservableObject
     /// </summary>
     public Uri? ProfileImageUri => User.LogoUrl;
 }
+
+

@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: InverseBoolConverter.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Globalization;
 using System.Windows.Data;
@@ -19,3 +28,4 @@ public class InverseBoolConverter : IValueConverter
         return value is bool boolValue && !boolValue;
     }
 }
+

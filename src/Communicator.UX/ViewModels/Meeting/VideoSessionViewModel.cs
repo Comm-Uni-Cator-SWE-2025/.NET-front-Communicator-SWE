@@ -1,6 +1,16 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: VideoSessionViewModel.cs
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -28,7 +38,7 @@ public enum VideoViewMode
 /// Represents the video session view, displaying all participants with their video/screen streams.
 /// Manages view modes (Grid, VideoFocus, ScreenFocus), participant sorting, and RPC frame updates.
 /// </summary>
-public class VideoSessionViewModel : ObservableObject, IDisposable
+public sealed class VideoSessionViewModel : ObservableObject, IDisposable
 {
     private int _gridColumns = 1;
     private int _gridRows = 1;
@@ -60,7 +70,7 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
 
         // Subscribe to collection changes to update grid layout and sorting
         Participants.CollectionChanged += OnParticipantsChanged;
-        
+
         // Subscribe to each participant's property changes for re-sorting
         foreach (ParticipantViewModel participant in Participants)
         {
@@ -214,17 +224,14 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Handles incoming video/screen frames from RPC.
     /// </summary>
-    private void OnFrameReceived(object? sender, byte[] data)
+    private void OnFrameReceived(object? sender, RpcDataEventArgs e)
     {
         try
         {
-            RImage rImage = RImage.Deserialize(data);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                UpdateParticipantFrame(rImage);
-            });
+            RImage rImage = RImage.Deserialize(e.Data.ToArray());
+            Application.Current.Dispatcher.Invoke(() => UpdateParticipantFrame(rImage));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is IndexOutOfRangeException || ex is IOException)
         {
             System.Diagnostics.Debug.WriteLine($"Error processing frame: {ex.Message}");
         }
@@ -233,30 +240,20 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Handles stop share signal from RPC.
     /// </summary>
-    private void OnStopShare(object? sender, byte[] data)
+    private void OnStopShare(object? sender, RpcDataEventArgs e)
     {
-        // The data might contain the IP of the user stopping the share, or it might be empty/generic.
-        // Assuming it contains IP string like SUBSCRIBE_AS_VIEWER does, or we might need to parse it.
-        // But Utils.STOP_SHARE is just a signal.
-        // If we don't know who stopped, we might need to check who was sharing.
-        
-        // For now, let's assume we need to clear screen share for everyone or check the payload.
-        // Java implementation of OnStopShare?
-        // It's not explicitly shown in the provided files, but let's assume it carries the IP.
-        
-        try 
+        try
         {
-             // If data is not empty, try to read IP
-             if (data.Length > 0)
-             {
-                 // Try to read IP string
-                 // But wait, how is it encoded?
-                 // If it's just a string bytes:
-                 // string ip = System.Text.Encoding.UTF8.GetString(data);
-                 // Let's try that.
-             }
+            // If data is not empty, try to read IP
+            if (e.Data.Length > 0)
+            {
+                // Placeholder for future logic
+            }
         }
-        catch (Exception) { }
+        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error in OnStopShare: {ex.Message}");
+        }
     }
 
     private void UpdateParticipantFrame(RImage rImage)
@@ -268,12 +265,12 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
         if (participant != null)
         {
             WriteableBitmap? bitmapSource = CreateBitmapSourceFromIntArray(rImage.Image);
-            
+
             // If participant is marked as screen sharing, update screen frame
             // Otherwise update video frame
             // Note: This logic depends on IsScreenSharing flag being set correctly via other means (e.g. separate RPC call)
             // OR we can infer it.
-            
+
             if (participant.IsScreenSharing)
             {
                 participant.ScreenFrame = bitmapSource;
@@ -298,9 +295,9 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
             return null;
         }
         int width = pixels[0].Length;
-        
+
         WriteableBitmap wBitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
-        
+
         // Flatten the array
         int[] flatPixels = new int[width * height];
         for (int y = 0; y < height; y++)
@@ -310,7 +307,7 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
                 flatPixels[y * width + x] = pixels[y][x];
             }
         }
-        
+
         wBitmap.WritePixels(new Int32Rect(0, 0, width, height), flatPixels, width * 4, 0);
         wBitmap.Freeze(); // Make it cross-thread accessible if needed, though we are on UI thread here.
         return wBitmap;
@@ -360,7 +357,7 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
     private void UpdateSortedParticipants()
     {
         var sorted = Participants.OrderByDescending(p => p.IsScreenSharing).ToList();
-        
+
         SortedParticipants.Clear();
         foreach (ParticipantViewModel participant in sorted)
         {
@@ -431,7 +428,7 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (disposing)
         {
@@ -440,7 +437,7 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
                 _rpcEventService.FrameReceived -= OnFrameReceived;
                 _rpcEventService.StopShareReceived -= OnStopShare;
             }
-            
+
             Participants.CollectionChanged -= OnParticipantsChanged;
             foreach (ParticipantViewModel participant in Participants)
             {
@@ -449,3 +446,5 @@ public class VideoSessionViewModel : ObservableObject, IDisposable
         }
     }
 }
+
+

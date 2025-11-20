@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: MeetingSessionViewModel.cs
+ *  Owner: Geetheswar V
+ *  Roll Number : 142201025
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,12 +27,13 @@ namespace Communicator.UX.ViewModels.Meeting;
 /// sub-features (video, screenshare, chat, whiteboard), navigation, and toolbar state.
 /// Merges the functionality of MeetingShellViewModel and MeetingViewModel.
 /// </summary>
-public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisposable
+public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisposable
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
     private readonly ICloudMessageService _cloudMessageService;
     private readonly ICloudConfigService _cloudConfig;
+    private readonly INavigationService _navigationService;
     private readonly UserProfile _currentUser;
     private readonly Stack<MeetingTabViewModel> _backStack = new();
     private readonly Stack<MeetingTabViewModel> _forwardStack = new();
@@ -69,6 +79,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         IToastService toastService,
         ICloudMessageService cloudMessageService,
         ICloudConfigService cloudConfig,
+        INavigationService navigationService,
         IRPC? rpc = null,
         IRpcEventService? rpcEventService = null)
     {
@@ -77,6 +88,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
         _cloudMessageService = cloudMessageService ?? throw new ArgumentNullException(nameof(cloudMessageService));
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
+        _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _rpc = rpc;
         _rpcEventService = rpcEventService;
 
@@ -106,11 +118,11 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         ToggleCameraCommand = new RelayCommand(_ => ToggleCamera());
         ToggleHandCommand = new RelayCommand(_ => ToggleHandRaised());
         ToggleScreenShareCommand = new RelayCommand(_ => ToggleScreenShare());
-        LeaveMeetingCommand = new RelayCommand(async _ => await LeaveMeetingAsync());
+        LeaveMeetingCommand = new RelayCommand(async _ => await LeaveMeetingAsync().ConfigureAwait(true));
         ToggleChatPanelCommand = new RelayCommand(_ => ToggleChatPanel());
         ToggleParticipantsPanelCommand = new RelayCommand(_ => ToggleParticipantsPanel());
         CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
-        SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync(), _ => CanSendQuickDoubt());
+        SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync().ConfigureAwait(true), _ => CanSendQuickDoubt());
         DismissQuickDoubtCommand = new RelayCommand(param => DismissQuickDoubt(param as string));
 
         RaiseNavigationStateChanged();
@@ -130,8 +142,9 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         _ = InitializeServicesAsync();
     }
 
-    private void OnParticipantJoined(object? sender, string viewerIP)
+    private void OnParticipantJoined(object? sender, RpcStringEventArgs e)
     {
+        string viewerIP = e.Value;
         UserProfile newUser = new(
             email: $"{viewerIP}@example.com",
             displayName: viewerIP,
@@ -143,8 +156,9 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         System.Windows.Application.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
     }
 
-    private void OnParticipantLeft(object? sender, string viewerIP)
+    private void OnParticipantLeft(object? sender, RpcStringEventArgs e)
     {
+        string viewerIP = e.Value;
         // Update collection on UI thread
         System.Windows.Application.Current.Dispatcher.Invoke(() => {
             // Find participant by email (which we constructed as IP@example.com)
@@ -153,14 +167,15 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         });
     }
 
-    private void OnParticipantsListUpdated(object? sender, string participantsJson)
+    private void OnParticipantsListUpdated(object? sender, RpcStringEventArgs e)
     {
+        string participantsJson = e.Value;
         try
         {
             // Deserialize the list of participants
             // Expected format: [{"ip": "...", "email": "..."}, ...]
             List<Dictionary<string, string>>? participants = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(participantsJson);
-            
+
             if (participants == null)
             {
                 return;
@@ -168,15 +183,15 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
             System.Windows.Application.Current.Dispatcher.Invoke(() => {
                 // Sync our list with the backend list
-                
+
                 // 1. Add new participants
                 foreach (Dictionary<string, string> p in participants)
                 {
                     if (p.TryGetValue("email", out string? email) && !string.IsNullOrEmpty(email))
                     {
-                        string ip = p.ContainsKey("ip") ? p["ip"] : "";
+                        string ip = p.TryGetValue("ip", out string? ipVal) ? ipVal : "";
                         string displayName = !string.IsNullOrEmpty(ip) ? ip : email;
-                        
+
                         // Check if we already have this participant
                         if (!Participants.Any(existing => existing.User.Email == email))
                         {
@@ -196,7 +211,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
                     .Select(p => p.TryGetValue("email", out string? e) ? e : null)
                     .Where(e => e != null)
                     .ToHashSet();
-                
+
                 // Don't remove ourselves
                 if (_currentUser.Email != null)
                 {
@@ -216,7 +231,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
                 }
             });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Text.Json.JsonException)
         {
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] Error parsing participant list: {ex.Message}");
         }
@@ -494,8 +509,15 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             Participants.Remove(participant);
             _toastService.ShowInfo($"{participant.DisplayName} left the meeting");
 
-            // TODO: Notify backend of participant removal
-            // Example: await _rpc?.Call("removeParticipant", Encoding.UTF8.GetBytes(email));
+            // Check if the host left the meeting
+            if (_currentMeeting != null && !string.IsNullOrEmpty(_currentMeeting.CreatedBy) && email == _currentMeeting.CreatedBy)
+            {
+                // If the host left, the meeting is over for everyone
+                System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+                    _toastService.ShowWarning("Host has ended the meeting.");
+                    await CleanupAndNavigateBackAsync().ConfigureAwait(false);
+                });
+            }
         }
     }
 
@@ -514,7 +536,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         IsMuted = !IsMuted;
 
         // Call RPC to toggle audio
-        await _rpc.Call(IsMuted ? Utils.STOP_AUDIO_CAPTURE : Utils.START_AUDIO_CAPTURE, Array.Empty<byte>());
+        await _rpc.Call(IsMuted ? Utils.STOP_AUDIO_CAPTURE : Utils.START_AUDIO_CAPTURE, Array.Empty<byte>()).ConfigureAwait(true);
 
         // Update current user's participant state
         ParticipantViewModel? currentParticipant = Participants.FirstOrDefault(p => p.User.Email == _currentUser.Email);
@@ -535,7 +557,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         IsCameraOn = !IsCameraOn;
 
         // Call RPC to toggle video
-        await _rpc.Call(IsCameraOn ? Utils.START_VIDEO_CAPTURE : Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
+        await _rpc.Call(IsCameraOn ? Utils.START_VIDEO_CAPTURE : Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>()).ConfigureAwait(true);
 
         // Update current user's participant state
         ParticipantViewModel? currentParticipant = Participants.FirstOrDefault(p => p.User.Email == _currentUser.Email);
@@ -579,7 +601,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         IsScreenSharing = !IsScreenSharing;
 
         // Call RPC to toggle screen share
-        await _rpc.Call(IsScreenSharing ? Utils.START_SCREEN_CAPTURE : Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
+        await _rpc.Call(IsScreenSharing ? Utils.START_SCREEN_CAPTURE : Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>()).ConfigureAwait(true);
 
         // Update current user's participant state
         ParticipantViewModel? currentParticipant = Participants.FirstOrDefault(p => p.User.Email == _currentUser.Email);
@@ -688,7 +710,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.QuickDoubt,
                 _currentUser.DisplayName ?? "Unknown User",
-                QuickDoubtSentMessage).ConfigureAwait(false);
+                QuickDoubtSentMessage).ConfigureAwait(true);
 
             // Clear the input field and hide it
             QuickDoubtMessage = string.Empty;
@@ -696,8 +718,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
             // Note: We don't show the popup for the sender - only others will see it via SignalR
             // Keep the bubble open to show the sent message (no textbox)
         }
-#pragma warning disable CA1031 // Do not catch general exception types
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
         {
             _toastService.ShowError($"Failed to send quick doubt: {ex.Message}");
             // Restore the message if sending failed
@@ -767,7 +788,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleQuickDoubt: Adding doubt item to ActiveQuickDoubts collection");
 
         // Add to collection in UI thread
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>{
+        System.Windows.Application.Current.Dispatcher.Invoke(() => {
             var doubtItem = new QuickDoubtItem {
                 Id = Guid.NewGuid().ToString(),
                 SenderName = senderName,
@@ -813,16 +834,15 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         try
         {
             // Connect to cloud messaging service
-            await _cloudMessageService.ConnectAsync(_currentUser.DisplayName ?? "Unknown User").ConfigureAwait(false);
+            await _cloudMessageService.ConnectAsync(_currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
             _toastService.ShowSuccess("Connected to cloud messaging service");
 
             // Notify other participants that this user has joined
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.UserJoined,
-                _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(false);
+                _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
         }
-#pragma warning disable CA1031 // Do not catch general exception types
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
         {
             _toastService.ShowError($"Failed to initialize services: {ex.Message}");
         }
@@ -842,41 +862,66 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
                 // Stop video capture if enabled
                 if (IsCameraOn)
                 {
-                    await _rpc.Call(Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>());
+                    await _rpc.Call(Utils.STOP_VIDEO_CAPTURE, Array.Empty<byte>()).ConfigureAwait(true);
                 }
 
                 // Stop screen share if enabled
                 if (IsScreenSharing)
                 {
-                    await _rpc.Call(Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>());
+                    await _rpc.Call(Utils.STOP_SCREEN_CAPTURE, Array.Empty<byte>()).ConfigureAwait(true);
                 }
 
                 // Stop audio capture if enabled
                 if (!IsMuted)
                 {
-                    await _rpc.Call(Utils.STOP_AUDIO_CAPTURE, Array.Empty<byte>());
+                    await _rpc.Call(Utils.STOP_AUDIO_CAPTURE, Array.Empty<byte>()).ConfigureAwait(true);
                 }
 
                 // Notify backend of leaving
-                // await _rpc.Call("leaveMeeting", Encoding.UTF8.GetBytes(_currentUser.Email ?? ""));
+                await _rpc.Call("core/leaveMeeting", Array.Empty<byte>()).ConfigureAwait(true);
             }
 
+            await CleanupAndNavigateBackAsync().ConfigureAwait(true);
+            _toastService.ShowSuccess("Left the meeting");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+        {
+            _toastService.ShowError($"Error leaving meeting: {ex.Message}");
+            // Even if error occurs, try to cleanup locally
+            await CleanupAndNavigateBackAsync().ConfigureAwait(true);
+        }
+#pragma warning restore CA1031 // Do not catch general exception types
+    }
+
+    private async Task CleanupAndNavigateBackAsync()
+    {
+        try
+        {
             // Disconnect from cloud messaging service
-            await _cloudMessageService.DisconnectAsync().ConfigureAwait(false);
+            await _cloudMessageService.DisconnectAsync().ConfigureAwait(true);
 
             // Clear meeting state
             _currentMeeting = null;
             IsMeetingActive = false;
-            Participants.Clear();
 
-            _toastService.ShowSuccess("Left the meeting");
+            System.Windows.Application.Current.Dispatcher.Invoke(() => {
+                Participants.Clear();
+                // Navigate back to home
+                if (_navigationService.CanGoBack)
+                {
+                    _navigationService.GoBack();
+                }
+                else
+                {
+                    // Fallback if no history (shouldn't happen if flow is correct)
+                    // We might need to navigate explicitly to Home, but GoBack is safer for now
+                }
+            });
         }
-#pragma warning disable CA1031 // Do not catch general exception types
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidOperationException || ex is TimeoutException)
         {
-            _toastService.ShowError($"Error leaving meeting: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error during cleanup: {ex.Message}");
         }
-#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     #endregion
@@ -889,7 +934,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (disposing)
         {
@@ -915,3 +960,5 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
 
     #endregion
 }
+
+

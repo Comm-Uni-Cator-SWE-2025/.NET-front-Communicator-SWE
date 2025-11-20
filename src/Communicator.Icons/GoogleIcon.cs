@@ -1,3 +1,12 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: GoogleIcon.cs
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
 using System.Windows;
 using System.Windows.Controls;
 
@@ -11,7 +20,7 @@ public class GoogleIcon : Control
 {
     static GoogleIcon()
     {
-        DefaultStyleKeyProperty.OverrideMetadata(typeof(GoogleIcon), 
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(GoogleIcon),
             new FrameworkPropertyMetadata(typeof(GoogleIcon)));
     }
 
@@ -20,3 +29,4 @@ public class GoogleIcon : Control
     /// The template will use these values for sizing
     /// </summary>
 }
+
