@@ -63,6 +63,7 @@ public sealed partial class App : Application
     /// Subscribes to RPC methods that the backend may call.
     /// Must be called BEFORE Connect(), matching Java frontend pattern.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "RPC callbacks must not crash the app")]
     private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService)
     {
         System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
@@ -151,6 +152,68 @@ public sealed partial class App : Application
                 System.Diagnostics.Debug.WriteLine($"[App] Error in unSubscribeAsViewer: {ex.Message}");
                 return Array.Empty<byte>();
             }
+        });
+
+        // --- Chat Subscriptions ---
+
+        rpc.Subscribe("chat:new-message", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerChatMessageReceived(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:new-message: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
+
+        rpc.Subscribe("chat:file-metadata-received", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerFileMetadataReceived(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-metadata-received: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
+
+        rpc.Subscribe("chat:file-saved-success", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerFileSaveSuccess(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-saved-success: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
+
+        rpc.Subscribe("chat:file-saved-error", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerFileSaveError(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-saved-error: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
+
+        rpc.Subscribe("chat:message-deleted", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerMessageDeleted(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:message-deleted: {ex.Message}");
+            }
+            return Array.Empty<byte>();
         });
 
         System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");

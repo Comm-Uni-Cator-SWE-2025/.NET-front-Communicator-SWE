@@ -97,7 +97,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
         // Create sub-ViewModels with shared participant collection
         VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc, _rpcEventService);
-        Chat = new ChatViewModel(_currentUser, _toastService);
+        Chat = new ChatViewModel(_currentUser, _toastService, _rpc, _rpcEventService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
         AIInsights = new AIInsightsViewModel(_currentUser);
 
@@ -173,10 +173,10 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         try
         {
             // Deserialize the list of participants
-            // Expected format: [{"ip": "...", "email": "..."}, ...]
-            List<Dictionary<string, string>>? participants = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(participantsJson);
+            // Expected format: {"ip": "email", ...} (Map<String, String> from Java)
+            Dictionary<string, string>? ipToMailMap = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(participantsJson);
 
-            if (participants == null)
+            if (ipToMailMap == null)
             {
                 return;
             }
@@ -185,32 +185,27 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
                 // Sync our list with the backend list
 
                 // 1. Add new participants
-                foreach (Dictionary<string, string> p in participants)
+                foreach (KeyValuePair<string, string> kvp in ipToMailMap)
                 {
-                    if (p.TryGetValue("email", out string? email) && !string.IsNullOrEmpty(email))
-                    {
-                        string ip = p.TryGetValue("ip", out string? ipVal) ? ipVal : "";
-                        string displayName = !string.IsNullOrEmpty(ip) ? ip : email;
+                    string ip = kvp.Key;
+                    string email = kvp.Value;
+                    string displayName = !string.IsNullOrEmpty(ip) ? ip : email;
 
-                        // Check if we already have this participant
-                        if (!Participants.Any(existing => existing.User.Email == email))
-                        {
-                            UserProfile newUser = new(
-                                email: email,
-                                displayName: displayName,
-                                role: ParticipantRole.STUDENT,
-                                logoUrl: null
-                            );
-                            AddParticipant(newUser);
-                        }
+                    // Check if we already have this participant
+                    if (!Participants.Any(existing => existing.User.Email == email))
+                    {
+                        UserProfile newUser = new(
+                            email: email,
+                            displayName: displayName,
+                            role: ParticipantRole.STUDENT,
+                            logoUrl: null
+                        );
+                        AddParticipant(newUser);
                     }
                 }
 
                 // 2. Remove participants not in the list (except self)
-                var emailsInBackend = participants
-                    .Select(p => p.TryGetValue("email", out string? e) ? e : null)
-                    .Where(e => e != null)
-                    .ToHashSet();
+                var emailsInBackend = new HashSet<string>(ipToMailMap.Values);
 
                 // Don't remove ourselves
                 if (_currentUser.Email != null)
