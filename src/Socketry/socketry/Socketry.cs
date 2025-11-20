@@ -23,7 +23,7 @@ namespace socketry
             {
                 Console.WriteLine(procedureName);
                 binaryWriter.Write(Encoding.UTF8.GetBytes(procedureName));
-                binaryWriter.Write(0);
+                binaryWriter.Write((byte)0);
             }
             buffer.Position = 0;
             byte[] result = buffer.ToArray();

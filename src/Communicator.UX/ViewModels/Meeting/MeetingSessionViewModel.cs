@@ -189,6 +189,23 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
                 {
                     string ip = kvp.Key;
                     string email = kvp.Value;
+
+                    // Handle Java ClientNode.toString() format: ClientNode[hostName=127.0.0.1, port=6945]
+                    if (ip.StartsWith("ClientNode[", StringComparison.Ordinal) && ip.Contains("hostName=", StringComparison.Ordinal))
+                    {
+                        int start = ip.IndexOf("hostName=", StringComparison.Ordinal) + 9;
+                        int end = ip.IndexOf(',', start);
+                        if (end == -1)
+                        {
+                            end = ip.IndexOf(']', start);
+                        }
+
+                        if (start > 8 && end > start)
+                        {
+                            ip = ip.Substring(start, end - start);
+                        }
+                    }
+
                     string displayName = !string.IsNullOrEmpty(ip) ? ip : email;
 
                     // Check if we already have this participant
