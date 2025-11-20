@@ -1,4 +1,12 @@
-﻿using System.Net;
+﻿/******************************************************************************
+* Filename    = MessageSignalRTests.cs
+* Author      = Nikhil S Thomas
+* Product     = Comm-Uni-Cator
+* Project     = SignalR Function App
+* Description = Unit test for NegotiateFunction Azure Function.
+*****************************************************************************/
+
+using System.Net;
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -12,13 +20,20 @@ using Xunit;
 
 namespace Communicator.Cloud.SignalR.Tests;
 
+/// <summary>
+/// Class containing unit tests for the NegotiateFunction Azure Function.
+/// </summary>
 public class NegotiateFunctionTests
 {
+    // Mock objects and function instance
     private readonly Mock<ILogger<NegotiateFunction>> _mockLogger;
     private readonly Mock<FunctionContext> _mockContext;
     private readonly Mock<HttpRequestData> _mockRequest;
     private readonly NegotiateFunction _function;
 
+    /// <summary>
+    /// Constructor to set up the test environment.
+    /// </summary>
     public NegotiateFunctionTests()
     {
         _mockLogger = new Mock<ILogger<NegotiateFunction>>();
@@ -35,6 +50,9 @@ public class NegotiateFunctionTests
         _function = new NegotiateFunction(_mockLogger.Object);
     }
 
+    /// <summary>
+    /// Test for the NegotiateFunction Run method.
+    /// </summary>
     [Fact]
     public async Task NegotitateFunctionTest()
     {

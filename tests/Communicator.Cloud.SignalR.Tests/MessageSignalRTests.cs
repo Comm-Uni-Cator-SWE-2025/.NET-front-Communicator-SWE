@@ -1,5 +1,13 @@
-﻿using System.Collections.Specialized;
+﻿/******************************************************************************
+* Filename    = MessageSignalRTests.cs
+* Author      = Nikhil S Thomas
+* Product     = Comm-Uni-Cator
+* Project     = SignalR Function App
+* Description = Unit tests for MessageSignalR Azure Function.
+*****************************************************************************/
+
 using System.Net;
+using System.Collections.Specialized;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +20,12 @@ using static Communicator.Cloud.SignalR.MessageSignalR;
 
 namespace Communicator.Cloud.SignalR.Tests;
 
+/// <summary>
+/// Class containing unit tests for the MessageSignalR Azure Function.
+/// </summary>
 public class MessageSignalRTests
 {
+    // Mock objects and function instance
     private readonly Mock<ILogger<MessageSignalR>> _mockLogger;
     private readonly Mock<FunctionContext> _mockContext;
     private readonly Mock<HttpRequestData> _mockRequest;
@@ -21,6 +33,9 @@ public class MessageSignalRTests
     private readonly MemoryStream _responseStream;
     private readonly Mock<HttpResponseData> _mockResponse;
 
+    /// <summary>
+    /// Constructor to set up the test environment.
+    /// </summary>
     public MessageSignalRTests()
     {
         _mockLogger = new Mock<ILogger<MessageSignalR>>();
@@ -45,6 +60,9 @@ public class MessageSignalRTests
         _mockRequest.Setup(r => r.CreateResponse()).Returns(_mockResponse.Object);
     }
 
+    /// <summary>
+    /// Test to verify broadcasting a given message to the SignalR hub.
+    /// </summary>
     [Fact]
     public async Task BroadcastGivenMessageTest()
     {
@@ -79,6 +97,9 @@ public class MessageSignalRTests
         );
     }
 
+    /// <summary>
+    /// Test to verify broadcasting the default message when no message is provided.
+    /// </summary>
     [Fact]
     public async Task BroadcastDefaultMessageTest()
     {
