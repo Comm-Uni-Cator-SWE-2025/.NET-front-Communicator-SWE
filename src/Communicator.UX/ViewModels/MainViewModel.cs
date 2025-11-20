@@ -60,6 +60,9 @@ public class MainViewModel : ObservableObject
     public string? CurrentUserEmail => _authenticationService.CurrentUser?.Email;
 
     public ToastContainerViewModel ToastContainerViewModel { get; }
+    public LoadingViewModel LoadingViewModel { get; }
+
+    public bool IsBusy => LoadingViewModel.IsBusy;
 
     private INavigationScope? _navigationScope;
     private readonly RelayCommand _goBackCommand;
@@ -81,6 +84,7 @@ public class MainViewModel : ObservableObject
         INavigationService navigationService,
         IAuthenticationService authenticationService,
         ToastContainerViewModel toastContainerViewModel,
+        LoadingViewModel loadingViewModel,
         Func<Communicator.UX.ViewModels.Auth.AuthViewModel> authViewModelFactory,
         Func<UserProfile, HomePageViewModel> homePageViewModelFactory,
         Func<UserProfile, SettingsViewModel> settingsViewModelFactory)
@@ -88,9 +92,18 @@ public class MainViewModel : ObservableObject
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
         ToastContainerViewModel = toastContainerViewModel ?? throw new ArgumentNullException(nameof(toastContainerViewModel));
+        LoadingViewModel = loadingViewModel ?? throw new ArgumentNullException(nameof(loadingViewModel));
         _authViewModelFactory = authViewModelFactory ?? throw new ArgumentNullException(nameof(authViewModelFactory));
         _homePageViewModelFactory = homePageViewModelFactory ?? throw new ArgumentNullException(nameof(homePageViewModelFactory));
         _settingsViewModelFactory = settingsViewModelFactory ?? throw new ArgumentNullException(nameof(settingsViewModelFactory));
+
+        // Subscribe to loading state changes
+        LoadingViewModel.PropertyChanged += (s, e) => {
+            if (e.PropertyName == nameof(LoadingViewModel.IsBusy))
+            {
+                OnPropertyChanged(nameof(IsBusy));
+            }
+        };
 
         _authViewModel = CreateAuthViewModel();
         LogoutCommand = new RelayCommand(Logout);

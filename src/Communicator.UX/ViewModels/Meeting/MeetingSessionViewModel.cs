@@ -159,15 +159,18 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
         {
             // Deserialize the list of participants
             // Expected format: [{"ip": "...", "email": "..."}, ...]
-            var participants = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(participantsJson);
+            List<Dictionary<string, string>>? participants = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(participantsJson);
             
-            if (participants == null) return;
+            if (participants == null)
+            {
+                return;
+            }
 
             System.Windows.Application.Current.Dispatcher.Invoke(() => {
                 // Sync our list with the backend list
                 
                 // 1. Add new participants
-                foreach (var p in participants)
+                foreach (Dictionary<string, string> p in participants)
                 {
                     if (p.TryGetValue("email", out string? email) && !string.IsNullOrEmpty(email))
                     {
@@ -204,7 +207,7 @@ public class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisp
                     .Where(p => p.User.Email != null && !emailsInBackend.Contains(p.User.Email))
                     .ToList();
 
-                foreach (var p in toRemove)
+                foreach (ParticipantViewModel p in toRemove)
                 {
                     if (p.User.Email != null)
                     {

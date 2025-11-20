@@ -46,13 +46,6 @@ public partial class App : Application
         // Start RPC connection in background thread (like Java does)
         // This allows UI to appear while waiting for backend to connect
         StartRpcConnectionInBackground(rpc, e.Args);
-
-        // Create and show main window with DI
-        MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
-        var mainView = new MainView {
-            DataContext = mainViewModel
-        };
-        mainView.Show();
     }
 
     /// <summary>
@@ -156,6 +149,11 @@ public partial class App : Application
     {
         System.Diagnostics.Debug.WriteLine("[App] Starting RPC connection in background thread...");
         
+        // Show loading screen
+        var loadingViewModel = new ViewModels.Common.LoadingViewModel { Message = "Connecting to backend..." };
+        var loadingView = new Views.Common.LoadingView { DataContext = loadingViewModel };
+        loadingView.Show();
+
         // Start RPC server in background thread - matches Java: rpc.connect() returns Thread
         var rpcTask = Task.Run(() =>
         {
@@ -175,6 +173,19 @@ public partial class App : Application
                 
                 System.Diagnostics.Debug.WriteLine("[App] RPC thread: Backend connected, server running");
                 
+                // Connection successful, switch to MainView on UI thread
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    loadingView.Close();
+                    
+                    // Create and show main window with DI
+                    MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
+                    var mainView = new MainView {
+                        DataContext = mainViewModel
+                    };
+                    mainView.Show();
+                });
+                
                 // The rpcThread is now running listenLoop in background
             }
             catch (Exception ex)
@@ -185,11 +196,22 @@ public partial class App : Application
                 // Show error on UI thread
                 Application.Current?.Dispatcher.Invoke(() =>
                 {
+                    loadingViewModel.Message = $"Connection Failed: {ex.Message}";
+                    loadingViewModel.IsBusy = false;
+                    
                     MessageBox.Show(
                         $"Failed to establish RPC connection: {ex.Message}\n\nSome features may not work.",
                         "Connection Error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
+                        
+                    // Allow proceeding even if connection failed (for testing/offline)
+                    loadingView.Close();
+                    MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
+                    var mainView = new MainView {
+                        DataContext = mainViewModel
+                    };
+                    mainView.Show();
                 });
             }
         });
@@ -233,6 +255,9 @@ public partial class App : Application
 
         // Register ToastContainerViewModel as Singleton (single toast container for app)
         services.AddSingleton<ViewModels.Common.ToastContainerViewModel>();
+        
+        // Register LoadingViewModel as Singleton
+        services.AddSingleton<ViewModels.Common.LoadingViewModel>();
 
         // Register ViewModel Factories
         // Factory for creating AuthViewModel instances (used in MainViewModel)
