@@ -206,14 +206,12 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
                         }
                     }
 
-                    string displayName = !string.IsNullOrEmpty(ip) ? ip : email;
-
                     // Check if we already have this participant
                     if (!Participants.Any(existing => existing.User.Email == email))
                     {
                         UserProfile newUser = new(
                             email: email,
-                            displayName: displayName,
+                            displayName: email,
                             role: ParticipantRole.STUDENT,
                             logoUrl: null
                         );
