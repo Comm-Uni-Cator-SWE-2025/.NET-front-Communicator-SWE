@@ -47,17 +47,19 @@ public interface ICloudMessageService
     /// <summary>
     /// Connects to the SignalR hub for cloud messaging.
     /// </summary>
+    /// <param name="meetingId">The meeting ID to join the appropriate hub group.</param>
     /// <param name="username">The username to identify the user.</param>
-    Task ConnectAsync(string username);
+    Task ConnectAsync(string meetingId, string username);
 
     /// <summary>
     /// Sends a message to all participants via cloud function.
     /// The cloud function determines how to broadcast based on message type.
     /// </summary>
     /// <param name="messageType">The type of message being sent.</param>
+    /// <param name="meetingId">The meeting ID to send the message to the correct group.</param>
     /// <param name="username">The username of the sender.</param>
     /// <param name="message">The message content (optional for some message types like UserJoined).</param>
-    Task SendMessageAsync(CloudMessageType messageType, string username, string message = "");
+    Task SendMessageAsync(CloudMessageType messageType, string meetingId, string username, string message = "");
 
     /// <summary>
     /// Disconnects from the SignalR hub.

@@ -718,9 +718,12 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             QuickDoubtSentMessage = QuickDoubtMessage.Trim();
             QuickDoubtTimestamp = DateTime.Now;
 
+            string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+
             // Send via cloud message service
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.QuickDoubt,
+                meetingId,
                 _currentUser.DisplayName ?? "Unknown User",
                 QuickDoubtSentMessage).ConfigureAwait(true);
 
@@ -845,13 +848,16 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     {
         try
         {
+            string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+
             // Connect to cloud messaging service
-            await _cloudMessageService.ConnectAsync(_currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
+            await _cloudMessageService.ConnectAsync(meetingId, _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
             _toastService.ShowSuccess("Connected to cloud messaging service");
 
             // Notify other participants that this user has joined
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.UserJoined,
+                meetingId,
                 _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
         }
         catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
