@@ -114,6 +114,9 @@ public sealed class MainViewModel : ObservableObject
             }
         };
 
+        // Subscribe to authentication events
+        _authenticationService.UserLoggedOut += OnUserLoggedOut;
+
         _authViewModel = CreateAuthViewModel();
         LogoutCommand = new RelayCommand(Logout);
         NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
@@ -228,26 +231,38 @@ public sealed class MainViewModel : ObservableObject
     /// Clears shell state and returns to the authentication view.
     /// Uses AuthenticationService to clear user session.
     /// </summary>
-    private void Logout(object? obj)
+    private async void Logout(object? obj)
     {
-        // Cleanup auth view model
-        if (_authViewModel != null)
-        {
-            _authViewModel.LoggedIn -= OnLoggedIn;
-        }
-
         // Logout via authentication service
-        _authenticationService.Logout();
+        // This will trigger OnUserLoggedOut via event
+        // ConfigureAwait(false) to avoid deadlocks, but OnUserLoggedOut handles dispatching
+        await _authenticationService.LogoutAsync().ConfigureAwait(false);
+    }
 
-        // Notify UI that user properties changed
-        OnPropertyChanged(nameof(IsLoggedIn));
-        OnPropertyChanged(nameof(CurrentUserName));
-        OnPropertyChanged(nameof(CurrentUserEmail));
+    /// <summary>
+    /// Handles user logout event from AuthenticationService.
+    /// Resets the UI to the authentication screen.
+    /// </summary>
+    private void OnUserLoggedOut(object? sender, EventArgs e)
+    {
+        // Ensure UI updates happen on the UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() => {
+            // Cleanup auth view model if it was attached
+            if (_authViewModel != null)
+            {
+                _authViewModel.LoggedIn -= OnLoggedIn;
+            }
 
-        // Clear navigation history and return to auth
-        _navigationService.ClearHistory();
-        _authViewModel = CreateAuthViewModel();
-        CurrentView = _authViewModel;
+            // Notify UI that user properties changed
+            OnPropertyChanged(nameof(IsLoggedIn));
+            OnPropertyChanged(nameof(CurrentUserName));
+            OnPropertyChanged(nameof(CurrentUserEmail));
+
+            // Clear navigation history and return to auth
+            _navigationService.ClearHistory();
+            _authViewModel = CreateAuthViewModel();
+            CurrentView = _authViewModel;
+        });
     }
 
     /// <summary>

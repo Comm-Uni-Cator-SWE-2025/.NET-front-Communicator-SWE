@@ -9,10 +9,12 @@
  */
 using System.Globalization;
 using System.Windows.Input;
+using System.Threading.Tasks;
 using Communicator.Controller.Meeting;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Models;
 using Communicator.Core.UX.Services;
+using Communicator.App.Services;
 
 namespace Communicator.App.ViewModels.Settings;
 
@@ -24,6 +26,7 @@ public sealed class SettingsViewModel : ObservableObject
 {
     private readonly UserProfile _user;
     private readonly IThemeService _themeService;
+    private readonly IAuthenticationService _authenticationService;
 
     // User Information
     public string DisplayName => _user.DisplayName ?? "User";
@@ -49,13 +52,23 @@ public sealed class SettingsViewModel : ObservableObject
 
     public string CurrentThemeText => _isDarkMode ? "Dark" : "Light";
 
-    public SettingsViewModel(UserProfile user, IThemeService themeService)
+    public ICommand LogoutCommand { get; }
+
+    public SettingsViewModel(UserProfile user, IThemeService themeService, IAuthenticationService authenticationService)
     {
         _user = user;
         _themeService = themeService;
+        _authenticationService = authenticationService;
 
         // Initialize theme toggle based on current theme
         _isDarkMode = _themeService.CurrentTheme == AppTheme.Dark;
+
+        LogoutCommand = new RelayCommand(async _ => await LogoutAsync().ConfigureAwait(true));
+    }
+
+    private async Task LogoutAsync()
+    {
+        await _authenticationService.LogoutAsync().ConfigureAwait(true);
     }
 }
 

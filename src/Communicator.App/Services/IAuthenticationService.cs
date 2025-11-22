@@ -59,7 +59,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Clears the current user session.
     /// </summary>
-    void Logout();
+    System.Threading.Tasks.Task LogoutAsync();
 }
 
 
