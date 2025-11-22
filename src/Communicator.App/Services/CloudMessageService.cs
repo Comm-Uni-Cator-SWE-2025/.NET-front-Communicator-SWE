@@ -51,8 +51,8 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
         try
         {
             // Get SignalR connection info from negotiate endpoint
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] Calling negotiate endpoint: {_cloudConfig.NegotiateUrl}");
             string uri = $"{_cloudConfig.NegotiateUrl}?meetingId={Uri.EscapeDataString(meetingId)}";
+            System.Diagnostics.Debug.WriteLine($"[CloudMessage] Calling negotiate endpoint: {uri}");
             string negotiateJson = await _httpClient.GetStringAsync(new Uri(uri)).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Negotiate response: {negotiateJson}");
 
