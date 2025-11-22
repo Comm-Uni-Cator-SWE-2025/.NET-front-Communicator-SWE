@@ -43,6 +43,8 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     private bool _suppressSelectionNotifications;
     private object? _currentPage;
 
+    private Dictionary<string, string> _ipToMailMap = new Dictionary<string, string>();
+
     // Meeting Session State
     private MeetingSession? _currentMeeting;
     private readonly IRPC? _rpc;
@@ -98,7 +100,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         Participants = new ObservableCollection<ParticipantViewModel>();
 
         // Create sub-ViewModels with shared participant collection
-        VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc, _rpcEventService);
+        VideoSession = new VideoSessionViewModel(_currentUser, Participants, this, _rpc, _rpcEventService);
         Chat = new ChatViewModel(_currentUser, _toastService, _rpc, _rpcEventService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
         AIInsights = new AIInsightsViewModel(_currentUser);
@@ -145,6 +147,8 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         // Connect to HandWave and RPC
         _ = InitializeServicesAsync();
     }
+
+    public Dictionary<string, string> IpToMailMap => _ipToMailMap;
 
     private void OnLogout(object? sender, RpcStringEventArgs e)
     {
@@ -195,7 +199,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             // Deserialize the list of participants
             // Expected format: {"host:port": {"email": "...", "displayName": "...", "role": "..."}}
             // Map<ClientNode, UserProfile> from Java
-            Dictionary<string, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<string, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
+            Dictionary<ClientNode, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<ClientNode, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
 
             if (nodeToProfileMap == null)
             {
@@ -206,10 +210,11 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
                 // Sync our list with the backend list
 
                 // 1. Add new participants or update existing ones
-                foreach (KeyValuePair<string, UserProfile> kvp in nodeToProfileMap)
+                foreach (KeyValuePair<ClientNode, UserProfile> kvp in nodeToProfileMap)
                 {
                     UserProfile profile = kvp.Value;
 
+                    _ipToMailMap[kvp.Key.HostName] = profile.Email ?? "";
                     // Check if we already have this participant by Email
                     ParticipantViewModel? existingParticipant = Participants.FirstOrDefault(p => p.User.Email == profile.Email);
                     if (existingParticipant == null)
@@ -480,6 +485,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
             // Add current user to participants list if not already there
             AddParticipant(_currentUser);
+            _ipToMailMap[Utils.GetSelfIP() ?? ""] = _currentUser.Email ?? "";
 
             // Add existing participants from the session (if any)
             foreach (UserProfile participant in _currentMeeting.Participants.Values)

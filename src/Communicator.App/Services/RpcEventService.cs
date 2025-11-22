@@ -81,6 +81,11 @@ public sealed class RpcEventService : IRpcEventService
 
     public void TriggerFrameReceived(byte[] data)
     {
+        ArgumentNullException.ThrowIfNull(data);
+
+
+        Console.WriteLine($"[App] UPDATE_UI 2 TriggerFrameReceived called Received UPDATE_UI with {data.Length} bytes" + FrameReceived);
+        System.Diagnostics.Debug.WriteLine("UPDATE UI: Got FrameReceived event" + FrameReceived);
         FrameReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 

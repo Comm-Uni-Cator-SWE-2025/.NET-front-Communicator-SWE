@@ -91,6 +91,8 @@ public sealed partial class MainApp : Application
         rpc.Subscribe(ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
             try
             {
+                Console.WriteLine($"[App] UPDATE_UI Received UPDATE_UI with {data.Length} bytes");
+                System.Diagnostics.Debug.WriteLine("UPDATE UI : Triggering FrameReceived event");
                 rpcEventService.TriggerFrameReceived(data);
             }
             catch (ArgumentException ex)
