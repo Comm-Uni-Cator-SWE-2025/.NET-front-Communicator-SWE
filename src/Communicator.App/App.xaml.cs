@@ -88,7 +88,7 @@ public sealed partial class MainApp : Application
         });
 
         // Subscribe to UPDATE_UI to receive video/screen frames
-        rpc.Subscribe(Communicator.ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
+        rpc.Subscribe(ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
             try
             {
                 rpcEventService.TriggerFrameReceived(data);
@@ -101,7 +101,7 @@ public sealed partial class MainApp : Application
         });
 
         // Subscribe to STOP_SHARE to clear screen frames
-        rpc.Subscribe(Communicator.ScreenShare.Utils.STOP_SHARE, (byte[] data) => {
+        rpc.Subscribe(ScreenShare.Utils.STOP_SHARE, (byte[] data) => {
             try
             {
                 rpcEventService.TriggerStopShareReceived(data);

@@ -18,71 +18,21 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Communicator.Chat;
-using Communicator.Controller.Serialization;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.App.Services;
+using ChatSerializer = Communicator.Chat.Serializer_deserializer.ChatMessageSerializer;
+using FileSerializer = Communicator.Chat.Serializer_deserializer.FileMessageSerializer;
+using SerializedChatMessage = Communicator.Chat.Serializer_deserializer.ChatMessage;
+using SerializedFileMessage = Communicator.Chat.Serializer_deserializer.FileMessage;
 
 namespace Communicator.App.ViewModels.Meeting;
 
 public class RequestFileSelectionEventArgs : EventArgs
 {
     public FileInfo? SelectedFile { get; set; }
-}
-
-// DTOs for RPC communication
-public class ChatMessageDto
-{
-    [JsonPropertyName("messageId")]
-    public string MessageId { get; set; } = "";
-
-    [JsonPropertyName("userId")]
-    public string UserId { get; set; } = "";
-
-    [JsonPropertyName("senderDisplayName")]
-    public string SenderDisplayName { get; set; } = "";
-
-    [JsonPropertyName("content")]
-    public string Content { get; set; } = "";
-
-    [JsonPropertyName("replyToMessageId")]
-    public string ReplyToMessageId { get; set; } = "";
-
-    [JsonPropertyName("timestamp")]
-    public string Timestamp { get; set; } = ""; // ISO string or similar
-}
-
-public class FileMessageDto
-{
-    [JsonPropertyName("messageId")]
-    public string MessageId { get; set; } = "";
-
-    [JsonPropertyName("userId")]
-    public string UserId { get; set; } = "";
-
-    [JsonPropertyName("senderDisplayName")]
-    public string SenderDisplayName { get; set; } = "";
-
-    [JsonPropertyName("caption")]
-    public string Caption { get; set; } = "";
-
-    [JsonPropertyName("fileName")]
-    public string FileName { get; set; } = "";
-
-    [JsonPropertyName("filePath")]
-    public string FilePath { get; set; } = "";
-
-    [JsonPropertyName("replyToMessageId")]
-    public string ReplyToMessageId { get; set; } = "";
-
-    [JsonPropertyName("timestamp")]
-    public string Timestamp { get; set; } = "";
-
-    [JsonPropertyName("fileContent")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "DTO")]
-    public byte[]? FileContent { get; set; }
 }
 
 /// <summary>
@@ -229,11 +179,12 @@ public sealed class ChatViewModel : ObservableObject
         HandleBackendDelete(e.Data.ToArray());
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "RPC callbacks must not crash the app")]
     private void HandleBackendTextMessage(byte[] data)
     {
         try
         {
-            ChatMessageDto? messageDto = DataSerializer.Deserialize<ChatMessageDto>(data);
+            SerializedChatMessage messageDto = ChatSerializer.Deserialize(data);
 
             if (messageDto != null)
             {
@@ -242,7 +193,7 @@ public sealed class ChatViewModel : ObservableObject
                         messageDto.MessageId,
                         messageDto.UserId,
                         messageDto.SenderDisplayName,
-                        FormatTimestamp(messageDto.Timestamp),
+                        DateTimeOffset.FromUnixTimeSeconds(messageDto.TimestampEpochSeconds).LocalDateTime.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture),
                         messageDto.ReplyToMessageId,
                         messageDto.Content,
                         null, 0, null
@@ -250,17 +201,18 @@ public sealed class ChatViewModel : ObservableObject
                 });
             }
         }
-        catch (Exception ex) when (ex is JsonException || ex is ArgumentException)
+        catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error handling text message: {ex.Message}");
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "RPC callbacks must not crash the app")]
     private void HandleBackendFileMetadata(byte[] data)
     {
         try
         {
-            FileMessageDto? messageDto = DataSerializer.Deserialize<FileMessageDto>(data);
+            SerializedFileMessage messageDto = FileSerializer.Deserialize(data);
 
             if (messageDto != null)
             {
@@ -271,17 +223,17 @@ public sealed class ChatViewModel : ObservableObject
                         messageDto.MessageId,
                         messageDto.UserId,
                         messageDto.SenderDisplayName,
-                        FormatTimestamp(messageDto.Timestamp),
+                        DateTimeOffset.FromUnixTimeSeconds(messageDto.TimestampEpochSeconds).LocalDateTime.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture),
                         messageDto.ReplyToMessageId,
                         messageDto.Caption,
                         messageDto.FileName,
                         compressedSize,
-                        null
+                        messageDto.FileContent
                     );
                 });
             }
         }
-        catch (Exception ex) when (ex is JsonException || ex is ArgumentException)
+        catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error handling file metadata: {ex.Message}");
         }
@@ -345,6 +297,7 @@ public sealed class ChatViewModel : ObservableObject
     private async void SendTextMessage(string messageText)
     {
         string messageId = Guid.NewGuid().ToString();
+        long timestampEpoch = DateTimeOffset.Now.ToUnixTimeSeconds();
         string timestamp = DateTime.Now.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
         // Optimistic update
@@ -360,15 +313,16 @@ public sealed class ChatViewModel : ObservableObject
 
         if (_rpc != null)
         {
-            var dto = new ChatMessageDto {
-                MessageId = messageId,
-                UserId = _currentUser.Email ?? "unknown",
-                SenderDisplayName = _currentUser.DisplayName ?? "User",
-                Content = messageText,
-                ReplyToMessageId = _currentReplyId ?? ""
-            };
+            var dto = new SerializedChatMessage(
+                messageId,
+                _currentUser.Email ?? "unknown",
+                _currentUser.DisplayName ?? "User",
+                messageText,
+                timestampEpoch,
+                _currentReplyId ?? ""
+            );
 
-            await _rpc.Call("chat:send-text", DataSerializer.Serialize(dto)).ConfigureAwait(true);
+            await _rpc.Call("chat:send-text", ChatSerializer.Serialize(dto)).ConfigureAwait(true);
         }
     }
 
@@ -387,6 +341,7 @@ public sealed class ChatViewModel : ObservableObject
         }
 
         string messageId = Guid.NewGuid().ToString();
+        long timestampEpoch = DateTimeOffset.Now.ToUnixTimeSeconds();
         string timestamp = DateTime.Now.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
         // Optimistic update
@@ -404,17 +359,17 @@ public sealed class ChatViewModel : ObservableObject
 
         if (_rpc != null)
         {
-            var dto = new FileMessageDto {
-                MessageId = messageId,
-                UserId = _currentUser.Email ?? "unknown",
-                SenderDisplayName = _currentUser.DisplayName ?? "User",
-                Caption = caption ?? "",
-                FileName = file.Name,
-                FilePath = file.FullName, // Sending path as per Java impl
-                ReplyToMessageId = _currentReplyId ?? ""
-            };
+            var dto = new SerializedFileMessage(
+                messageId,
+                _currentUser.Email ?? "unknown",
+                _currentUser.DisplayName ?? "User",
+                caption ?? "",
+                file.Name,
+                file.FullName, // Sending path as per Java impl
+                _currentReplyId ?? ""
+            );
 
-            await _rpc.Call("chat:send-file", DataSerializer.Serialize(dto)).ConfigureAwait(true);
+            await _rpc.Call("chat:send-file", FileSerializer.Serialize(dto)).ConfigureAwait(true);
         }
     }
 

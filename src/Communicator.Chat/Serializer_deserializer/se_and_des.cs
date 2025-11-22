@@ -4,7 +4,7 @@ using System.Text;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 
-namespace RpcChat
+namespace Communicator.Chat.Serializer_deserializer
 {
     // ====================================================================
     // 1. DATA MODELS (To match the fields used by the Java Serializers)
