@@ -1,5 +1,5 @@
-﻿using AnalyticsApp.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
+using AnalyticsApp.Models;
 
 namespace AnalyticsApp.Services;
 
@@ -54,7 +54,7 @@ public class CanvasDataService
     private CanvasData ParseJson(string json)
     {
         using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
         return new CanvasData
         {

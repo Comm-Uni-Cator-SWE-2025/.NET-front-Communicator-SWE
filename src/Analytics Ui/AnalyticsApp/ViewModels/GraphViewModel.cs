@@ -1,36 +1,4 @@
-﻿//using LiveChartsCore;
-//using LiveChartsCore.Defaults;
-//using LiveChartsCore.SkiaSharpView;
-//using System.Collections.ObjectModel;
-
-//namespace AnalyticsApp.ViewModels;
-
-///// <summary>
-///// A single graph: holds points + chart series.
-///// </summary>
-//public class GraphViewModel
-//{
-//    public ObservableCollection<DateTimePoint> Points { get; } = new();
-
-//    public ISeries[] Series { get; }
-//    public Axis[] XAxes { get; }
-//    public Axis[] YAxes { get; }
-
-//    public GraphViewModel()
-//    {
-//        Series = new ISeries[]
-//        {
-//            new LineSeries<DateTimePoint>
-//            {
-//                Values = Points,
-//                GeometrySize = 6,
-//                LineSmoothness = 0,
-//                Fill = null
-//            }
-//        };
-
-//    }
-//}
+﻿
 using System.Collections.ObjectModel;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
@@ -147,19 +115,9 @@ public class GraphViewModel
             XAxes[0].MaxLimit = x;
         }
     }
+
+
 }
 
 
 
-
-//public void AddPoint(double timeSeconds, double value)
-//{
-//    Points.Add(new ObservablePoint(timeSeconds, value));
-
-//    // Sliding window
-//    double min = Math.Max(0, timeSeconds - WindowSeconds);
-//    double max = timeSeconds;
-
-//    XAxes[0].MinLimit = min;
-//    XAxes[0].MaxLimit = max;
-//}

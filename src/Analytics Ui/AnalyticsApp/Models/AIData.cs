@@ -14,7 +14,7 @@ public class AIData
     public DateTime Time { get; set; }
 
     /// <summary>
-    /// The sentiment value from the API (mapped to "Value").
+    /// The sentiment value from the API (mapped to "sentiment").
     /// </summary>
     [JsonPropertyName("sentiment")]
     public double Value { get; set; }

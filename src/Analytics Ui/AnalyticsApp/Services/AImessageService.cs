@@ -47,14 +47,14 @@ public class AIMessageService
     /// <returns>A list of AIMessageData items containing timestamped messages.</returns>
     public List<AIMessageData> GetNext()
     {
-        var messages = _messageGroups[_index];
+        string[] messages = _messageGroups[_index];
 
         // Move index forward cyclically
         _index = (_index + 1) % _messageGroups.Count;
 
         var result = new List<AIMessageData>();
 
-        foreach (var text in messages)
+        foreach (string text in messages)
         {
             result.Add(new AIMessageData
             {
