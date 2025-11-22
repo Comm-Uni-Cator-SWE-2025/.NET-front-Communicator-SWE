@@ -13,4 +13,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="UX\Fonts\JetBrainsMono-VariableFont_wght.ttf" />
+  </ItemGroup>
+
 </Project>

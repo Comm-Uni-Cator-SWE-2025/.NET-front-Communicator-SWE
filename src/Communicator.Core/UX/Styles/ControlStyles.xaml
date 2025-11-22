@@ -1,8 +1,21 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- FONTS -->
+    <FontFamily x:Key="AppFont">/Communicator.Core;component/UX/Fonts/#JetBrains Mono</FontFamily>
+
+    <!-- GLOBAL TEXT ELEMENT STYLE -->
+    <Style TargetType="{x:Type TextElement}">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+    </Style>
+    
+    <Style TargetType="{x:Type TextBlock}">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+    </Style>
+
     <!-- PRIMARY BUTTON STYLE -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
         <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -42,6 +55,7 @@
 
     <!-- SECONDARY BUTTON STYLE -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
         <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -150,6 +164,7 @@
 
     <!-- TEXTBOX STYLE -->
     <Style x:Key="TextBoxStyle" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
         <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -159,7 +174,7 @@
         <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}"/>
         <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}"/>
         <Setter Property="SelectionOpacity" Value="0.4"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="FocusVisualStyle" Value="{īx:Null}"/>
         <Setter Property="AllowDrop" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -200,6 +215,7 @@
 
     <!-- PASSWORDBOX STYLE -->
     <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
         <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
