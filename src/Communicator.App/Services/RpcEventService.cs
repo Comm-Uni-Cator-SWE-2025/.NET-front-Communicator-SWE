@@ -36,6 +36,8 @@ public interface IRpcEventService
     event EventHandler<RpcStringEventArgs>? ParticipantJoined;
     event EventHandler<RpcStringEventArgs>? ParticipantLeft;
     event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
+    event EventHandler<RpcStringEventArgs>? Logout;
+    event EventHandler<RpcStringEventArgs>? EndMeeting;
 
     // Chat Events
     event EventHandler<RpcDataEventArgs>? ChatMessageReceived;
@@ -49,6 +51,8 @@ public interface IRpcEventService
     void TriggerParticipantJoined(string viewerIp);
     void TriggerParticipantLeft(string viewerIp);
     void TriggerParticipantsListUpdated(string participantsJson);
+    void TriggerLogout(string message);
+    void TriggerEndMeeting(string message);
 
     // Chat Triggers
     void TriggerChatMessageReceived(byte[] data);
@@ -65,6 +69,8 @@ public sealed class RpcEventService : IRpcEventService
     public event EventHandler<RpcStringEventArgs>? ParticipantJoined;
     public event EventHandler<RpcStringEventArgs>? ParticipantLeft;
     public event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
+    public event EventHandler<RpcStringEventArgs>? Logout;
+    public event EventHandler<RpcStringEventArgs>? EndMeeting;
 
     // Chat Events
     public event EventHandler<RpcDataEventArgs>? ChatMessageReceived;
@@ -96,6 +102,16 @@ public sealed class RpcEventService : IRpcEventService
     public void TriggerParticipantsListUpdated(string participantsJson)
     {
         ParticipantsListUpdated?.Invoke(this, new RpcStringEventArgs(participantsJson));
+    }
+
+    public void TriggerLogout(string message)
+    {
+        Logout?.Invoke(this, new RpcStringEventArgs(message));
+    }
+
+    public void TriggerEndMeeting(string message)
+    {
+        EndMeeting?.Invoke(this, new RpcStringEventArgs(message));
     }
 
     // Chat Triggers

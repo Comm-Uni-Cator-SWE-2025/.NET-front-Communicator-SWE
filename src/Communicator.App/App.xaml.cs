@@ -113,8 +113,8 @@ public sealed partial class MainApp : Application
             return Array.Empty<byte>();
         });
 
-        // Subscribe to "core/setIpToMailMap" - called when participant list updates
-        rpc.Subscribe("core/setIpToMailMap", (byte[] data) => {
+        // Subscribe to "core/updateParticipants" - called when participant list updates
+        rpc.Subscribe("core/updateParticipants", (byte[] data) => {
             try
             {
                 string json = System.Text.Encoding.UTF8.GetString(data);
@@ -126,12 +126,44 @@ public sealed partial class MainApp : Application
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/setIpToMailMap: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/updateParticipants: {ex.Message}");
                 return Array.Empty<byte>();
             }
             catch (System.Text.Json.JsonException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/setIpToMailMap: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/updateParticipants: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        });
+
+        // Subscribe to "core/logout"
+        rpc.Subscribe("core/logout", (byte[] data) => {
+            try
+            {
+                string message = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] Logout received: {message}");
+                rpcEventService.TriggerLogout(message);
+                return Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/logout: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        });
+
+        // Subscribe to "core/endMeeting"
+        rpc.Subscribe("core/endMeeting", (byte[] data) => {
+            try
+            {
+                string message = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] EndMeeting received: {message}");
+                rpcEventService.TriggerEndMeeting(message);
+                return Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/endMeeting: {ex.Message}");
                 return Array.Empty<byte>();
             }
         });

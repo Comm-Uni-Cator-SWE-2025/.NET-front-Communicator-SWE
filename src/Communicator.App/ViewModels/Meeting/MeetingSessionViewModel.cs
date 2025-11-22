@@ -138,10 +138,28 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             _rpcEventService.ParticipantJoined += OnParticipantJoined;
             _rpcEventService.ParticipantLeft += OnParticipantLeft;
             _rpcEventService.ParticipantsListUpdated += OnParticipantsListUpdated;
+            _rpcEventService.Logout += OnLogout;
+            _rpcEventService.EndMeeting += OnEndMeeting;
         }
 
         // Connect to HandWave and RPC
         _ = InitializeServicesAsync();
+    }
+
+    private void OnLogout(object? sender, RpcStringEventArgs e)
+    {
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+            _toastService.ShowInfo($"Logged out: {e.Value}");
+            await CleanupAndNavigateBackAsync().ConfigureAwait(false);
+        });
+    }
+
+    private void OnEndMeeting(object? sender, RpcStringEventArgs e)
+    {
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+            _toastService.ShowInfo($"Meeting ended: {e.Value}");
+            await CleanupAndNavigateBackAsync().ConfigureAwait(false);
+        });
     }
 
     private void OnParticipantJoined(object? sender, RpcStringEventArgs e)
@@ -175,10 +193,11 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         try
         {
             // Deserialize the list of participants
-            // Expected format: {"ip": "email", ...} (Map<String, String> from Java)
-            Dictionary<string, string>? ipToMailMap = DataSerializer.Deserialize<Dictionary<string, string>>(Encoding.UTF8.GetBytes(participantsJson));
+            // Expected format: {"host:port": {"email": "...", "displayName": "...", "role": "..."}}
+            // Map<ClientNode, UserProfile> from Java
+            Dictionary<string, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<string, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
 
-            if (ipToMailMap == null)
+            if (nodeToProfileMap == null)
             {
                 return;
             }
@@ -186,43 +205,34 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             System.Windows.Application.Current.Dispatcher.Invoke(() => {
                 // Sync our list with the backend list
 
-                // 1. Add new participants
-                foreach (KeyValuePair<string, string> kvp in ipToMailMap)
+                // 1. Add new participants or update existing ones
+                foreach (KeyValuePair<string, UserProfile> kvp in nodeToProfileMap)
                 {
-                    string ip = kvp.Key;
-                    string email = kvp.Value;
+                    UserProfile profile = kvp.Value;
 
-                    // Handle Java ClientNode.toString() format: ClientNode[hostName=127.0.0.1, port=6945]
-                    if (ip.StartsWith("ClientNode[", StringComparison.Ordinal) && ip.Contains("hostName=", StringComparison.Ordinal))
+                    // Check if we already have this participant by Email
+                    ParticipantViewModel? existingParticipant = Participants.FirstOrDefault(p => p.User.Email == profile.Email);
+                    if (existingParticipant == null)
                     {
-                        int start = ip.IndexOf("hostName=", StringComparison.Ordinal) + 9;
-                        int end = ip.IndexOf(',', start);
-                        if (end == -1)
+                        // Ensure role is set if missing (default to STUDENT)
+                        if (profile.Role == 0) // Assuming 0 is default/unknown
                         {
-                            end = ip.IndexOf(']', start);
+                            profile.Role = ParticipantRole.STUDENT;
                         }
-
-                        if (start > 8 && end > start)
-                        {
-                            ip = ip.Substring(start, end - start);
-                        }
+                        AddParticipant(profile);
                     }
-
-                    // Check if we already have this participant
-                    if (!Participants.Any(existing => existing.User.Email == email))
+                    else
                     {
-                        UserProfile newUser = new(
-                            email: email,
-                            displayName: email,
-                            role: ParticipantRole.STUDENT,
-                            logoUrl: null
-                        );
-                        AddParticipant(newUser);
+                        // Update display name if changed
+                        if (existingParticipant.User.DisplayName != profile.DisplayName)
+                        {
+                            existingParticipant.User.DisplayName = profile.DisplayName;
+                        }
                     }
                 }
 
                 // 2. Remove participants not in the list (except self)
-                var emailsInBackend = new HashSet<string>(ipToMailMap.Values);
+                var emailsInBackend = new HashSet<string>(nodeToProfileMap.Values.Select(p => p.Email).Where(e => e != null)!);
 
                 // Don't remove ourselves
                 if (_currentUser.Email != null)
@@ -960,6 +970,10 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             if (_rpcEventService != null)
             {
                 _rpcEventService.ParticipantJoined -= OnParticipantJoined;
+                _rpcEventService.ParticipantLeft -= OnParticipantLeft;
+                _rpcEventService.ParticipantsListUpdated -= OnParticipantsListUpdated;
+                _rpcEventService.Logout -= OnLogout;
+                _rpcEventService.EndMeeting -= OnEndMeeting;
             }
 
             // Unsubscribe from cloud message events
