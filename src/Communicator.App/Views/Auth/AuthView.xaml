@@ -59,6 +59,7 @@
                         <!-- Loading Spinner (visible when IsLoading is true) -->
                         <icons:Icon IconName="loader-2"
                                     IconSize="20"
+                                    Foreground="{DynamicResource IconBrush}"
                                     Margin="0,0,12,0"
                                     VerticalAlignment="Center"
                                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
