@@ -63,7 +63,7 @@ public class NegotiateFunctionTests
         };
 
         var query = new NameValueCollection {
-            { "meetingId", "ABC123" }
+            { "meetingId", "Test123" }
         };
         _mockRequest.Setup(r => r.Query).Returns(query);
 
