@@ -22,6 +22,7 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
     private readonly ICloudConfigService _cloudConfig;
     private readonly HttpClient _httpClient;
     private HubConnection? _hubConnection;
+    private string _currentMeetingId = string.Empty;
     private string _currentUsername = string.Empty;
 
     public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
@@ -37,20 +38,22 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
     /// <summary>
     /// Connects to Azure SignalR hub via cloud function negotiate endpoint.
     /// </summary>
-    public async Task ConnectAsync(string username)
+    public async Task ConnectAsync(string meetingId, string username)
     {
         if (string.IsNullOrWhiteSpace(username))
         {
             throw new ArgumentException("Username cannot be empty", nameof(username));
         }
 
+        _currentMeetingId = meetingId;
         _currentUsername = username;
 
         try
         {
             // Get SignalR connection info from negotiate endpoint
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Calling negotiate endpoint: {_cloudConfig.NegotiateUrl}");
-            string negotiateJson = await _httpClient.GetStringAsync(_cloudConfig.NegotiateUrl).ConfigureAwait(false);
+            string uri = $"{_cloudConfig.NegotiateUrl}?meetingId={Uri.EscapeDataString(meetingId)}";
+            string negotiateJson = await _httpClient.GetStringAsync(new Uri(uri)).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Negotiate response: {negotiateJson}");
 
             JsonDocument doc = JsonDocument.Parse(negotiateJson);
@@ -100,7 +103,7 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
     /// <summary>
     /// Sends a message to all participants via cloud function endpoint.
     /// </summary>
-    public async Task SendMessageAsync(CloudMessageType messageType, string username, string message = "")
+    public async Task SendMessageAsync(CloudMessageType messageType, string meetingId, string username, string message = "")
     {
         if (string.IsNullOrWhiteSpace(username))
         {
@@ -116,7 +119,8 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
         {
             string formattedMessage = FormatMessageForCloud(messageType, username, message);
             string encodedMessage = System.Net.WebUtility.UrlEncode(formattedMessage);
-            string url = $"{_cloudConfig.MessageUrl}?message={encodedMessage}";
+            // add meetingId as query parameter
+            string url = $"{_cloudConfig.MessageUrl}?meetingId={Uri.EscapeDataString(meetingId)}&message={encodedMessage}";
 
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Sending {messageType}: {formattedMessage}");
             await _httpClient.GetAsync(new Uri(url)).ConfigureAwait(false);
