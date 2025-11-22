@@ -174,7 +174,7 @@
         <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}"/>
         <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}"/>
         <Setter Property="SelectionOpacity" Value="0.4"/>
-        <Setter Property="FocusVisualStyle" Value="{īx:Null}"/>
+        <!-- <Setter Property="FocusVisualStyle" Value="{īx:Null}"/> -->
         <Setter Property="AllowDrop" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>

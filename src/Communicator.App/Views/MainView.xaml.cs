@@ -220,7 +220,11 @@ public sealed partial class MainView : Window
 
         ContentHost.Margin = new Thickness(0);
 
-        MaximizeButton.Content = isMaximized ? "\uE923" : "\uE922";
+        if (MaximizeButton.Content is Communicator.Icons.Icon icon)
+        {
+            icon.IconName = isMaximized ? "copy" : "square";
+        }
+
         MaximizeButton.ToolTip = isMaximized ? "Restore" : "Maximize";
     }
 
