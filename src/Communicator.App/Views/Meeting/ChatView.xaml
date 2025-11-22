@@ -53,22 +53,22 @@
                                     <!-- Quoted Message (if replying) -->
                                     <Border Visibility="{Binding HasQuote, Converter={StaticResource BooleanToVisibilityConverter}}"
                                             Background="{DynamicResource SurfaceBrush}"
-                                            BorderBrush="{Binding IsSentByMe, Converter={StaticResource MessageTextColorConverter}}"
+                                            BorderBrush="{DynamicResource TextPrimaryBrush}"
                                             BorderThickness="2,0,0,0"
                                             CornerRadius="4"
                                             Padding="8,6"
                                             Margin="0,0,0,8">
                                         <StackPanel Orientation="Horizontal">
-                                            <icons:Icon IconName="arrow-back-up" 
+                                            <icons:Icon IconName="corner-up-left" 
                                                         IconSize="12" 
-                                                        Foreground="{Binding IsSentByMe, Converter={StaticResource MessageTextColorConverter}}"
+                                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                                         Opacity="0.7"
                                                         Margin="0,0,6,0"
                                                         VerticalAlignment="Top"/>
                                             <TextBlock Text="{Binding QuotedContent}"
                                                        FontSize="11"
                                                        FontStyle="Italic"
-                                                       Foreground="{Binding IsSentByMe, Converter={StaticResource MessageTextColorConverter}}"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                                        Opacity="0.7"
                                                        TextWrapping="Wrap"/>
                                         </StackPanel>
@@ -169,7 +169,7 @@
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Button.Style>
-                                                <icons:Icon IconName="arrow-back-up" 
+                                                <icons:Icon IconName="corner-up-left" 
                                                             IconSize="14" 
                                                             Foreground="{Binding IsSentByMe, Converter={StaticResource MessageTextColorConverter}}"
                                                             Opacity="0.8"/>
@@ -280,7 +280,7 @@
                 </Grid.ColumnDefinitions>
 
                 <icons:Icon Grid.Column="0"
-                            IconName="arrow-back-up" 
+                            IconName="corner-up-left" 
                             IconSize="18" 
                             Foreground="{DynamicResource PrimaryBrush}"
                             Margin="0,0,10,0"

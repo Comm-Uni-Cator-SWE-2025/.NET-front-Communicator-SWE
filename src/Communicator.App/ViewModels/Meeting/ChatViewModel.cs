@@ -410,7 +410,7 @@ public sealed class ChatViewModel : ObservableObject
             }
 
             _attachedFile = selectedFile;
-            AttachmentText = $"ðŸ“Ž {selectedFile.Name}";
+            AttachmentText = selectedFile.Name;
         }
     }
 
@@ -523,7 +523,7 @@ public sealed class ChatViewModel : ObservableObject
             ? $"File: {repliedToMessage.FileName}"
             : TruncateText(repliedToMessage.Content, 30);
 
-        return $"â†© {sender}: {contentSnippet}";
+        return $"{sender}: {contentSnippet}";
     }
 
     private static string TruncateText(string text, int maxLength)
