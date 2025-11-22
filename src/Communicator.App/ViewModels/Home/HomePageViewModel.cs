@@ -36,7 +36,7 @@ public sealed class HomePageViewModel : ObservableObject
     public string WelcomeMessage => _user.DisplayName ?? "User";
     public static string SubHeading => "Ready to connect and collaborate? Join an existing meeting or create a new one to get started.";
 
-    private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions s_jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private string _meetingLink;
     public string MeetingLink
@@ -160,7 +160,7 @@ public sealed class HomePageViewModel : ObservableObject
             string json = System.Text.Encoding.UTF8.GetString(response);
 
             // Use case-insensitive options as Java might use camelCase while C# expects PascalCase (or vice versa depending on config)
-            MeetingSession? session = JsonSerializer.Deserialize<MeetingSession>(json, _jsonOptions);
+            MeetingSession? session = JsonSerializer.Deserialize<MeetingSession>(json, s_jsonOptions);
 
             if (session != null)
             {

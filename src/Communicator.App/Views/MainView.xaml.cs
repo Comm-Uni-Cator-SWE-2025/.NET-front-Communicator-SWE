@@ -114,19 +114,19 @@ public sealed partial class MainView : Window
             if (monitor != IntPtr.Zero)
             {
                 MONITORINFO monitorInfo = new() {
-                    cbSize = Marshal.SizeOf<MONITORINFO>()
+                    _cbSize = Marshal.SizeOf<MONITORINFO>()
                 };
 
                 if (GetMonitorInfo(monitor, ref monitorInfo))
                 {
-                    RECT rcWorkArea = monitorInfo.rcWork;
-                    RECT rcMonitorArea = monitorInfo.rcMonitor;
+                    RECT rcWorkArea = monitorInfo._rcWork;
+                    RECT rcMonitorArea = monitorInfo._rcMonitor;
 
                     // Set the maximized size to the work area (excluding taskbar)
-                    mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
-                    mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
-                    mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
-                    mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top);
+                    mmi._ptMaxPosition._x = Math.Abs(rcWorkArea._left - rcMonitorArea._left);
+                    mmi._ptMaxPosition._y = Math.Abs(rcWorkArea._top - rcMonitorArea._top);
+                    mmi._ptMaxSize._x = Math.Abs(rcWorkArea._right - rcWorkArea._left);
+                    mmi._ptMaxSize._y = Math.Abs(rcWorkArea._bottom - rcWorkArea._top);
 
                     Marshal.StructureToPtr(mmi, lParam, true);
                     handled = true;
@@ -238,8 +238,8 @@ public sealed partial class MainView : Window
         try
         {
             DwmWindowCornerPreference preference = DwmWindowCornerPreference.Round;
-            const uint attributeSize = sizeof(uint);
-            int result = DwmSetWindowAttribute(handle, DwmWindowAttribute.WindowCornerPreference, ref preference, attributeSize);
+            const uint AttributeSize = sizeof(uint);
+            int result = DwmSetWindowAttribute(handle, DwmWindowAttribute.WindowCornerPreference, ref preference, AttributeSize);
 
             // Check HRESULT - 0 indicates success
             if (result != 0)
@@ -290,36 +290,36 @@ public sealed partial class MainView : Window
     [StructLayout(LayoutKind.Sequential)]
     private struct MONITORINFO
     {
-        public int cbSize;
-        public RECT rcMonitor;
-        public RECT rcWork;
-        public uint dwFlags;
+        public int _cbSize;
+        public RECT _rcMonitor;
+        public RECT _rcWork;
+        public uint _dwFlags;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct RECT
     {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
+        public int _left;
+        public int _top;
+        public int _right;
+        public int _bottom;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT
     {
-        public int X;
-        public int Y;
+        public int _x;
+        public int _y;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MINMAXINFO
     {
-        public POINT ptReserved;
-        public POINT ptMaxSize;
-        public POINT ptMaxPosition;
-        public POINT ptMinTrackSize;
-        public POINT ptMaxTrackSize;
+        public POINT _ptReserved;
+        public POINT _ptMaxSize;
+        public POINT _ptMaxPosition;
+        public POINT _ptMinTrackSize;
+        public POINT _ptMaxTrackSize;
     }
 }
 
