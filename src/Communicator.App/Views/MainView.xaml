@@ -10,6 +10,7 @@
         xmlns:commonVm="clr-namespace:Communicator.App.ViewModels.Common"
         xmlns:mainVm="clr-namespace:Communicator.App.ViewModels"
         xmlns:commonViews="clr-namespace:Communicator.App.Views.Common"
+        xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
         mc:Ignorable="d"
         Title="Comm-Uni-Cate"
         Width="1024"
@@ -37,7 +38,6 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
@@ -110,7 +110,6 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
             <Setter Property="FontSize" Value="16" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -161,24 +160,26 @@
 
                 <StackPanel Orientation="Horizontal" Margin="16,6,0,6" VerticalAlignment="Center">
                     <!-- Navigation Buttons -->
-                    <Button Content="&#xE72B;"
-                            Style="{StaticResource CaptionButtonStyle}"
+                    <Button Style="{StaticResource CaptionButtonStyle}"
                             Command="{Binding GoBackCommand}"
                             ToolTip="Go Back"
                             Width="32"
                             Height="32"
                             Margin="0,0,4,0"
                             Visibility="{Binding ShowBackButton, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <Button Content="&#xE72A;"
-                            Style="{StaticResource CaptionButtonStyle}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <icons:Icon IconName="arrow-left" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                    </Button>
+                    <Button Style="{StaticResource CaptionButtonStyle}"
                             Command="{Binding GoForwardCommand}"
                             ToolTip="Go Forward"
                             Width="32"
                             Height="32"
                             Margin="0,0,16,0"
                             Visibility="{Binding ShowForwardButton, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <icons:Icon IconName="arrow-right" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                    </Button>
                     
                     <Grid VerticalAlignment="Center">
                         <ContentControl Content="{Binding MeetingToolbar}"
@@ -209,11 +210,11 @@
                 <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" Height="48">
             <Button x:Name="AvatarButton"
                 Style="{StaticResource CircleButtonStyle}"
-                Content="&#xE77B;"
                 ToolTip="Profile"
                 Margin="0,0,12,0"
                 Click="OnAvatarButtonClick"
                 shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <icons:Icon IconName="user-circle" IconSize="20" Foreground="{DynamicResource IconBrush}" />
                         <Button.ContextMenu>
                             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                 <MenuItem Header="{Binding CurrentUserName}" IsEnabled="False"/>
@@ -230,22 +231,25 @@
                     </Button>
                     <Button x:Name="MinimizeButton"
                             Style="{StaticResource CaptionButtonStyle}"
-                            Content="&#xE921;"
                             ToolTip="Minimize"
                             Click="OnMinimizeClick"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48" />
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
+                        <icons:Icon IconName="minus" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                    </Button>
                     <Button x:Name="MaximizeButton"
                             Style="{StaticResource CaptionButtonStyle}"
-                            Content="&#xE922;"
                             ToolTip="Maximize"
                             Click="OnMaximizeClick"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48" />
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
+                        <icons:Icon IconName="square" IconSize="14" Foreground="{DynamicResource IconBrush}" />
+                    </Button>
                     <Button x:Name="CloseButton"
                             Style="{StaticResource CloseButtonStyle}"
-                            Content="&#xE8BB;"
                             ToolTip="Close"
                             Click="OnCloseClick"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48" />
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
+                        <icons:Icon IconName="x" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                    </Button>
                 </StackPanel>
             </Grid>
 

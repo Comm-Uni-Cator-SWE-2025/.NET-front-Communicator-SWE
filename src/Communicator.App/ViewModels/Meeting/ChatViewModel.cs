@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Communicator.Chat;
+using Communicator.Controller.Serialization;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
@@ -232,8 +233,7 @@ public sealed class ChatViewModel : ObservableObject
     {
         try
         {
-            string json = Encoding.UTF8.GetString(data);
-            ChatMessageDto? messageDto = JsonSerializer.Deserialize<ChatMessageDto>(json);
+            ChatMessageDto? messageDto = DataSerializer.Deserialize<ChatMessageDto>(data);
 
             if (messageDto != null)
             {
@@ -260,8 +260,7 @@ public sealed class ChatViewModel : ObservableObject
     {
         try
         {
-            string json = Encoding.UTF8.GetString(data);
-            FileMessageDto? messageDto = JsonSerializer.Deserialize<FileMessageDto>(json);
+            FileMessageDto? messageDto = DataSerializer.Deserialize<FileMessageDto>(data);
 
             if (messageDto != null)
             {
@@ -369,8 +368,7 @@ public sealed class ChatViewModel : ObservableObject
                 ReplyToMessageId = _currentReplyId ?? ""
             };
 
-            string json = JsonSerializer.Serialize(dto);
-            await _rpc.Call("chat:send-text", Encoding.UTF8.GetBytes(json)).ConfigureAwait(true);
+            await _rpc.Call("chat:send-text", DataSerializer.Serialize(dto)).ConfigureAwait(true);
         }
     }
 
@@ -416,8 +414,7 @@ public sealed class ChatViewModel : ObservableObject
                 ReplyToMessageId = _currentReplyId ?? ""
             };
 
-            string json = JsonSerializer.Serialize(dto);
-            await _rpc.Call("chat:send-file", Encoding.UTF8.GetBytes(json)).ConfigureAwait(true);
+            await _rpc.Call("chat:send-file", DataSerializer.Serialize(dto)).ConfigureAwait(true);
         }
     }
 
