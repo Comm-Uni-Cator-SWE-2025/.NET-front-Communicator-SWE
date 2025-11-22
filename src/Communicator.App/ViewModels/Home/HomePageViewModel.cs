@@ -12,6 +12,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Communicator.Controller.Serialization;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
@@ -35,8 +36,6 @@ public sealed class HomePageViewModel : ObservableObject
     public static string CurrentTime => DateTime.Now.ToString("dddd, MMMM dd, yyyy", CultureInfo.CurrentCulture);
     public string WelcomeMessage => _user.DisplayName ?? "User";
     public static string SubHeading => "Ready to connect and collaborate? Join an existing meeting or create a new one to get started.";
-
-    private static readonly JsonSerializerOptions s_jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private string _meetingLink;
     public string MeetingLink
@@ -110,8 +109,7 @@ public sealed class HomePageViewModel : ObservableObject
 
             // 3. Serialize meeting ID to JSON string, then to bytes
             // Java backend expects: DataSerializer.deserialize(meetId, String.class)
-            string jsonId = JsonSerializer.Serialize(meetingId);
-            byte[] payload = System.Text.Encoding.UTF8.GetBytes(jsonId);
+            byte[] payload = DataSerializer.Serialize(meetingId);
 
             // 4. Call RPC to join meeting
             // Backend returns the meeting ID if successful
@@ -157,10 +155,8 @@ public sealed class HomePageViewModel : ObservableObject
             byte[] response = await _rpc.Call("core/createMeeting", Array.Empty<byte>()).ConfigureAwait(true);
 
             // 2. Deserialize response to MeetingSession
-            string json = System.Text.Encoding.UTF8.GetString(response);
-
             // Use case-insensitive options as Java might use camelCase while C# expects PascalCase (or vice versa depending on config)
-            MeetingSession? session = JsonSerializer.Deserialize<MeetingSession>(json, s_jsonOptions);
+            MeetingSession? session = DataSerializer.Deserialize<MeetingSession>(response);
 
             if (session != null)
             {

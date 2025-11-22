@@ -13,6 +13,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Text;
+using Communicator.Controller.Serialization;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
@@ -174,7 +176,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         {
             // Deserialize the list of participants
             // Expected format: {"ip": "email", ...} (Map<String, String> from Java)
-            Dictionary<string, string>? ipToMailMap = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(participantsJson);
+            Dictionary<string, string>? ipToMailMap = DataSerializer.Deserialize<Dictionary<string, string>>(Encoding.UTF8.GetBytes(participantsJson));
 
             if (ipToMailMap == null)
             {
