@@ -7,16 +7,20 @@ using System.Net;
 using System.Text;
 
 namespace Communicator.ScreenShare;
+
 public class RImage
 {
     public int[][] Image { get; }
 
     public string Ip { get; }
 
-    private RImage(int[][] imageArgs, string ipArgs)
+    public long DataRate { get; }
+
+    private RImage(int[][] imageArgs, string ipArgs, long dataRateArgs = 0)
     {
         Ip = ipArgs;
         Image = imageArgs;
+        DataRate = dataRateArgs;
     }
     public static RImage Deserialize(byte[] data)
     {
@@ -35,6 +39,9 @@ public class RImage
 
 
         string ip = Encoding.UTF8.GetString(ipBytes);
+
+
+        long dataRate = reader.ReadInt64();
 
         // --- get the UIImage ---
         int height = IPAddress.NetworkToHostOrder(reader.ReadInt32());
@@ -61,6 +68,6 @@ public class RImage
                 image[i][j] = pixel;
             }
         }
-        return new RImage(image, ip);
+        return new RImage(image, ip, dataRate);
     }
 }

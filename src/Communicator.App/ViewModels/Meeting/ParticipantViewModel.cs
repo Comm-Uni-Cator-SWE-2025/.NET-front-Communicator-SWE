@@ -20,8 +20,7 @@ namespace Communicator.App.ViewModels.Meeting;
 /// </summary>
 public sealed class ParticipantViewModel : ObservableObject
 {
-    private BitmapSource? _videoFrame;
-    private BitmapSource? _screenFrame;
+    private BitmapSource? _frame;
     private bool _isMuted;
     private bool _isCameraOn;
     private bool _isScreenSharing;
@@ -41,29 +40,15 @@ public sealed class ParticipantViewModel : ObservableObject
     public UserProfile User { get; }
 
     /// <summary>
-    /// Current video frame from this participant's camera.
+    /// Current frame from this participant (video or screen share).
     /// </summary>
-    public BitmapSource? VideoFrame
+    public BitmapSource? Frame
     {
-        get => _videoFrame;
+        get => _frame;
         set {
-            if (SetProperty(ref _videoFrame, value))
+            if (SetProperty(ref _frame, value))
             {
-                OnPropertyChanged(nameof(HasVideoFrame));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Current screen share frame from this participant.
-    /// </summary>
-    public BitmapSource? ScreenFrame
-    {
-        get => _screenFrame;
-        set {
-            if (SetProperty(ref _screenFrame, value))
-            {
-                OnPropertyChanged(nameof(HasScreenFrame));
+                OnPropertyChanged(nameof(HasFrame));
             }
         }
     }
@@ -115,14 +100,9 @@ public sealed class ParticipantViewModel : ObservableObject
     public string Initial => string.IsNullOrEmpty(DisplayName) ? "?" : DisplayName.Substring(0, 1).ToUpper(System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// Whether this participant has a video frame to display.
+    /// Whether this participant has a frame to display.
     /// </summary>
-    public bool HasVideoFrame => VideoFrame != null;
-
-    /// <summary>
-    /// Whether this participant has a screen share frame to display.
-    /// </summary>
-    public bool HasScreenFrame => ScreenFrame != null;
+    public bool HasFrame => Frame != null;
 
     /// <summary>
     /// Profile image URI (from user profile or null).

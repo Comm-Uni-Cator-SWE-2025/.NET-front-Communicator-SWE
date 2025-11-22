@@ -276,12 +276,12 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
             // Otherwise update video frame
             // Note: This logic depends on IsScreenSharing flag being set correctly via other means (e.g. separate RPC call)
             // OR we can infer it.
-            Console.WriteLine($"[App] UPDATE_UI 4 Created bitmap source for participant {email} {participant.IsScreenSharing} " + bitmapSource);
+            Console.WriteLine($"[App] UPDATE_UI 4 Created bitmap source for participant {email} {participant.IsScreenSharing} " + bitmapSource + rImage.Image.Length);
 
             if (participant.IsScreenSharing)
             {
                 Console.WriteLine("[App] UPDATE_UI 5 Updating screen frame for participant " + participant);
-                participant.ScreenFrame = bitmapSource;
+                participant.Frame = bitmapSource;
                 // Also ensure we switch to screen focus if this is the first frame
                 if (ViewMode != VideoViewMode.ScreenFocus && FocusedParticipant == participant)
                 {
@@ -290,7 +290,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
             }
             else
             {
-                participant.VideoFrame = bitmapSource;
+                participant.Frame = bitmapSource;
             }
         }
     }
@@ -393,7 +393,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         else if (ViewMode == VideoViewMode.VideoFocus && FocusedParticipant == participant)
         {
             // Same participant clicked in VideoFocus
-            if (participant.IsScreenSharing && participant.HasScreenFrame)
+            if (participant.IsScreenSharing && participant.HasFrame)
             {
                 // Has screen → Switch to ScreenFocus
                 ViewMode = VideoViewMode.ScreenFocus;
