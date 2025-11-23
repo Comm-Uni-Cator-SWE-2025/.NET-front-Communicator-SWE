@@ -39,7 +39,7 @@ Write-Host "Filled icons: $filledCount" -ForegroundColor Yellow
 $csCode = @"
 using System.Collections.Generic;
 
-namespace UX.Icons;
+namespace Communicator.Icons;
 
 /// <summary>
 /// Maps Tabler icon names to Unicode characters
@@ -62,11 +62,14 @@ $allIcons.GetEnumerator() | Sort-Object Key | ForEach-Object {
     $hex = $_.Value
     $codePoint = [int]"0x$hex"
     
-    # For characters above U+FFFF, use \U with 8 digits, otherwise use \u with 4 digits
+    # For characters above U+FFFF, use surrogate pairs with \u
     if ($codePoint -le 0xFFFF) {
         $unicode = "\u$hex"
     } else {
-        $unicode = "\U" + $codePoint.ToString("X8").ToLower().PadLeft(8, '0')
+        $val = $codePoint - 0x10000
+        $high = 0xD800 + ($val -shr 10)
+        $low = 0xDC00 + ($val -band 0x3FF)
+        $unicode = "\u{0:x4}\u{1:x4}" -f $high, $low
     }
     
     $csCode += "        { `"$($_.Key)`", `"$unicode`" },`n"

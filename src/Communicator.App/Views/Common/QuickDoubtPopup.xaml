@@ -36,15 +36,13 @@
             
             <!-- Icon -->
             <Border Grid.Column="0"
-                    Background="{DynamicResource WarningBrush}"
-                    CornerRadius="8"
                     Width="36"
                     Height="36"
                     VerticalAlignment="Center"
                     Margin="0,0,10,0">
-                <icons:Icon IconName="hand-paper"
+                <icons:Icon IconName="hand-stop"
                             IconSize="20"
-                            Foreground="{DynamicResource TextOnPrimaryBrush}"
+                            Foreground="{DynamicResource WarningBrush}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"/>
             </Border>

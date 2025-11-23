@@ -68,6 +68,7 @@
         </Style>
 
         <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -151,7 +152,7 @@
 
             <Grid x:Name="TitleBar"
                   Grid.Row="0"
-                  Background="{DynamicResource SurfaceBrush}"
+                  Background="{DynamicResource AppBackgroundBrush}"
                   MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -165,20 +166,10 @@
                             ToolTip="Go Back"
                             Width="32"
                             Height="32"
-                            Margin="0,0,4,0"
+                            Margin="0,0,16,0"
                             Visibility="{Binding ShowBackButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <icons:Icon IconName="arrow-left" IconSize="16" Foreground="{DynamicResource IconBrush}" />
-                    </Button>
-                    <Button Style="{StaticResource CaptionButtonStyle}"
-                            Command="{Binding GoForwardCommand}"
-                            ToolTip="Go Forward"
-                            Width="32"
-                            Height="32"
-                            Margin="0,0,16,0"
-                            Visibility="{Binding ShowForwardButton, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                        <icons:Icon IconName="arrow-right" IconSize="16" Foreground="{DynamicResource IconBrush}" />
                     </Button>
                     
                     <Grid VerticalAlignment="Center">
@@ -248,7 +239,7 @@
                             ToolTip="Close"
                             Click="OnCloseClick"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
-                        <icons:Icon IconName="x" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                        <icons:Icon IconName="x" IconSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Button>
                 </StackPanel>
             </Grid>

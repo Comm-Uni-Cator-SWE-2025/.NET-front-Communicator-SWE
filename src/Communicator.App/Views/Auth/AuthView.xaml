@@ -57,16 +57,18 @@
                         IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <!-- Loading Spinner (visible when IsLoading is true) -->
-                        <TextBlock Text="âŸ³"
-                                   FontSize="20"
-                                   Margin="0,0,12,0"
-                                   VerticalAlignment="Center"
-                                   Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
-                            <TextBlock.RenderTransform>
-                                <RotateTransform x:Name="SpinnerRotate" CenterX="10" CenterY="10"/>
-                            </TextBlock.RenderTransform>
-                            <TextBlock.Triggers>
-                                <EventTrigger RoutedEvent="TextBlock.Loaded">
+                        <icons:Icon IconName="loader-2"
+                                    IconSize="20"
+                                    Foreground="{DynamicResource IconBrush}"
+                                    Margin="0,0,12,0"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                                    RenderTransformOrigin="0.5, 0.5">
+                            <icons:Icon.RenderTransform>
+                                <RotateTransform x:Name="SpinnerRotate" Angle="0"/>
+                            </icons:Icon.RenderTransform>
+                            <icons:Icon.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
                                     <BeginStoryboard>
                                         <Storyboard RepeatBehavior="Forever">
                                             <DoubleAnimation Storyboard.TargetName="SpinnerRotate"
@@ -75,8 +77,8 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
-                            </TextBlock.Triggers>
-                        </TextBlock>
+                            </icons:Icon.Triggers>
+                        </icons:Icon>
 
                         <!-- Official Google Logo with brand colors (hidden when loading) -->
                         <icons:GoogleIcon Width="20" Height="20" Margin="0,0,12,0"

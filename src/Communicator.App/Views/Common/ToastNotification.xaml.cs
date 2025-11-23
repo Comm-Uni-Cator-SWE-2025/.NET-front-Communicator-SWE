@@ -46,19 +46,19 @@ public sealed partial class ToastNotification : UserControl
         {
             case ToastType.Success:
                 ToastBorder.Style = (Style)Resources["SuccessToast"];
-                IconText.Text = "\uE73E"; // Checkmark
+                ToastIcon.IconName = "check";
                 break;
             case ToastType.Error:
                 ToastBorder.Style = (Style)Resources["ErrorToast"];
-                IconText.Text = "\uE783"; // Error
+                ToastIcon.IconName = "alert-circle";
                 break;
             case ToastType.Warning:
                 ToastBorder.Style = (Style)Resources["WarningToast"];
-                IconText.Text = "\uE7BA"; // Warning
+                ToastIcon.IconName = "alert-triangle";
                 break;
             case ToastType.Info:
                 ToastBorder.Style = (Style)Resources["InfoToast"];
-                IconText.Text = "\uE946"; // Info
+                ToastIcon.IconName = "info-circle";
                 break;
         }
 
