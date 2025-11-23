@@ -60,20 +60,35 @@ public class NetworkFront : IController, INetworking
         _moduleRpc.Call("networkRPCBroadcast", args);
     }
 
+    private HashSet<int> _registeredModules = new HashSet<int>();
+
+    public void RegisterModule(int moduleId)
+    {
+        if (_registeredModules.Contains(moduleId)) return;
+
+        string callbackName = "callback" + moduleId;
+        _moduleRpc.Subscribe(callbackName, (byte[] args) => {
+            if (_listeners.TryGetValue(moduleId, out IMessageListener? listener))
+            {
+                listener.ReceiveData(args);
+            }
+            else
+            {
+                Console.WriteLine($"[NetworkFront] Received data for module {moduleId} but no listener subscribed.");
+            }
+            return new byte[0];
+        });
+        _registeredModules.Add(moduleId);
+    }
+
     public void Subscribe(int name, IMessageListener function)
     {
-        _listeners.Add(name, function);
-        int bufferSize = sizeof(int);
-        MemoryStream buffer = new MemoryStream(bufferSize);
-        BinaryWriter writer = new BinaryWriter(buffer);
-        writer.Write(name);
-        string callbackName = "callback" + name;
-        byte[] args = buffer.ToArray();
-
-        _moduleRpc.Subscribe(callbackName, (byte[] args) => {
-            function.ReceiveData(args);
-            return null;
-        });
+        _listeners[name] = function;
+        
+        if (!_registeredModules.Contains(name))
+        {
+            RegisterModule(name);
+        }
     }
 
     public void RemoveSubscription(int name)

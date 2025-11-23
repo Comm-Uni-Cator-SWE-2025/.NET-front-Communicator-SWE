@@ -1,4 +1,8 @@
-﻿/*
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+/*
  * -----------------------------------------------------------------------------
  *  File: ClientViewModel.cs
  *  Owner: Sami Mohiddin
@@ -7,15 +11,10 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Communicator.Canvas;
 using Communicator.Core.RPC;
 using Communicator.Networking;
-using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -23,19 +22,14 @@ namespace Communicator.UX.Canvas.ViewModels;
 /// Represents the Client-side logic for the collaborative canvas.
 /// Handles sending actions to the host and processing incoming network messages.
 /// </summary>
-public class ClientViewModel : CanvasViewModel
+public class ClientViewModel : CanvasViewModel, IMessageListener
 {
     private readonly INetworking _networking;
 
     /// <summary>
-    /// The IP address of this client machine.
-    /// </summary>
-    private readonly string _myIp = "192.168.1.50";
-
-    /// <summary>
     /// The IP address of the host/server machine.
     /// </summary>
-    private readonly string _hostIp = "";
+    private string _hostIp = "";
 
     private int _hostPort = 0;
 
@@ -55,7 +49,7 @@ public class ClientViewModel : CanvasViewModel
     {
         _networking = networking;
         CurrentUserId = "Client_" + Guid.NewGuid().ToString().Substring(0, 4);
-        
+
         _networking.Subscribe(CanvasModuleId, this);
         InitializeHostIp();
     }
@@ -134,14 +128,14 @@ public class ClientViewModel : CanvasViewModel
 
         NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
         string json = CanvasSerializer.SerializeNetworkMessage(msg);
-        
+
         if (!string.IsNullOrEmpty(_hostIp))
         {
             byte[] data = Encoding.UTF8.GetBytes(json);
             ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
             _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
         }
-        
+
         ShowGhostShape(action);
     }
 
@@ -159,7 +153,7 @@ public class ClientViewModel : CanvasViewModel
             CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            
+
             if (!string.IsNullOrEmpty(_hostIp))
             {
                 byte[] data = Encoding.UTF8.GetBytes(json);

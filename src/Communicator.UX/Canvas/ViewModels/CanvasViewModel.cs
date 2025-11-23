@@ -36,13 +36,6 @@ public class CanvasViewModel : INotifyPropertyChanged
         _rpc = rpc;
     }
 
-    // Implementation of INotifyPropertyChanged for data binding (Observer Pattern)
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
     // --- Properties ---
 
     /// <summary>

@@ -44,4 +44,12 @@ public interface INetworking
      * @param name the name of the module
      */
     void RemoveSubscription(int name);
+
+    /**
+     * Registers a module ID with the RPC service before connection.
+     * This allows late binding of listeners.
+     * 
+     * @param moduleId the module ID to register
+     */
+    void RegisterModule(int moduleId);
 }

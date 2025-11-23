@@ -55,6 +55,8 @@ public sealed partial class MainApp : Application
         if (networking is NetworkFront networkFront)
         {
             networkFront.ConsumeRPC(rpc);
+            // Pre-register Canvas module (ID 2) to ensure RPC subscription happens before Connect()
+            networkFront.RegisterModule(2);
         }
 
         // Load saved theme preference

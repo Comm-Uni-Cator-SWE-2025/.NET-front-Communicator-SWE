@@ -1,4 +1,8 @@
-﻿/*
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+/*
  * -----------------------------------------------------------------------------
  *  File: HostViewModel.cs
  *  Owner: Pranitha Muluguru
@@ -7,24 +11,15 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using Communicator.Canvas;
-using Communicator.Core.RPC;
-using Communicator.Networking;
-using Microsoft.Win32;
-namespace Communicator.UX.Canvas.ViewModels;
-using System.IO; // Still keep this
-using System.Threading.Tasks;
-using System.Timers;
 using System.Windows;
 using Communicator.Canvas;
-using Communicator.Cloud.CloudFunction;
 using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
+using Communicator.Core.RPC;
+using Communicator.Networking;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -38,16 +33,6 @@ public class HostViewModel : CanvasViewModel, IMessageListener
     private readonly INetworking _networking;
 
     /// <summary>
-    /// The IP address of this Host machine.
-    /// </summary>
-    private readonly string _myIp = "127.0.0.1";
-
-    /// <summary>
-    /// The list of known client IP addresses to broadcast to.
-    /// </summary>
-    private readonly List<string> _clientIps = new() { "192.168.1.50" };
-
-    /// <summary>
     /// Timer for triggering the cloud auto-save functionality.
     /// </summary>
     private bool _suppressCommit = false;
@@ -56,11 +41,13 @@ public class HostViewModel : CanvasViewModel, IMessageListener
     /// Timer for triggering the cloud auto-save functionality.
     /// </summary>
     private System.Timers.Timer _autoSaveTimer;
-    
+
     /// <summary>
     /// Indicates that this instance is the Host.
     /// </summary>
     public override bool IsHost => true;
+
+    private const int CanvasModuleId = 2;
 
 
     /// <summary>
