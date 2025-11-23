@@ -39,9 +39,9 @@ public sealed class CloudFunctionLibrary : IDisposable
     /// <exception cref="InvalidOperationException">Thrown when CLOUD_BASE_URL environment variable is not set.</exception>
     public CloudFunctionLibrary()
     {
-        baseUrl = Environment.GetEnvironmentVariable("CLOUD_BASE_URL") ??
-                  throw new InvalidOperationException("CLOUD_BASE_URL environment variable is not set");
-
+        //baseUrl = Environment.GetEnvironmentVariable("CLOUD_BASE_URL") ??
+        //          throw new InvalidOperationException("CLOUD_BASE_URL environment variable is not set");
+        baseUrl = "https://cloud-function-app.azurewebsites.net/api/";
         httpClient = new HttpClient();
         jsonOptions = new JsonSerializerOptions {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

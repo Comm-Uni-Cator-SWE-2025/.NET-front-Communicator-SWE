@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Communicator.Canvas\Communicator.Canvas.csproj" />
+    <ProjectReference Include="..\..\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj" />
   </ItemGroup>
 
 </Project>

@@ -104,6 +104,17 @@ public partial class CanvasView : UserControl
         {
             SaveCanvasSnapshot();
         }
+        // --- ADDED: "C" Key for Cloud Retrieval ---
+        else if (e.Key == Key.C)
+        {
+            if (_vm is HostViewModel hostVm)
+            {
+                // Fire and forget the async task
+                Task.Run(async () => await hostVm.DownloadLastCloudSnapshot());
+                e.Handled = true;
+            }
+        }
+        // ------------------------------------------
     }
 
     private void BtnSnapshot_Click(object sender, RoutedEventArgs e)
