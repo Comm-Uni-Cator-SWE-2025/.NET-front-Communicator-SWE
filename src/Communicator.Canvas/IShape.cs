@@ -1,7 +1,17 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: Ishape.cs
+ *  Owner: Sriram Nangunoori
+ *  Roll Number : 112201019
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace Communicator.Canvas;
+
 
 /// <summary>
 /// Defines the contract for all geometric shapes on the canvas.

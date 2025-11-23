@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: StateManager.cs
+ *  Owner: Sami Mohiddin
+ *  Roll Number : 132201032
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 
 namespace Communicator.Canvas;

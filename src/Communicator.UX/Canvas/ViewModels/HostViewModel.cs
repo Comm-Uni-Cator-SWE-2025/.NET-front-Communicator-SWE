@@ -1,46 +1,82 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: HostViewModel.cs
+ *  Owner: Pranitha Muluguru
+ *  Roll Number : 112201019
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
-using Communicator.Canvas;
-using Microsoft.Win32;
-namespace Communicator.UX.Canvas.ViewModels;
-using System.IO; // Still keep this
 using System.Threading.Tasks;
-using System.Timers; // Required for the Timer
+using System.Timers;
 using System.Windows;
+using Communicator.Canvas;
 using Communicator.Cloud.CloudFunction;
 using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
+using Microsoft.Win32;
 
+namespace Communicator.UX.Canvas.ViewModels;
+
+/// <summary>
+/// Represents the Host (Server) side logic for the collaborative canvas.
+/// Manages action validation, broadcasting to clients, and cloud autosaving.
+/// </summary>
 public class HostViewModel : CanvasViewModel
 {
 
+    /// <summary>
+    /// The IP address of this Host machine.
+    /// </summary>
     private readonly string _myIp = "127.0.0.1";
-    private readonly List<string> _clientIps = new() { "192.168.1.50" };
-    private bool _suppressCommit = false;
-    private Timer _autoSaveTimer;
-    // --- OVERRIDE TO TRUE ---
-    public override bool IsHost => true;
-    // ------------------------
 
+    /// <summary>
+    /// The list of known client IP addresses to broadcast to.
+    /// </summary>
+    private readonly List<string> _clientIps = new() { "192.168.1.50" };
+
+    /// <summary>
+    /// Flag to prevent infinite loops when committing local changes.
+    /// </summary>
+    private bool _suppressCommit = false;
+
+    /// <summary>
+    /// Timer for triggering the cloud auto-save functionality.
+    /// </summary>
+    private System.Timers.Timer _autoSaveTimer;
+
+
+    /// <summary>
+    /// Indicates that this instance is the Host.
+    /// </summary>
+    public override bool IsHost => true;
+
+
+    /// <summary>
+    /// Initializes the HostViewModel, registers network listeners, and starts the auto-save timer.
+    /// </summary>
     public HostViewModel()
     {
         CurrentUserId = "Host_Admin";
         NetworkMock.Register(_myIp, ProcessIncomingMessage);
 
-        // --- Initialize and Start Auto-Save Timer ---
-        // Set interval to 5 minutes
-        _autoSaveTimer = new Timer(30 * 1000);
+        _autoSaveTimer = new System.Timers.Timer(1 * 30 * 1000);
         _autoSaveTimer.Elapsed += async (sender, e) => await CloudSave();
         _autoSaveTimer.AutoReset = true;
         _autoSaveTimer.Start();
 
-        // Log startup to text file on Desktop
         LogToDesktop("HostViewModel initialized. Auto-save timer started.");
     }
 
-    // --- Helper to verify background tasks without Console ---
-    // This creates a text file on your Desktop called "canvas_debug_log.txt"
+
+    /// <summary>
+    /// Writes a debug message to a text file on the Desktop.
+    /// </summary>
+    /// <param name="message">The message to log.</param>
     private void LogToDesktop(string message)
     {
         try
@@ -48,10 +84,18 @@ public class HostViewModel : CanvasViewModel
             string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "canvas_debug_log.txt");
             File.AppendAllText(path, $"{DateTime.Now}: {message}{Environment.NewLine}");
         }
-        catch { /* Ignore logging errors */ }
+        catch
+        {
+            /* Ignore logging errors */
+        }
     }
 
-    // --- Helper to safely show Pop-ups from background threads ---
+    /// <summary>
+    /// Helper to safely show Pop-ups from background threads via the Dispatcher.
+    /// </summary>
+    /// <param name="message">The body text of the message box.</param>
+    /// <param name="title">The title of the message box.</param>
+    /// <param name="icon">The icon to display.</param>
     private void ShowPopup(string message, string title, MessageBoxImage icon)
     {
         Application.Current.Dispatcher.Invoke(() => {
@@ -59,12 +103,18 @@ public class HostViewModel : CanvasViewModel
         });
     }
 
+    // --- Public Methods (Cloud & Network) ---
+
+    public CloudFunctionLibrary _cloud = new CloudFunctionLibrary();
+    /// <summary>
+    /// Serializes the current state and posts it to the Cloud.
+    /// </summary>
+    /// <returns>A Task representing the asynchronous operation.</returns>
     public async Task CloudSave()
     {
         try
         {
             string shapesJson = CanvasSerializer.SerializeShapesDictionary(_shapes);
-            CloudFunctionLibrary _cloud = new CloudFunctionLibrary();
 
             Entity _postEntity = new Entity(
                 Module: "Canvas",
@@ -87,13 +137,14 @@ public class HostViewModel : CanvasViewModel
         }
     }
 
-    // --- UPDATED: Retrieve Last Snapshot ---
-    // --- UPDATED: Retrieve Last Snapshot with Parsing Logic ---
+    /// <summary>
+    /// Downloads the most recent snapshot from the cloud and saves it to the Desktop.
+    /// </summary>
+    /// <returns>A Task representing the asynchronous operation.</returns>
     public async Task DownloadLastCloudSnapshot()
     {
         try
         {
-            CloudFunctionLibrary _cloud = new CloudFunctionLibrary();
 
             Entity _getEntity = new Entity(
                 Module: "Canvas",
@@ -169,6 +220,10 @@ public class HostViewModel : CanvasViewModel
                 MessageBoxImage.Error);
         }
     }
+
+    /// <summary>
+    /// Commits modifications, suppressed if needed to avoid recursion.
+    /// </summary>
     public override void CommitModification()
     {
         if (_suppressCommit)
@@ -179,6 +234,10 @@ public class HostViewModel : CanvasViewModel
         base.CommitModification();
     }
 
+    /// <summary>
+    /// Processes a local action, validates it, and broadcasts it to clients.
+    /// </summary>
+    /// <param name="action">The action performed locally.</param>
     protected override void ProcessAction(CanvasAction action)
     {
         if (action.ActionType == CanvasActionType.Modify && action.PrevShape != null)
@@ -189,8 +248,14 @@ public class HostViewModel : CanvasViewModel
                 if (SelectedShape != null && SelectedShape.ShapeId == action.PrevShape.ShapeId)
                 {
                     _suppressCommit = true;
-                    try { base.SelectedShape = action.PrevShape; }
-                    finally { _suppressCommit = false; }
+                    try
+                    {
+                        base.SelectedShape = action.PrevShape;
+                    }
+                    finally
+                    {
+                        _suppressCommit = false;
+                    }
                 }
             }
         }
@@ -198,7 +263,7 @@ public class HostViewModel : CanvasViewModel
         if (ValidateAction(action))
         {
             ApplyActionLocally(action);
-            var msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
+            NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             NetworkMock.Broadcast(_clientIps, json);
         }
@@ -209,6 +274,9 @@ public class HostViewModel : CanvasViewModel
         }
     }
 
+    /// <summary>
+    /// Undo an action locally and broadcast the inverse action to clients.
+    /// </summary>
     public override void Undo()
     {
         CommitModification();
@@ -219,12 +287,15 @@ public class HostViewModel : CanvasViewModel
         if (actionToUndo != null)
         {
             CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
-            var msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
+            NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             NetworkMock.Broadcast(_clientIps, json);
         }
     }
 
+    /// <summary>
+    /// Redo an action locally and broadcast it to clients.
+    /// </summary>
     public override void Redo()
     {
         SelectedShape = null;
@@ -233,41 +304,18 @@ public class HostViewModel : CanvasViewModel
 
         if (actionToRedo != null)
         {
-            var msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
+            NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             NetworkMock.Broadcast(_clientIps, json);
         }
     }
 
-    //public void ProcessIncomingMessage(string json)
-    //{
-    //    NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
-    //    if (msg == null) return;
-
-    //    CanvasAction action = msg.Action;
-
-    //    if (ValidateAction(action))
-    //    {
-    //        if (action.NewShape != null)
-    //        {
-    //            // KEY FIX: Use helper to sync dictionary and selection
-    //            UpdateShapeFromNetwork(action.NewShape);
-    //        }
-
-    //        RaiseRequestRedraw();
-    //        NetworkMock.Broadcast(_clientIps, json);
-    //    }
-    //    else
-    //    {
-    //        Console.WriteLine($"[Host] Validation Failed for Incoming Action: {action.ActionType}");
-    //    }
-    //}
-    // --- NEW: RESTORE FEATURE ---
-    // --- NEW: RESTORE FEATURE ---
+    /// <summary>
+    /// Restores the canvas from a local file and broadcasts the state to clients.
+    /// </summary>
     public void RestoreShapes()
     {
-        OpenFileDialog openDialog = new OpenFileDialog
-        {
+        OpenFileDialog openDialog = new OpenFileDialog {
             Filter = "Canvas JSON (*.json)|*.json"
         };
 
@@ -281,7 +329,7 @@ public class HostViewModel : CanvasViewModel
                 ApplyRestore(json);
 
                 // 2. Broadcast RESTORE Message
-                var msg = new NetworkMessage(NetworkMessageType.RESTORE, null, json);
+                NetworkMessage msg = new NetworkMessage(NetworkMessageType.RESTORE, null, json);
                 string networkJson = CanvasSerializer.SerializeNetworkMessage(msg);
 
                 Console.WriteLine("[Host] Broadcasting RESTORE command...");
@@ -293,8 +341,11 @@ public class HostViewModel : CanvasViewModel
             }
         }
     }
-    // ----------------------------
 
+    /// <summary>
+    /// Processes incoming messages (rare for Host, as it is the authority).
+    /// </summary>
+    /// <param name="json">The serialized message.</param>
     public void ProcessIncomingMessage(string json)
     {
         NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
@@ -328,6 +379,12 @@ public class HostViewModel : CanvasViewModel
         }
         // Host ignores incoming RESTORE messages (it is the source)
     }
+
+    /// <summary>
+    /// Validates an action against the current state to prevent conflicts.
+    /// </summary>
+    /// <param name="action">The action to validate.</param>
+    /// <returns>True if the action is valid, otherwise False.</returns>
     private bool ValidateAction(CanvasAction action)
     {
         string shapeId = action.NewShape?.ShapeId ?? action.PrevShape?.ShapeId ?? "";

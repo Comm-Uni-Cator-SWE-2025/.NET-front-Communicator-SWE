@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: TriangleShape.cs
+ *  Owner: Sriram Nangunoori
+ *  Roll Number : 112201019
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;

@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: CanvasSerializer.cs
+ *  Owner: Sami Mohiddin
+ *  Roll Number : 132201032
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;

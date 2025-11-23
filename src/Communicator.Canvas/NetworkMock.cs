@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: NetworkMock.cs
+ *  Owner: Sriram Nangunoori
+ *  Roll Number : 112201019
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 
 namespace Communicator.Canvas;

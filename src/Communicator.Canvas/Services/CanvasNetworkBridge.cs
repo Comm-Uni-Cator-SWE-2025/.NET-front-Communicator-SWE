@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: CanvasNetworkBridge.cs
+ *  Owner: Shanmukha Sri Krishna
+ *  Roll Number : 112201013
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +15,7 @@ using System.Threading.Tasks;
 
 using Communicator.Networking;
 using System;
-
+//to be implemented
 namespace Communicator.Canvas.Services;
 
 public class CanvasNetworkBridge : IMessageListener
