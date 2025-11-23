@@ -1,24 +1,174 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Communicator.Canvas;
 using Microsoft.Win32;
 namespace Communicator.UX.Canvas.ViewModels;
 using System.IO; // Still keep this
+using System.Threading.Tasks;
+using System.Timers; // Required for the Timer
+using System.Windows;
+using Communicator.Cloud.CloudFunction;
+using Communicator.Cloud.CloudFunction.DataStructures;
+using Communicator.Cloud.CloudFunction.FunctionLibrary;
 
 public class HostViewModel : CanvasViewModel
 {
+
     private readonly string _myIp = "127.0.0.1";
     private readonly List<string> _clientIps = new() { "192.168.1.50" };
     private bool _suppressCommit = false;
+    private Timer _autoSaveTimer;
     // --- OVERRIDE TO TRUE ---
     public override bool IsHost => true;
     // ------------------------
+
     public HostViewModel()
     {
         CurrentUserId = "Host_Admin";
         NetworkMock.Register(_myIp, ProcessIncomingMessage);
+
+        // --- Initialize and Start Auto-Save Timer ---
+        // Set interval to 5 minutes
+        _autoSaveTimer = new Timer(30 * 1000);
+        _autoSaveTimer.Elapsed += async (sender, e) => await CloudSave();
+        _autoSaveTimer.AutoReset = true;
+        _autoSaveTimer.Start();
+
+        // Log startup to text file on Desktop
+        LogToDesktop("HostViewModel initialized. Auto-save timer started.");
     }
 
+    // --- Helper to verify background tasks without Console ---
+    // This creates a text file on your Desktop called "canvas_debug_log.txt"
+    private void LogToDesktop(string message)
+    {
+        try
+        {
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "canvas_debug_log.txt");
+            File.AppendAllText(path, $"{DateTime.Now}: {message}{Environment.NewLine}");
+        }
+        catch { /* Ignore logging errors */ }
+    }
+
+    // --- Helper to safely show Pop-ups from background threads ---
+    private void ShowPopup(string message, string title, MessageBoxImage icon)
+    {
+        Application.Current.Dispatcher.Invoke(() => {
+            MessageBox.Show(message, title, MessageBoxButton.OK, icon);
+        });
+    }
+
+    public async Task CloudSave()
+    {
+        try
+        {
+            string shapesJson = CanvasSerializer.SerializeShapesDictionary(_shapes);
+            CloudFunctionLibrary _cloud = new CloudFunctionLibrary();
+
+            Entity _postEntity = new Entity(
+                Module: "Canvas",
+                Table: "Snapshots",
+                Id: Guid.NewGuid().ToString(),
+                Type: "post",
+                LastN: -1,
+                TimeRange: new TimeRange(0, 0),
+                Data: JsonDocument.Parse(shapesJson).RootElement
+            );
+
+            CloudResponse _response = await _cloud.CloudPostAsync(_postEntity);
+
+            // Write to log file on Desktop
+            LogToDesktop($"Auto-save executed. Status: {_response.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            LogToDesktop($"Auto-save FAILED: {ex.Message}");
+        }
+    }
+
+    // --- UPDATED: Retrieve Last Snapshot ---
+    // --- UPDATED: Retrieve Last Snapshot with Parsing Logic ---
+    public async Task DownloadLastCloudSnapshot()
+    {
+        try
+        {
+            CloudFunctionLibrary _cloud = new CloudFunctionLibrary();
+
+            Entity _getEntity = new Entity(
+                Module: "Canvas",
+                Table: "Snapshots",
+                Id: "",
+                Type: "",
+                LastN: 1,
+                TimeRange: null,
+                Data: JsonDocument.Parse("{}").RootElement
+            );
+
+            CloudResponse _response = await _cloud.CloudGetAsync(_getEntity);
+
+            // 1. Check if we got data
+            if (_response.Data.ValueKind == JsonValueKind.Undefined || _response.Data.ValueKind == JsonValueKind.Null)
+            {
+                ShowPopup($"Cloud returned empty data. Status: {_response.StatusCode}", "Warning", MessageBoxImage.Warning);
+                return;
+            }
+
+            string finalJsonToSave = "";
+
+            // 2. Unwrap the Array (LastN returns a list)
+            if (_response.Data.ValueKind == JsonValueKind.Array)
+            {
+                if (_response.Data.GetArrayLength() > 0)
+                {
+                    JsonElement firstEntity = _response.Data[0];
+
+                    // 3. Extract the inner "data" property which holds our shapes
+                    // We try both "data" and "Data" to be safe
+                    if (firstEntity.TryGetProperty("data", out JsonElement innerData) ||
+                        firstEntity.TryGetProperty("Data", out innerData))
+                    {
+                        finalJsonToSave = innerData.ToString();
+                    }
+                    else
+                    {
+                        // Fallback: If no "data" property, save the whole entity
+                        finalJsonToSave = firstEntity.ToString();
+                    }
+                }
+                else
+                {
+                    ShowPopup("Cloud returned an empty list (Array length 0).", "Info", MessageBoxImage.Information);
+                    return;
+                }
+            }
+            else
+            {
+                // Not an array, just use it directly
+                finalJsonToSave = _response.Data.ToString();
+            }
+
+            // 4. Save to Desktop
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string fileName = $"Canvas_Restore_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            string fullPath = Path.Combine(desktopPath, fileName);
+
+            File.WriteAllText(fullPath, finalJsonToSave);
+
+            ShowPopup(
+                $"Snapshot successfully downloaded!\nLocation: {fullPath}",
+                "Success",
+                MessageBoxImage.Information);
+
+        }
+        catch (Exception ex)
+        {
+            ShowPopup(
+                $"Error during download/save:\n{ex.Message}\n{ex.StackTrace}",
+                "Critical Error",
+                MessageBoxImage.Error);
+        }
+    }
     public override void CommitModification()
     {
         if (_suppressCommit)

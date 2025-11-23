@@ -21,7 +21,7 @@ public partial class CanvasView : UserControl
     private CanvasViewModel? _vm;
     private UIElement? _currentPreviewElement = null;
     private Rectangle? _selectionBox = null;
-    
+    private UIElement? _selectionInfo = null; // <--- ADD THIS FIELD
     // --- FIXED: Panning State ---
     private bool _isPanning = false;
     private Point _panLastPosition; // Tracks position relative to the static View, not the moving Canvas
@@ -104,6 +104,17 @@ public partial class CanvasView : UserControl
         {
             SaveCanvasSnapshot();
         }
+        // --- ADDED: "C" Key for Cloud Retrieval ---
+        else if (e.Key == Key.C)
+        {
+            if (_vm is HostViewModel hostVm)
+            {
+                // Fire and forget the async task
+                Task.Run(async () => await hostVm.DownloadLastCloudSnapshot());
+                e.Handled = true;
+            }
+        }
+        // ------------------------------------------
     }
 
     private void BtnSnapshot_Click(object sender, RoutedEventArgs e)
@@ -361,16 +372,38 @@ public partial class CanvasView : UserControl
 
     private void UpdateSelectionBox()
     {
+        // 1. Clear existing selection visuals
         if (_selectionBox != null)
         {
             DrawArea.Children.Remove(_selectionBox);
             _selectionBox = null;
         }
 
+        // <--- ADD THIS BLOCK --->
+        if (_selectionInfo != null)
+        {
+            DrawArea.Children.Remove(_selectionInfo);
+            _selectionInfo = null;
+        }
+        // <--- END ADD --->
+
+        // 2. Re-draw if a shape is selected
         if (_vm != null && _vm.SelectedShape != null && !_vm.SelectedShape.IsDeleted)
         {
-            _selectionBox = ShapeRenderer.CreateSelectionBox(_vm.SelectedShape.GetBoundingBox());
+            var bounds = _vm.SelectedShape.GetBoundingBox();
+
+            // Draw the box
+            _selectionBox = ShapeRenderer.CreateSelectionBox(bounds);
             DrawArea.Children.Add(_selectionBox);
+
+            // <--- ADD THIS LOGIC --->
+            // Only show the text info if we are NOT currently dragging/moving the shape
+            if (!_vm.IsMovingShape)
+            {
+                _selectionInfo = ShapeRenderer.CreateSelectionInfo(_vm.SelectedShape, bounds);
+                DrawArea.Children.Add(_selectionInfo);
+            }
+            // <--- END ADD --->
         }
     }
 
