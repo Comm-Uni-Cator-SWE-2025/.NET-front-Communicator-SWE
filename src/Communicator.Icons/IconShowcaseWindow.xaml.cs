@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: IconShowcaseWindow.xaml.cs
- *  Owner: UpdateNamesForEachModule
- *  Roll Number :
- *  Module : 
+ *  Owner: Dhruvadeep
+ *  Roll Number : 142201026
+ *  Module : UX
  *
  * -----------------------------------------------------------------------------
  */
