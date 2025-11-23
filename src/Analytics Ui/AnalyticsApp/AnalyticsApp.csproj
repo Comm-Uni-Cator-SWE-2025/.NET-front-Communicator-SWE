@@ -1,16 +1,4 @@
-<<<<<<<< HEAD:src/Communicator.Controller/ParticipantsUITest/ParticipantsUITest.csproj
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
-========
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -22,5 +10,4 @@
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc2" />
     
   </ItemGroup>
->>>>>>>> nishant/kishore/Analytics:src/Analytics Ui/AnalyticsApp/AnalyticsApp.csproj
 </Project>

@@ -21,7 +21,11 @@ namespace MeetAnalyticsApp.Commands
         }
 
         /// <inheritdoc />
-        public event EventHandler? CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
 
         /// <summary>
         /// Defines whether the command can execute.
