@@ -67,6 +67,8 @@ public class NegotiateFunctionTests
         };
         _mockRequest.Setup(r => r.Query).Returns(query);
 
+        _mockRequest.Setup(r => r.Url)
+            .Returns(new Uri("https://localhost/api/negotiate?meetingId=Test123"));
         var responseStream = new MemoryStream();
         var mockResponse = new Mock<HttpResponseData>(_mockContext.Object);
         mockResponse.Setup(r => r.Body).Returns(responseStream);
@@ -76,20 +78,19 @@ public class NegotiateFunctionTests
         _mockRequest.Setup(r => r.CreateResponse())
                     .Returns(mockResponse.Object);
 
-        HttpResponseData result = await _function.Run(_mockRequest.Object, fakeConnectionInfo);
+        NegotiateFunction.NegotiateResponse result = await _function.Run(_mockRequest.Object, fakeConnectionInfo);
 
-        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, result.HttpResponse!.StatusCode);
+        HttpResponseData httpResponse = result.HttpResponse!;
 
-        responseStream.Position = 0;
-        using var reader = new StreamReader(responseStream);
+        httpResponse.Body.Position = 0;
+        using var reader = new StreamReader(httpResponse.Body);
         string responseBody = await reader.ReadToEndAsync();
 
-        SignalRConnectionInfo? deserializedResponse = JsonSerializer.Deserialize<SignalRConnectionInfo>(responseBody,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Dictionary<string, object> json = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody)!;
 
-        Assert.NotNull(deserializedResponse);
-        Assert.Equal(fakeConnectionInfo.Url, deserializedResponse.Url);
-        Assert.Equal(fakeConnectionInfo.AccessToken, deserializedResponse.AccessToken);
+        Assert.Equal("ok", json["status"]!.ToString());
+        Assert.Equal("Test123", json["meetingId"]!.ToString());
 
         _mockLogger.Verify(
             log => log.Log(
