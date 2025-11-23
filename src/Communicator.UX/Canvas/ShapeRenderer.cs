@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Communicator.Canvas;
@@ -194,5 +195,36 @@ public static class ShapeRenderer
         WpfCanvas.SetTop(selectionBox, bounds.Top - 2);
 
         return selectionBox;
+    }
+    /// <summary>
+    /// Creates a small info box showing creation/modification details.
+    /// Positioned to the right of the bounding box.
+    /// </summary>
+    public static UIElement CreateSelectionInfo(IShape shape, Drawing.Rectangle bounds)
+    {
+        var border = new Border {
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(220, 255, 255, 255)), // Semi-transparent white
+            BorderBrush = Brushes.LightGray,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(3),
+            Padding = new Thickness(4),
+            IsHitTestVisible = false // Ensure it doesn't block mouse clicks
+        };
+
+        var textBlock = new TextBlock {
+            Text = $"Created: {shape.CreatedBy}\nMod: {shape.LastModifiedBy}",
+            FontSize = 9,
+            Foreground = Brushes.DarkGray,
+            LineHeight = 11,
+            LineStackingStrategy = LineStackingStrategy.BlockLineHeight
+        };
+
+        border.Child = textBlock;
+
+        // Position to the right of the shape with a small margin
+        WpfCanvas.SetLeft(border, bounds.Right + 6);
+        WpfCanvas.SetTop(border, bounds.Top);
+
+        return border;
     }
 }
