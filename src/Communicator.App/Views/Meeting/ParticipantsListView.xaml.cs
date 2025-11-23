@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: ParticipantsListView.xaml.cs
- *  Owner: Geetheswar V
- *  Roll Number : 142201025
- *  Module : UX
+ *  Owner: Pushti Vasoya
+ *  Roll Number : 1122010
+ *  Module : Controller
  *
  * -----------------------------------------------------------------------------
  */
