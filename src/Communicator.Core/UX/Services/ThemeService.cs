@@ -10,7 +10,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
+using Communicator.Cloud.CloudFunction.DataStructures;
+using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Communicator.Core.UX.Models;
 
 namespace Communicator.Core.UX.Services;
@@ -24,6 +28,11 @@ public class ThemeService : IThemeService
     private const string SettingsFileName = "settings.txt";
     private static readonly char[] s_lineSeparators = ['\n', '\r'];
     private AppTheme _currentTheme;
+    private string? _currentUsername;
+    private CloudFunctionLibrary? _cloudLibrary;
+    private const string ThemeContainer = "UX";
+    private const string ThemeType = "Theme";
+    private const string ThemeKey = "color";
 
     public event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
 
@@ -32,6 +41,85 @@ public class ThemeService : IThemeService
     public ThemeService()
     {
         _currentTheme = AppTheme.Light;
+        InitializeCloudLibrary();
+    }
+
+    private void InitializeCloudLibrary()
+    {
+        try
+        {
+            // Only initialize if environment variable is set to avoid crashes
+            if (Environment.GetEnvironmentVariable("CLOUD_BASE_URL") != null)
+            {
+                _cloudLibrary = new CloudFunctionLibrary();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to initialize CloudFunctionLibrary: {ex.Message}");
+        }
+    }
+
+    public void SetUser(string? username)
+    {
+        _currentUsername = username;
+        if (!string.IsNullOrEmpty(username))
+        {
+            LoadThemeFromCloud();
+        }
+    }
+
+    private async void LoadThemeFromCloud()
+    {
+        if (string.IsNullOrEmpty(_currentUsername) || _cloudLibrary == null) return;
+
+        try
+        {
+            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), null);
+            var res = await _cloudLibrary.CloudGetAsync(req);
+
+            if (res.Data.ValueKind != JsonValueKind.Undefined && res.Data.ValueKind != JsonValueKind.Null)
+            {
+                string themeStr = "";
+                if (res.Data.ValueKind == JsonValueKind.Object && res.Data.TryGetProperty(ThemeKey, out var val))
+                {
+                    themeStr = val.GetString() ?? "";
+                }
+                else if (res.Data.ValueKind == JsonValueKind.String)
+                {
+                    themeStr = res.Data.GetString() ?? "";
+                }
+
+                if (!string.IsNullOrEmpty(themeStr))
+                {
+                    var theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
+                    Application.Current.Dispatcher.Invoke(() => SetTheme(theme));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load theme from cloud: {ex.Message}");
+        }
+    }
+
+    private async void SaveThemeToCloud()
+    {
+        if (string.IsNullOrEmpty(_currentUsername) || _cloudLibrary == null) return;
+
+        try
+        {
+            string themeValue = _currentTheme == AppTheme.Dark ? "dark" : "light";
+            var data = new { color = themeValue };
+
+            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), data);
+            await _cloudLibrary.CloudPostAsync(req);
+            System.Diagnostics.Debug.WriteLine($"Theme saved to cloud: {themeValue}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save theme to cloud: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -65,6 +153,7 @@ public class ThemeService : IThemeService
             Application.Current.Resources.MergedDictionaries.Add(newTheme);
 
             SaveThemePreference();
+            SaveThemeToCloud();
 
             ThemeChanged?.Invoke(this, new ThemeChangedEventArgs(theme));
         }

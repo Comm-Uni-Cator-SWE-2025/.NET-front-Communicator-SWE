@@ -38,6 +38,9 @@ public sealed partial class MainApp : Application
     {
         ArgumentNullException.ThrowIfNull(e);
 
+        // Load environment variables from .env file
+        DotNetEnv.Env.TraversePath().Load();
+
         base.OnStartup(e);
 
         // Configure Dependency Injection
@@ -48,6 +51,15 @@ public sealed partial class MainApp : Application
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
         themeService.LoadSavedTheme();
+
+        // Subscribe to UserLoggedIn to sync theme with cloud
+        IAuthenticationService authService = Services.GetRequiredService<IAuthenticationService>();
+        authService.UserLoggedIn += (s, args) => {
+            if (args.User != null && !string.IsNullOrEmpty(args.User.Email))
+            {
+                themeService.SetUser(args.User.Email);
+            }
+        };
 
         // Subscribe to RPC methods BEFORE starting connection (like Java)
         IRPC rpc = Services.GetRequiredService<IRPC>();
