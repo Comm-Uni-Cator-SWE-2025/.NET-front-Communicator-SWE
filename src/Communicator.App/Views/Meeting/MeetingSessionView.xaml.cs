@@ -30,12 +30,6 @@ public sealed partial class MeetingSessionView : UserControl
     {
         InitializeComponent();
         Loaded += OnLoaded;
-
-        // Wire up Enter key handler for Quick Doubt TextBox
-        if (FindName("QuickDoubtTextBox") is TextBox quickDoubtTextBox)
-        {
-            quickDoubtTextBox.PreviewKeyDown += QuickDoubtTextBox_PreviewKeyDown;
-        }
     }
 
     private void QuickDoubtTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -46,9 +40,15 @@ public sealed partial class MeetingSessionView : UserControl
 
             if (DataContext is ViewModels.Meeting.MeetingSessionViewModel viewModel)
             {
+                System.Diagnostics.Debug.WriteLine($"[MeetingSessionView] Enter key pressed. Message: '{viewModel.QuickDoubtMessage}'");
                 if (viewModel.SendQuickDoubtCommand.CanExecute(null))
                 {
+                    System.Diagnostics.Debug.WriteLine("[MeetingSessionView] Executing SendQuickDoubtCommand");
                     viewModel.SendQuickDoubtCommand.Execute(null);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[MeetingSessionView] SendQuickDoubtCommand.CanExecute returned false");
                 }
             }
         }

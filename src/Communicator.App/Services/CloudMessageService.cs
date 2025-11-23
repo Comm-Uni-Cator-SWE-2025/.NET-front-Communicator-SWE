@@ -20,19 +20,13 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
     private readonly ICloudConfigService _cloudConfig;
     private readonly HttpClient _httpClient;
     private HubConnection? _hubConnection;
+
     private string _currentMeetingId = string.Empty;
     private string _currentUsername = string.Empty;
 
-    public bool IsConnected
-    {
-        get {
-            if (_hubConnection == null)
-            {
-                return false;
-            }
-            return _hubConnection.State == HubConnectionState.Connected;
-        }
-    }
+    public bool IsConnected =>
+        _hubConnection != null &&
+        _hubConnection.State == HubConnectionState.Connected;
 
     public event EventHandler<CloudMessageEventArgs>? MessageReceived;
 
@@ -42,10 +36,7 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
         _httpClient = new HttpClient();
     }
 
-    /// <summary>
-    /// Connects to Azure SignalR hub via cloud function negotiate endpoint,
-    /// with expanded diagnostics and robust handlers.
-    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "Logging for debug")]
     public async Task ConnectAsync(string meetingId, string username)
     {
         if (string.IsNullOrWhiteSpace(username))
@@ -58,11 +49,14 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
 
         try
         {
-            string uri = $"{_cloudConfig.NegotiateUrl}?meetingId={Uri.EscapeDataString(meetingId)}";
+            string negotiateUrl =
+                $"{_cloudConfig.NegotiateUrl}?userId={Uri.EscapeDataString(username)}";
 
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] NEGOTIATE: Calling: {uri}");
+            Console.WriteLine($"[CloudMessage] NEGOTIATE: Calling: {negotiateUrl}");
+            System.Diagnostics.Debug.WriteLine($"[CloudMessage] NEGOTIATE: Calling: {negotiateUrl}");
 
-            string negotiateJson = await _httpClient.GetStringAsync(new Uri(uri)).ConfigureAwait(false);
+            string negotiateJson =
+                await _httpClient.GetStringAsync(new Uri(negotiateUrl)).ConfigureAwait(false);
 
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] NEGOTIATE RAW JSON: {negotiateJson}");
 
@@ -73,12 +67,11 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
 
             if (string.IsNullOrWhiteSpace(url))
             {
-                throw new InvalidOperationException($"Negotiate response missing 'url'. Full response: {negotiateJson}");
+                throw new InvalidOperationException("Negotiate response missing URL");
             }
-
             if (string.IsNullOrWhiteSpace(accessToken))
             {
-                throw new InvalidOperationException($"Negotiate response missing 'accessToken'. Full response: {negotiateJson}");
+                throw new InvalidOperationException("Negotiate response missing accessToken");
             }
 
             if (accessToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
@@ -91,143 +84,104 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] TOKEN LENGTH: {accessToken.Length}");
 
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(
-                    url,
-                    opts => {
-                        opts.AccessTokenProvider = () => Task.FromResult<string?>(accessToken);
-                        opts.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling;
-                    }
-                )
+                .WithUrl(url, opts => {
+                    opts.AccessTokenProvider = () => Task.FromResult<string?>(accessToken);
+                    opts.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling;
+                })
                 .WithAutomaticReconnect()
                 .Build();
 
-            RegisterLifecycleDebugEvents();
+            RegisterLifecycleEvents();
             RegisterMessageHandlers();
 
             System.Diagnostics.Debug.WriteLine("[CloudMessage] CONNECTING...");
             await _hubConnection.StartAsync().ConfigureAwait(false);
 
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] CONNECTED: ID={_hubConnection.ConnectionId}, STATE={_hubConnection.State}");
+
+            await JoinGroupAsync(meetingId, username).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] CONNECT ERROR: {ex}");
+            Console.WriteLine($"[CloudMessage] Connect ERROR: {ex}");
+            System.Diagnostics.Debug.WriteLine($"[CloudMessage] Connect ERROR: {ex}");
             throw;
         }
     }
 
-    /// <summary>
-    /// Sends a message to all participants.
-    /// </summary>
+    private async Task JoinGroupAsync(string meetingId, string username)
+    {
+        string joinUrl =
+            $"{_cloudConfig.JoinGroupUrl}?meetingId={Uri.EscapeDataString(meetingId)}&userId={Uri.EscapeDataString(username)}";
+
+        await _httpClient.PostAsync(new Uri(joinUrl), null).ConfigureAwait(false);
+
+        System.Diagnostics.Debug.WriteLine($"[CloudMessage] JOINED GROUP: {meetingId}");
+    }
+
     public async Task SendMessageAsync(CloudMessageType messageType, string meetingId, string username, string message = "")
     {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            throw new ArgumentException("Username cannot be empty", nameof(username));
-        }
-
         if (!IsConnected)
         {
             throw new InvalidOperationException("Not connected to cloud message service");
         }
 
-        try
-        {
-            string formattedMessage = FormatMessageForCloud(messageType, username, message);
-            string encodedMessage = System.Net.WebUtility.UrlEncode(formattedMessage);
+        string formatted = FormatMessageForCloud(username, message);
+        string encoded = System.Net.WebUtility.UrlEncode(formatted);
 
-            string url =
-                $"{_cloudConfig.MessageUrl}?meetingId={Uri.EscapeDataString(meetingId)}&message={encodedMessage}";
+        string url =
+            $"{_cloudConfig.MessageUrl}?meetingId={Uri.EscapeDataString(meetingId)}&message={encoded}";
 
-            // Debug output
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] URL: {url}");
+        System.Diagnostics.Debug.WriteLine($"[CloudMessage] URL: {url}");
+        System.Diagnostics.Debug.WriteLine($"[CloudMessage] SEND: {messageType} -> {formatted}");
 
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] SEND: {messageType} -> {formattedMessage}");
+        HttpResponseMessage response = await _httpClient.GetAsync(new Uri(url)).ConfigureAwait(false);
 
-            HttpResponseMessage response = await _httpClient.GetAsync(new Uri(url)).ConfigureAwait(false);
-
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] SEND STATUS: {(int)response.StatusCode} {response.ReasonPhrase}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] SEND ERROR: {ex}");
-            throw;
-        }
+        System.Diagnostics.Debug.WriteLine($"[CloudMessage] SEND STATUS: {(int)response.StatusCode} {response.ReasonPhrase}");
     }
 
-    private static string FormatMessageForCloud(CloudMessageType messageType, string username, string message)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            username = string.Empty;
-        }
-
-        switch (messageType)
-        {
-            case CloudMessageType.UserJoined:
-                {
-                    return $"[USER_JOINED] {username}";
-                }
-
-            case CloudMessageType.QuickDoubt:
-                {
-                    return $"[{username}] {message}";
-                }
-
-            default:
-                {
-                    return $"[{username}] {message}";
-                }
-        }
-    }
-
-
-    /// <summary>
-    /// Disconnects cleanly.
-    /// </summary>
     public async Task DisconnectAsync()
     {
-        if (_hubConnection != null)
+        if (_hubConnection == null)
         {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine("[CloudMessage] DISCONNECTING...");
-                await _hubConnection.StopAsync().ConfigureAwait(false);
+            return;
+        }
 
-                System.Diagnostics.Debug.WriteLine("[CloudMessage] DISPOSING...");
-                await _hubConnection.DisposeAsync().ConfigureAwait(false);
-            }
-            catch (OperationCanceledException ex)
+        try
+        {
+            // Leave group first
+            if (!string.IsNullOrEmpty(_currentMeetingId) && !string.IsNullOrEmpty(_currentUsername))
             {
-                System.Diagnostics.Debug.WriteLine($"[CloudMessage] DISCONNECT CANCELED: {ex}");
+                string leaveUrl =
+                    $"{_cloudConfig.LeaveGroupUrl}?meetingId={Uri.EscapeDataString(_currentMeetingId)}&userId={Uri.EscapeDataString(_currentUsername)}";
+
+                await _httpClient.PostAsync(new Uri(leaveUrl), null).ConfigureAwait(false);
             }
-            catch (InvalidOperationException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[CloudMessage] DISCONNECT INVALID OP: {ex}");
-            }
-            catch (HttpRequestException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[CloudMessage] DISCONNECT HTTP ERROR: {ex}");
-            }
-            finally
-            {
-                _hubConnection = null;
-            }
+
+            System.Diagnostics.Debug.WriteLine("[CloudMessage] DISCONNECTING...");
+            await _hubConnection.StopAsync().ConfigureAwait(false);
+
+            System.Diagnostics.Debug.WriteLine("[CloudMessage] DISPOSING...");
+            await _hubConnection.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is OperationCanceledException || ex is InvalidOperationException || ex is HttpRequestException)
+        {
+            System.Diagnostics.Debug.WriteLine($"[CloudMessage] DISCONNECT ERROR: {ex.Message}");
+        }
+        finally
+        {
+            _hubConnection = null;
         }
     }
 
     public void Dispose()
     {
         _httpClient?.Dispose();
-
         _hubConnection?.DisposeAsync().AsTask().Wait();
-
         GC.SuppressFinalize(this);
     }
 
-    #region Private Debug Helpers
-
-    private void RegisterLifecycleDebugEvents()
+    private void RegisterLifecycleEvents()
     {
         if (_hubConnection == null)
         {
@@ -239,9 +193,10 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
             return Task.CompletedTask;
         };
 
-        _hubConnection.Reconnected += (id) => {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] LIFECYCLE: Reconnected. ID={id}");
-            return Task.CompletedTask;
+        _hubConnection.Reconnected += async (connectionId) => {
+            System.Diagnostics.Debug.WriteLine($"[CloudMessage] LIFECYCLE: Reconnected. ID={connectionId}");
+            // Re-join group
+            await JoinGroupAsync(_currentMeetingId, _currentUsername).ConfigureAwait(false);
         };
 
         _hubConnection.Closed += (ex) => {
@@ -250,10 +205,6 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
         };
     }
 
-    #endregion
-
-    #region Message Handlers
-
     private void RegisterMessageHandlers()
     {
         if (_hubConnection == null)
@@ -261,113 +212,24 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
             return;
         }
 
-        // ---- ReceiveDoubt ----
-
-        _hubConnection.On<string>("ReceiveDoubt", (msg) => {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] HDLR ReceiveDoubt(string): {msg}");
-            OnReceiveDoubt(msg);
-        });
-
-        _hubConnection.On<string, string>("ReceiveDoubt", (sender, payload) => {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] HDLR ReceiveDoubt(string,string): sender={sender}, payload={payload}");
-            OnReceiveDoubt($"[{sender}] {payload}");
-        });
-
-        _hubConnection.On<JsonElement>("ReceiveDoubt", (json) => {
-            string raw = json.GetRawText();
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] HDLR ReceiveDoubt(JsonElement): {raw}");
-
-            if (json.ValueKind == JsonValueKind.Object)
-            {
-                if (json.TryGetProperty("sender", out JsonElement s) &&
-                    json.TryGetProperty("message", out JsonElement m))
-                {
-                    OnReceiveDoubt($"[{s.GetString()}] {m.GetString()}");
-                    return;
-                }
-            }
-
-            OnReceiveDoubt(raw);
-        });
-
-        // ---- UserJoined ----
-
-        _hubConnection.On<string>("UserJoined", (msg) => {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] HDLR UserJoined(string): {msg}");
-            OnUserJoined(msg);
-        });
-
-        _hubConnection.On<string, string>("UserJoined", (sender, _) => {
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] HDLR UserJoined(string,string): sender={sender}");
-            OnUserJoined(sender);
-        });
-
-        _hubConnection.On<JsonElement>("UserJoined", (json) => {
-            string raw = json.GetRawText();
-            System.Diagnostics.Debug.WriteLine($"[CloudMessage] HDLR UserJoined(JsonElement): {raw}");
-
-            if (json.ValueKind == JsonValueKind.Object &&
-                json.TryGetProperty("username", out JsonElement u))
-            {
-                OnUserJoined(u.GetString() ?? "");
-            }
-            else
-            {
-                OnUserJoined(raw);
-            }
-        });
-
-        System.Diagnostics.Debug.WriteLine("[CloudMessage] HANDLERS REGISTERED (ReceiveDoubt & UserJoined) with multiple overloads.");
+        _hubConnection.On<string>("ReceiveDoubt", OnReceiveMessage);
     }
 
-    #endregion
-
-    #region Message Parsing Logic
-
-    private void OnReceiveDoubt(string msg)
+    private void OnReceiveMessage(string msg)
     {
-        System.Diagnostics.Debug.WriteLine($"[CloudMessage] RECV DOUBT RAW: {msg}");
+        System.Diagnostics.Debug.WriteLine($"[CloudMessage] RECV RAW: {msg}");
 
         string decoded = System.Net.WebUtility.UrlDecode(msg);
 
-        System.Diagnostics.Debug.WriteLine($"[CloudMessage] RECV DOUBT DECODED: {decoded}");
-
-        if (decoded.StartsWith("[USER_JOINED]", StringComparison.OrdinalIgnoreCase))
-        {
-            string username = decoded.Substring("[USER_JOINED]".Length).Trim();
-
-            if (!string.Equals(username, _currentUsername, StringComparison.OrdinalIgnoreCase))
-            {
-                MessageReceived?.Invoke(this, new CloudMessageEventArgs {
-                    MessageType = CloudMessageType.UserJoined,
-                    SenderName = username,
-                    Message = string.Empty
-                });
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("[CloudMessage] RECV: Skipped own user joined.");
-            }
-
-            return;
-        }
+        System.Diagnostics.Debug.WriteLine($"[CloudMessage] RECV DECODED: {decoded}");
 
         (string sender, string text) = ParseMessageFormat(decoded);
 
+        // Handle Quick Doubt (or other chat messages)
         if (string.Equals(sender, _currentUsername, StringComparison.OrdinalIgnoreCase))
         {
-            System.Diagnostics.Debug.WriteLine("[CloudMessage] RECV: Skipped own doubt.");
+            System.Diagnostics.Debug.WriteLine("[CloudMessage] RECV: Skipped own message.");
             return;
-        }
-
-        if (string.IsNullOrWhiteSpace(sender))
-        {
-            sender = "Unknown";
-        }
-
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            text = "(no message)";
         }
 
         MessageReceived?.Invoke(this, new CloudMessageEventArgs {
@@ -377,86 +239,39 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
         });
     }
 
-    private void OnUserJoined(string msg)
+    private static string FormatMessageForCloud(string username, string message)
     {
-        System.Diagnostics.Debug.WriteLine($"[CloudMessage] RECV USERJOIN RAW: {msg}");
-
-        string decoded = System.Net.WebUtility.UrlDecode(msg);
-        string username = ExtractUsernameFromUserJoined(decoded);
-
-        if (!string.Equals(username, _currentUsername, StringComparison.OrdinalIgnoreCase))
-        {
-            MessageReceived?.Invoke(this, new CloudMessageEventArgs {
-                MessageType = CloudMessageType.UserJoined,
-                SenderName = username,
-                Message = string.Empty
-            });
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine("[CloudMessage] RECV: Skipped own user joined.");
-        }
+        return $"[{username}] {message}";
     }
 
-    private static string ExtractUsernameFromUserJoined(string rawMessage)
+    private static (string sender, string text) ParseMessageFormat(string rawMessage)
     {
-        if (string.IsNullOrWhiteSpace(rawMessage))
-        {
-            return string.Empty;
-        }
-
-        if (rawMessage.StartsWith("[USER_JOINED]", StringComparison.OrdinalIgnoreCase))
-        {
-            return rawMessage.Substring(13).Trim();
-        }
-
         if (rawMessage.StartsWith('['))
         {
-            int i = rawMessage.IndexOf(']', System.StringComparison.Ordinal);
-            if (i > 0)
-            {
-                return rawMessage.Substring(1, i - 1).Trim();
-            }
-        }
-
-        return rawMessage.Trim();
-    }
-
-    private static (string senderName, string message) ParseMessageFormat(string rawMessage)
-    {
-        if (string.IsNullOrWhiteSpace(rawMessage))
-        {
-            return (string.Empty, string.Empty);
-        }
-
-        if (rawMessage.StartsWith('['))
-        {
-            int i = rawMessage.IndexOf(']', System.StringComparison.Ordinal);
+            int i = rawMessage.IndexOf(']', StringComparison.Ordinal);
             if (i > 0)
             {
                 string sender = rawMessage.Substring(1, i - 1).Trim();
-                string msg = rawMessage.Length > i + 1
-                    ? rawMessage.Substring(i + 1).Trim()
-                    : string.Empty;
+                string msg = rawMessage.Length > i + 1 ?
+                    rawMessage.Substring(i + 1).Trim() :
+                    "";
 
                 return (sender, msg);
             }
         }
-
-        return (string.Empty, rawMessage.Trim());
+        return ("", rawMessage);
     }
 
-    private static string? TryGetPropertyString(JsonElement element, params string[] names)
+    private static string? TryGetPropertyString(JsonElement e, params string[] names)
     {
-        foreach (string name in names)
+        foreach (string n in names)
         {
-            if (element.TryGetProperty(name, out JsonElement v))
+            if (e.TryGetProperty(n, out JsonElement v))
             {
                 return v.GetString();
             }
         }
+
         return null;
     }
-
-    #endregion
 }

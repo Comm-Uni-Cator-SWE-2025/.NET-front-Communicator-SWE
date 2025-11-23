@@ -142,6 +142,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         }
 
         // Connect to HandWave and RPC
+        System.Diagnostics.Debug.WriteLine("[MeetingSession] Constructor: Calling InitializeServicesAsync");
         _ = InitializeServicesAsync();
     }
 
@@ -641,17 +642,45 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 
     private bool CanSendQuickDoubt()
     {
-        return !string.IsNullOrWhiteSpace(QuickDoubtMessage) && _cloudMessageService.IsConnected;
+        // Allow command to execute even if disconnected, so we can show an error toast
+        return !string.IsNullOrWhiteSpace(QuickDoubtMessage);
     }
 
     /// <summary>
     /// Sends quick doubt message via cloud messaging service.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We need to log all send errors")]
     private async Task SendQuickDoubtAsync()
     {
+        System.Diagnostics.Debug.WriteLine($"[MeetingSession] SendQuickDoubtAsync called. Message='{QuickDoubtMessage}'");
+
         if (string.IsNullOrWhiteSpace(QuickDoubtMessage))
         {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Message is empty, aborting.");
             return;
+        }
+
+        if (!_cloudMessageService.IsConnected)
+        {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Not connected to cloud service.");
+            _toastService.ShowError("Not connected to chat server. Trying to reconnect...");
+
+            // Try to reconnect
+            try
+            {
+                string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+                string username = _currentUser.DisplayName ?? "Unknown User";
+                await _cloudMessageService.ConnectAsync(meetingId, username).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MeetingSession] Auto-reconnect failed: {ex.Message}");
+            }
+
+            if (!_cloudMessageService.IsConnected)
+            {
+                return;
+            }
         }
 
         try
@@ -661,12 +690,15 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
             QuickDoubtTimestamp = DateTime.Now;
 
             string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+            string username = _currentUser.DisplayName ?? "Unknown User";
+
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Sending QuickDoubt: '{QuickDoubtSentMessage}' to meeting '{meetingId}'");
 
             // Send via cloud message service
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.QuickDoubt,
                 meetingId,
-                _currentUser.DisplayName ?? "Unknown User",
+                username,
                 QuickDoubtSentMessage).ConfigureAwait(true);
 
             // Clear the input field and hide it
@@ -675,15 +707,15 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
             // Note: We don't show the popup for the sender - only others will see it via SignalR
             // Keep the bubble open to show the sent message (no textbox)
         }
-        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] SendQuickDoubtAsync FAILED: {ex}");
             _toastService.ShowError($"Failed to send quick doubt: {ex.Message}");
             // Restore the message if sending failed
             QuickDoubtMessage = QuickDoubtSentMessage;
             QuickDoubtSentMessage = string.Empty;
             QuickDoubtTimestamp = null;
         }
-#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>
@@ -696,31 +728,10 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 
         switch (e.MessageType)
         {
-            case CloudMessageType.UserJoined:
-                HandleUserJoined(e.SenderName);
-                break;
-
             case CloudMessageType.QuickDoubt:
                 HandleQuickDoubt(e.SenderName, e.Message);
                 break;
         }
-    }
-
-    /// <summary>
-    /// Handles user joined notifications by showing a toast.
-    /// </summary>
-    private void HandleUserJoined(string username)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            System.Diagnostics.Debug.WriteLine("[MeetingSession] HandleUserJoined: Username is empty, ignoring");
-            return;
-        }
-
-        System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleUserJoined: Showing toast for '{username}'");
-
-        // Show simple toast notification - no popup
-        _toastService.ShowInfo($"{username} joined!");
     }
 
     /// <summary>
@@ -786,27 +797,42 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Initializes RPC and cloud messaging services.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We need to log all startup errors")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "Logging for debug")]
     private async Task InitializeServicesAsync()
     {
+        Console.WriteLine("[MeetingSession] InitializeServicesAsync: Started");
+        System.Diagnostics.Debug.WriteLine("[MeetingSession] InitializeServicesAsync: Started");
         try
         {
             string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+            string username = _currentUser.DisplayName ?? "Unknown User";
+
+            Console.WriteLine($"[MeetingSession] Connecting to cloud with MeetingId={meetingId}, Username={username}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Connecting to cloud with MeetingId={meetingId}, Username={username}");
 
             // Connect to cloud messaging service
-            await _cloudMessageService.ConnectAsync(meetingId, _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
-            _toastService.ShowSuccess("Connected to cloud messaging service");
+            await _cloudMessageService.ConnectAsync(meetingId, username).ConfigureAwait(true);
 
-            // Notify other participants that this user has joined
-            await _cloudMessageService.SendMessageAsync(
-                CloudMessageType.UserJoined,
-                meetingId,
-                _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
+            if (_cloudMessageService.IsConnected)
+            {
+                Console.WriteLine("[MeetingSession] CloudMessageService connected successfully");
+                System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService connected successfully");
+                _toastService.ShowSuccess("Connected to cloud messaging service");
+            }
+            else
+            {
+                Console.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
+                System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
+                _toastService.ShowError("Cloud service failed to connect (IsConnected=false)");
+            }
         }
-        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
+        catch (Exception ex)
         {
+            Console.WriteLine($"[MeetingSession] InitializeServicesAsync FAILED: {ex}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] InitializeServicesAsync FAILED: {ex}");
             _toastService.ShowError($"Failed to initialize services: {ex.Message}");
         }
-#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>

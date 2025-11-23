@@ -264,7 +264,8 @@
                                          Margin="0,0,0,8"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
                                          CaretBrush="{DynamicResource TextPrimaryBrush}"
-                                         Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=True}">
+                                         Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=True}"
+                                         PreviewKeyDown="QuickDoubtTextBox_PreviewKeyDown">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">
                                             <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>

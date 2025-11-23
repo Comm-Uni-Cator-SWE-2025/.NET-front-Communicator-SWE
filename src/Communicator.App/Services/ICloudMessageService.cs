@@ -14,7 +14,6 @@ namespace Communicator.App.Services;
 /// </summary>
 public enum CloudMessageType
 {
-    UserJoined,
     QuickDoubt
 }
 
