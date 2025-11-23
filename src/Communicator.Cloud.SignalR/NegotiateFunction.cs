@@ -51,11 +51,13 @@ public class NegotiateFunction
 
         // Create HTTP response
         HttpResponseData httpResponse = req.CreateResponse(HttpStatusCode.OK);
-        await httpResponse.WriteAsJsonAsync(new {
-            status = "ok",
-            meetingId,
-            info = "Negotiation successful"
+        await httpResponse.WriteAsJsonAsync(new
+        {
+            url = connectionInfo.Url,
+            accessToken = connectionInfo.AccessToken,
+            meetingId
         });
+
 
         // Group add action
         var groupAddAction = new SignalRGroupAction(SignalRGroupActionType.Add) {
