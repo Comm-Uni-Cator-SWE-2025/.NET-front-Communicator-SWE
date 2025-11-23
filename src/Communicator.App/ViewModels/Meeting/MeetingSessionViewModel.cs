@@ -11,16 +11,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Text;
-using Communicator.Controller.Serialization;
+using Communicator.App.Services;
 using Communicator.Controller.Meeting;
+using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.ScreenShare;
-using Communicator.App.Services;
 using Communicator.UX.Analytics.ViewModels;
 
 namespace Communicator.App.ViewModels.Meeting;
@@ -37,6 +37,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     private readonly ICloudMessageService _cloudMessageService;
     private readonly ICloudConfigService _cloudConfig;
     private readonly INavigationService _navigationService;
+    private readonly IThemeService _themeService;
     private readonly UserProfile _currentUser;
     private MeetingTabViewModel? _currentTab;
     private object? _currentPage;
@@ -80,6 +81,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         ICloudMessageService cloudMessageService,
         ICloudConfigService cloudConfig,
         INavigationService navigationService,
+        IThemeService themeService,
         IRPC? rpc = null,
         IRpcEventService? rpcEventService = null)
     {
@@ -89,6 +91,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         _cloudMessageService = cloudMessageService ?? throw new ArgumentNullException(nameof(cloudMessageService));
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
         _rpc = rpc;
         _rpcEventService = rpcEventService;
 
@@ -99,7 +102,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc, _rpcEventService);
         Chat = new ChatViewModel(_currentUser, _toastService, _rpc, _rpcEventService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
-        AIInsights = new AnalyticsViewModel();
+        AIInsights = new AnalyticsViewModel(_themeService);
 
         // Create toolbar with tabs
         _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs());

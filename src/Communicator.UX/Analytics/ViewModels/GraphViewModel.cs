@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
@@ -55,17 +56,17 @@ public class GraphViewModel : ObservableObject
             new Axis
             {
                 Name = "Time (s)",
-                NamePaint = new SolidColorPaint(SKColors.Black),
-                NameTextSize = 18,
-                TextSize = 14,
+                NamePaint = new SolidColorPaint(SKColors.White),
+                NameTextSize = 14,
+                TextSize = 12,
 
                 // Initial time window
                 MinLimit = 0,
                 MaxLimit = WindowSeconds,
 
-                LabelsPaint = new SolidColorPaint(SKColors.DimGray),
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 TicksPaint = new SolidColorPaint(SKColors.Gray),
-                SeparatorsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(new SKColor(80, 80, 80)),
 
                 // Format numeric labels
                 Labeler = v => v.ToString("0"),
@@ -79,11 +80,45 @@ public class GraphViewModel : ObservableObject
             new Axis
             {
                 Name = "Sentiment",
-                NamePaint = new SolidColorPaint(SKColors.Black),
-                NameTextSize = 18,
-                TextSize = 14
+                NamePaint = new SolidColorPaint(SKColors.White),
+                NameTextSize = 14,
+                TextSize = 12,
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(new SKColor(80, 80, 80))
             }
         };
+        
+        ApplyTheme();
+    }
+
+    public void ApplyTheme()
+    {
+        var textPrimary = GetThemeColor("TextPrimaryColor");
+        var textSecondary = GetThemeColor("TextSecondaryColor");
+        var borderColor = GetThemeColor("BorderColor");
+
+        if (XAxes != null && XAxes.Length > 0)
+        {
+            XAxes[0].NamePaint = new SolidColorPaint(textPrimary);
+            XAxes[0].LabelsPaint = new SolidColorPaint(textSecondary);
+            XAxes[0].SeparatorsPaint = new SolidColorPaint(borderColor);
+        }
+
+        if (YAxes != null && YAxes.Length > 0)
+        {
+            YAxes[0].NamePaint = new SolidColorPaint(textPrimary);
+            YAxes[0].LabelsPaint = new SolidColorPaint(textSecondary);
+            YAxes[0].SeparatorsPaint = new SolidColorPaint(borderColor);
+        }
+    }
+
+    private static SKColor GetThemeColor(string key)
+    {
+        if (Application.Current != null && Application.Current.Resources.Contains(key) && Application.Current.Resources[key] is System.Windows.Media.Color color)
+        {
+            return new SKColor(color.R, color.G, color.B, color.A);
+        }
+        return SKColors.Gray;
     }
 
     /// <summary>

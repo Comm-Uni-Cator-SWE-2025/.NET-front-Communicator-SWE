@@ -5,6 +5,7 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using Communicator.Core.UX;
+using System.Windows;
 
 namespace Communicator.UX.Analytics.ViewModels;
 
@@ -86,7 +87,10 @@ public class CanvasGraphViewModel : ObservableObject
             {
                 Labels = Labels,
                 Name = "Data Snapshot",
-                TextSize = 14
+                TextSize = 12,
+                NameTextSize = 14,
+                NamePaint = new SolidColorPaint(SKColors.White),
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray)
             }
         };
 
@@ -95,9 +99,44 @@ public class CanvasGraphViewModel : ObservableObject
             new Axis
             {
                 Name = "Count",
-                TextSize = 14
+                TextSize = 12,
+                NameTextSize = 14,
+                NamePaint = new SolidColorPaint(SKColors.White),
+                LabelsPaint = new SolidColorPaint(SKColors.LightGray),
+                SeparatorsPaint = new SolidColorPaint(new SKColor(80, 80, 80))
             }
         };
+
+        ApplyTheme();
+    }
+
+    public void ApplyTheme()
+    {
+        var textPrimary = GetThemeColor("TextPrimaryColor");
+        var textSecondary = GetThemeColor("TextSecondaryColor");
+        var borderColor = GetThemeColor("BorderColor");
+
+        if (XAxes != null && XAxes.Length > 0)
+        {
+            XAxes[0].NamePaint = new SolidColorPaint(textPrimary);
+            XAxes[0].LabelsPaint = new SolidColorPaint(textSecondary);
+        }
+
+        if (YAxes != null && YAxes.Length > 0)
+        {
+            YAxes[0].NamePaint = new SolidColorPaint(textPrimary);
+            YAxes[0].LabelsPaint = new SolidColorPaint(textSecondary);
+            YAxes[0].SeparatorsPaint = new SolidColorPaint(borderColor);
+        }
+    }
+
+    private static SKColor GetThemeColor(string key)
+    {
+        if (Application.Current != null && Application.Current.Resources.Contains(key) && Application.Current.Resources[key] is System.Windows.Media.Color color)
+        {
+            return new SKColor(color.R, color.G, color.B, color.A);
+        }
+        return SKColors.Gray;
     }
 
     /// <summary>

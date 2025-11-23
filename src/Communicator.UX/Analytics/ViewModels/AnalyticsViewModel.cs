@@ -3,11 +3,13 @@ using System.Windows;
 using Communicator.UX.Analytics.Models;
 using Communicator.UX.Analytics.Services;
 using Communicator.Core.UX;
+using Communicator.Core.UX.Services;
+using Communicator.Core.UX.Models;
 using Timer = System.Timers.Timer;
 
 namespace Communicator.UX.Analytics.ViewModels;
 
-public class AnalyticsViewModel : ObservableObject
+public class AnalyticsViewModel : ObservableObject, IDisposable
 {
     // 
     // GRAPH MODELS
@@ -24,6 +26,7 @@ public class AnalyticsViewModel : ObservableObject
     private readonly AIMessageService _msgService = new();
     private readonly CanvasDataService _canvasService = new();
     private readonly ScreenShareService _screenService = new();   //s
+    private readonly IThemeService? _themeService;
 
     // 
     // TIMERS
@@ -49,8 +52,15 @@ public class AnalyticsViewModel : ObservableObject
     // 
     // CONSTRUCTOR
     // 
-    public AnalyticsViewModel()
+    public AnalyticsViewModel(IThemeService? themeService = null)
     {
+        _themeService = themeService;
+
+        if (_themeService != null)
+        {
+            _themeService.ThemeChanged += OnThemeChanged;
+        }
+
         // AI Graph Timer (4s)
         _aiTimer = new Timer(4000);
         _aiTimer.Elapsed += async (_, _) => await UpdateAI();
@@ -72,6 +82,40 @@ public class AnalyticsViewModel : ObservableObject
         _screenTimer.Elapsed += async (_, _) => await UpdateScreenShare();
         _screenTimer.Start();
         _ = UpdateScreenShare();
+        
+        // Apply initial theme
+        ApplyTheme();
+    }
+
+    private void OnThemeChanged(object? sender, ThemeChangedEventArgs e)
+    {
+        Application.Current.Dispatcher.Invoke(() => ApplyTheme());
+    }
+
+    public void ApplyTheme()
+    {
+        Graph1_AI.ApplyTheme();
+        Graph2_Canvas.ApplyTheme();
+        Graph3_Msg.ApplyTheme();
+        Graph4_Screen.ApplyTheme();
+    }
+
+    public void Dispose()
+    {
+        if (_themeService != null)
+        {
+            _themeService.ThemeChanged -= OnThemeChanged;
+        }
+        
+        _aiTimer.Stop();
+        _msgTimer.Stop();
+        _canvasTimer.Stop();
+        _screenTimer.Stop();
+        
+        _aiTimer.Dispose();
+        _msgTimer.Dispose();
+        _canvasTimer.Dispose();
+        _screenTimer.Dispose();
     }
 
     // 

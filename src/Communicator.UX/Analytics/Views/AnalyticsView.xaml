@@ -59,7 +59,7 @@
                         Series="{Binding Graph1_AI.Series}"
                         XAxes="{Binding Graph1_AI.XAxes}"
                         YAxes="{Binding Graph1_AI.YAxes}"
-                        ZoomMode="X"/>
+                        ZoomMode="None"/>
                 </Grid>
             </Border>
 
