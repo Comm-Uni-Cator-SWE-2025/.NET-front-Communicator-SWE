@@ -115,7 +115,10 @@ public sealed class HomePageViewModel : ObservableObject
             // Backend returns the meeting ID if successful
             await _rpc.Call("core/joinMeeting", payload).ConfigureAwait(true);
 
-            // 5. Navigate to meeting session
+            // 5. Initialize Canvas (fetch host IP) now that we are joined
+            await meetingVm.InitializeCanvasAsync().ConfigureAwait(true);
+
+            // 6. Navigate to meeting session
             _navigationService.NavigateTo(meetingVm);
 
             _toastService.ShowSuccess($"Joined meeting {meetingId}");
@@ -160,8 +163,14 @@ public sealed class HomePageViewModel : ObservableObject
 
             if (session != null)
             {
-                // 3. Navigate to meeting session
-                _navigationService.NavigateTo(_meetingSessionViewModelFactory(_user, session));
+                // 3. Create ViewModel
+                MeetingSessionViewModel meetingVm = _meetingSessionViewModelFactory(_user, session);
+
+                // 4. Initialize Canvas (if needed)
+                await meetingVm.InitializeCanvasAsync().ConfigureAwait(true);
+
+                // 5. Navigate to meeting session
+                _navigationService.NavigateTo(meetingVm);
                 _toastService.ShowSuccess($"Created meeting {session.MeetingId}");
             }
             else

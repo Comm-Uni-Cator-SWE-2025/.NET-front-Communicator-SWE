@@ -62,24 +62,33 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine("[Client] Requesting host IP from RPC...");
             byte[] response = await _rpc.Call("canvas:getHostIp", Array.Empty<byte>());
-            System.Diagnostics.Debug.WriteLine("Received host IP response from RPC: " + Encoding.UTF8.GetString(response));
+
+            if (response == null || response.Length == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("[Client] Received empty response for host IP.");
+                return;
+            }
+
             string hostString = Encoding.UTF8.GetString(response);
+            System.Diagnostics.Debug.WriteLine("[Client] Received host IP response: " + hostString);
+
             string[] parts = hostString.Split(':');
             if (parts.Length == 2)
             {
                 _hostIp = parts[0];
-                System.Diagnostics.Debug.WriteLine("Parsed host IP: " + _hostIp);
                 if (int.TryParse(parts[1], out int port))
                 {
                     _hostPort = port;
-                    System.Diagnostics.Debug.WriteLine("Parsed host port: " + _hostPort);
+                    System.Diagnostics.Debug.WriteLine($"[Client] Parsed Host: {_hostIp}:{_hostPort}");
                 }
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[Client] Failed to get host IP: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[Client] Failed to get host IP: {ex}");
         }
     }
 

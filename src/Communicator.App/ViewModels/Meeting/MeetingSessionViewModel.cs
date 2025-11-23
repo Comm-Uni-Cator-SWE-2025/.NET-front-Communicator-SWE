@@ -119,9 +119,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         {
             var clientVM = new ClientViewModel(_networking, _rpc!);
             Whiteboard = clientVM;
-            // Initialize client VM after creation (but ideally after joining meeting)
-            // Since we are in MeetingSessionViewModel, we assume we are joining/starting
-            clientVM.Initialize();
+            // Note: clientVM.Initialize() must be called after meeting join is confirmed
         }
 
         AIInsights = new AnalyticsViewModel(_themeService);
@@ -167,6 +165,23 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     }
 
     public Dictionary<string, string> IpToMailMap => _ipToMailMap;
+
+    /// <summary>
+    /// Initializes the Canvas (Whiteboard) if it requires post-join setup.
+    /// Specifically for ClientViewModel which needs to fetch Host IP from backend.
+    /// </summary>
+    public async Task InitializeCanvasAsync()
+    {
+        if (Whiteboard is ClientViewModel clientVM)
+        {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] Initializing Client Canvas...");
+            clientVM.Initialize();
+            // Note: Initialize is async void in ClientViewModel, but we can't await it easily unless we change it to Task.
+            // Ideally ClientViewModel.Initialize should be Task.
+            // For now, we just trigger it.
+        }
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
 
     private void OnLogout(object? sender, RpcStringEventArgs e)
     {
