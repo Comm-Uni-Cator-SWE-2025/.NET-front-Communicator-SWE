@@ -21,6 +21,7 @@ using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.ScreenShare;
 using Communicator.App.Services;
+using Communicator.UX.Analytics.ViewModels;
 
 namespace Communicator.App.ViewModels.Meeting;
 
@@ -98,7 +99,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc, _rpcEventService);
         Chat = new ChatViewModel(_currentUser, _toastService, _rpc, _rpcEventService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
-        AIInsights = new AIInsightsViewModel(_currentUser);
+        AIInsights = new AnalyticsViewModel();
 
         // Create toolbar with tabs
         _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs());
@@ -285,9 +286,9 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     public WhiteboardViewModel Whiteboard { get; }
 
     /// <summary>
-    /// Sub-ViewModel for AI insights functionality.
+    /// Sub-ViewModel for AI insights functionality (Powered by Analytics).
     /// </summary>
-    public AIInsightsViewModel AIInsights { get; }
+    public AnalyticsViewModel AIInsights { get; }
 
     public bool IsMeetingActive
     {
