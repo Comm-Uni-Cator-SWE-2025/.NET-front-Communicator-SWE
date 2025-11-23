@@ -29,7 +29,7 @@ namespace Communicator.App.ViewModels.Meeting;
 /// sub-features (video, screenshare, chat, whiteboard), navigation, and toolbar state.
 /// Merges the functionality of MeetingShellViewModel and MeetingViewModel.
 /// </summary>
-public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisposable
+public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
@@ -37,10 +37,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     private readonly ICloudConfigService _cloudConfig;
     private readonly INavigationService _navigationService;
     private readonly UserProfile _currentUser;
-    private readonly Stack<MeetingTabViewModel> _backStack = new();
-    private readonly Stack<MeetingTabViewModel> _forwardStack = new();
     private MeetingTabViewModel? _currentTab;
-    private bool _suppressSelectionNotifications;
     private object? _currentPage;
 
     // Meeting Session State
@@ -126,8 +123,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
         SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync().ConfigureAwait(true), _ => CanSendQuickDoubt());
         DismissQuickDoubtCommand = new RelayCommand(param => DismissQuickDoubt(param as string));
-
-        RaiseNavigationStateChanged();
 
         // Start the meeting session
         StartMeeting();
@@ -384,57 +379,14 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
     #endregion
 
-    #region Navigation
-
-    public bool CanNavigateBack => _backStack.Count > 0;
-
-    public bool CanNavigateForward => _forwardStack.Count > 0;
-
-    public event EventHandler? NavigationStateChanged;
-
-    public void NavigateBack()
-    {
-        if (!CanNavigateBack || _currentTab == null)
-        {
-            return;
-        }
-
-        MeetingTabViewModel target = _backStack.Pop();
-        _forwardStack.Push(_currentTab);
-        ActivateTabFromHistory(target);
-    }
-
-    public void NavigateForward()
-    {
-        if (!CanNavigateForward || _currentTab == null)
-        {
-            return;
-        }
-
-        MeetingTabViewModel target = _forwardStack.Pop();
-        _backStack.Push(_currentTab);
-        ActivateTabFromHistory(target);
-    }
-
-    private void RaiseNavigationStateChanged()
-    {
-        NavigationStateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
     private void OnSelectedTabChanged(object? sender, TabChangedEventArgs e)
     {
         MeetingTabViewModel? tab = e.Tab;
-        if (_suppressSelectionNotifications || tab == null || tab == _currentTab)
+        if (tab == null || tab == _currentTab)
         {
             return;
         }
 
-        if (_currentTab != null)
-        {
-            _backStack.Push(_currentTab);
-        }
-
-        _forwardStack.Clear();
         ActivateTab(tab);
     }
 
@@ -442,15 +394,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     {
         _currentTab = tab;
         CurrentPage = tab.ContentViewModel;
-        RaiseNavigationStateChanged();
-    }
-
-    private void ActivateTabFromHistory(MeetingTabViewModel tab)
-    {
-        _suppressSelectionNotifications = true;
-        _toolbarViewModel.SelectedTab = tab;
-        _suppressSelectionNotifications = false;
-        ActivateTab(tab);
     }
 
     private IEnumerable<MeetingTabViewModel> CreateTabs()
@@ -459,8 +402,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         yield return new MeetingTabViewModel("Meeting", VideoSession);
         yield return new MeetingTabViewModel("Canvas", Whiteboard);
     }
-
-    #endregion
 
     #region Meeting Management
 
@@ -985,8 +926,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             // Dispose managed resources
             VideoSession.Dispose();
             _toolbarViewModel.SelectedTabChanged -= OnSelectedTabChanged;
-            _backStack.Clear();
-            _forwardStack.Clear();
         }
     }
 

@@ -32,11 +32,6 @@ public interface INavigationService
     bool CanGoBack { get; }
 
     /// <summary>
-    /// Indicates whether the service can navigate forward in its stack.
-    /// </summary>
-    bool CanGoForward { get; }
-
-    /// <summary>
     /// Pushes a new view model onto the navigation stack and activates it immediately.
     /// </summary>
     void NavigateTo(object viewModel);
@@ -45,11 +40,6 @@ public interface INavigationService
     /// Moves to the previous entry in the navigation stack when available.
     /// </summary>
     void GoBack();
-
-    /// <summary>
-    /// Moves to the next entry in the navigation stack when available.
-    /// </summary>
-    void GoForward();
 
     /// <summary>
     /// Clears the navigation history and resets the forward/back stacks.

@@ -166,20 +166,10 @@
                             ToolTip="Go Back"
                             Width="32"
                             Height="32"
-                            Margin="0,0,4,0"
+                            Margin="0,0,16,0"
                             Visibility="{Binding ShowBackButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <icons:Icon IconName="arrow-left" IconSize="16" Foreground="{DynamicResource IconBrush}" />
-                    </Button>
-                    <Button Style="{StaticResource CaptionButtonStyle}"
-                            Command="{Binding GoForwardCommand}"
-                            ToolTip="Go Forward"
-                            Width="32"
-                            Height="32"
-                            Margin="0,0,16,0"
-                            Visibility="{Binding ShowForwardButton, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                        <icons:Icon IconName="arrow-right" IconSize="16" Foreground="{DynamicResource IconBrush}" />
                     </Button>
                     
                     <Grid VerticalAlignment="Center">
