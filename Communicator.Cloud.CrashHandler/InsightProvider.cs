@@ -11,6 +11,24 @@ using System.Threading.Tasks;
 namespace Communicator.Cloud.CrashHandler;
 public class InsightProvider
 {
+    private HttpClient _client;
+
+    private bool _connectionFlag;
+
+    private string _deploymentModel = "gemini-2.5-flash";
+
+    InsightProvider()
+    {
+        try
+        {
+            
+        }
+        catch 
+        {
+            _connectionFlag = false;
+        }
+    }
+
     public string GetInsights(string exceptionPrompt)
     {
         return "Error: unable to connect to model...";
