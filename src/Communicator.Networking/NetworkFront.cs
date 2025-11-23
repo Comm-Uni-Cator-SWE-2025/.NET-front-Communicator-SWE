@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Text;
+using System.Net;
 using Communicator.Core.RPC;
 
 namespace Communicator.Networking;
@@ -28,18 +29,18 @@ public class NetworkFront : IController, INetworking
         int bufferSize = dataLength + destSize + 4 * sizeof(int);
         MemoryStream buffer = new MemoryStream(bufferSize);
         BinaryWriter writer = new BinaryWriter(buffer);
-        writer.Write(dest.Length);
+        writer.Write(IPAddress.HostToNetworkOrder(dest.Length));
         foreach (ClientNode record in dest)
         {
             byte[] hostName = Encoding.UTF8.GetBytes(record.HostName);
             writer.Write((byte)hostName.Length);
             writer.Write(hostName);
-            writer.Write(record.Port);
+            writer.Write(IPAddress.HostToNetworkOrder(record.Port));
         }
-        writer.Write(dataLength);
+        writer.Write(IPAddress.HostToNetworkOrder(dataLength));
         writer.Write(data);
-        writer.Write(module);
-        writer.Write(priority);
+        writer.Write(IPAddress.HostToNetworkOrder(module));
+        writer.Write(IPAddress.HostToNetworkOrder(priority));
         byte[] args = buffer.ToArray();
 
         _moduleRpc.Call("networkRPCSendData", args);
@@ -51,10 +52,10 @@ public class NetworkFront : IController, INetworking
         int bufferSize = dataLength + 3 * sizeof(int);
         MemoryStream buffer = new MemoryStream(bufferSize);
         BinaryWriter writer = new BinaryWriter(buffer);
-        writer.Write(dataLength);
+        writer.Write(IPAddress.HostToNetworkOrder(dataLength));
         writer.Write(data);
-        writer.Write(module);
-        writer.Write(priority);
+        writer.Write(IPAddress.HostToNetworkOrder(module));
+        writer.Write(IPAddress.HostToNetworkOrder(priority));
         byte[] args = buffer.ToArray();
 
         _moduleRpc.Call("networkRPCBroadcast", args);
@@ -96,7 +97,7 @@ public class NetworkFront : IController, INetworking
         int bufferSize = sizeof(int);
         MemoryStream buffer = new MemoryStream(bufferSize);
         BinaryWriter writer = new BinaryWriter(buffer);
-        writer.Write(name);
+        writer.Write(IPAddress.HostToNetworkOrder(name));
         byte[] args = buffer.ToArray();
 
         _moduleRpc.Call("networkRPCRemoveSubscription", args);
@@ -111,11 +112,11 @@ public class NetworkFront : IController, INetworking
         byte[] hostName = Encoding.UTF8.GetBytes(deviceAddress.HostName);
         writer.Write((byte)hostName.Length);
         writer.Write(hostName);
-        writer.Write(deviceAddress.Port);
+        writer.Write(IPAddress.HostToNetworkOrder(deviceAddress.Port));
         hostName = Encoding.UTF8.GetBytes(mainServerAddress.HostName);
         writer.Write((byte)hostName.Length);
         writer.Write(hostName);
-        writer.Write(mainServerAddress.Port);
+        writer.Write(IPAddress.HostToNetworkOrder(mainServerAddress.Port));
         byte[] args = buffer.ToArray();
 
         _moduleRpc.Call("getNetworkRPCAddUser", args);
@@ -128,11 +129,11 @@ public class NetworkFront : IController, INetworking
      */
     public void NetworkFrontCallSubscriber(byte[] data)
     {
-        int dataSize = data.Length - 1;
+        if (data.Length < 4) return;
         MemoryStream buffer = new MemoryStream(data);
         BinaryReader reader = new BinaryReader(buffer);
-        int module = reader.ReadInt32();
-        byte[] newData = new byte[dataSize];
+        int module = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+        byte[] newData = reader.ReadBytes(data.Length - 4);
         IMessageListener function = _listeners.GetValueOrDefault(module);
         function?.ReceiveData(newData);
     }
