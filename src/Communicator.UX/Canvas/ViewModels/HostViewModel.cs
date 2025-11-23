@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 using Communicator.Canvas;
+using Communicator.Core.RPC;
+using Communicator.Networking;
 using Microsoft.Win32;
 namespace Communicator.UX.Canvas.ViewModels;
 using System.IO; // Still keep this
@@ -12,21 +15,23 @@ using Communicator.Cloud.CloudFunction;
 using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
 
-public class HostViewModel : CanvasViewModel
+public class HostViewModel : CanvasViewModel, IMessageListener
 {
-
-    private readonly string _myIp = "127.0.0.1";
-    private readonly List<string> _clientIps = new() { "192.168.1.50" };
+    private readonly INetworking _networking;
     private bool _suppressCommit = false;
     private Timer _autoSaveTimer;
+    private const int CanvasModuleId = 2;
+
     // --- OVERRIDE TO TRUE ---
     public override bool IsHost => true;
     // ------------------------
 
-    public HostViewModel()
+    public HostViewModel(INetworking networking, IRPC rpc) : base(rpc)
     {
+        _networking = networking;
         CurrentUserId = "Host_Admin";
-        NetworkMock.Register(_myIp, ProcessIncomingMessage);
+        
+        _networking.Subscribe(CanvasModuleId, this);
 
         // --- Initialize and Start Auto-Save Timer ---
         // Set interval to 5 minutes
@@ -38,6 +43,13 @@ public class HostViewModel : CanvasViewModel
         // Log startup to text file on Desktop
         LogToDesktop("HostViewModel initialized. Auto-save timer started.");
     }
+
+    public void ReceiveData(byte[] data)
+    {
+        string json = Encoding.UTF8.GetString(data);
+        Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
+    }
+
 
     // --- Helper to verify background tasks without Console ---
     // This creates a text file on your Desktop called "canvas_debug_log.txt"
@@ -200,7 +212,8 @@ public class HostViewModel : CanvasViewModel
             ApplyActionLocally(action);
             var msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            NetworkMock.Broadcast(_clientIps, json);
+            byte[] data = Encoding.UTF8.GetBytes(json);
+            _networking.Broadcast(data, CanvasModuleId, 1);
         }
         else
         {
@@ -221,7 +234,8 @@ public class HostViewModel : CanvasViewModel
             CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
             var msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            NetworkMock.Broadcast(_clientIps, json);
+            byte[] data = Encoding.UTF8.GetBytes(json);
+            _networking.Broadcast(data, CanvasModuleId, 1);
         }
     }
 
@@ -235,7 +249,8 @@ public class HostViewModel : CanvasViewModel
         {
             var msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            NetworkMock.Broadcast(_clientIps, json);
+            byte[] data = Encoding.UTF8.GetBytes(json);
+            _networking.Broadcast(data, CanvasModuleId, 1);
         }
     }
 
@@ -285,7 +300,8 @@ public class HostViewModel : CanvasViewModel
                 string networkJson = CanvasSerializer.SerializeNetworkMessage(msg);
 
                 Console.WriteLine("[Host] Broadcasting RESTORE command...");
-                NetworkMock.Broadcast(_clientIps, networkJson);
+                byte[] data = Encoding.UTF8.GetBytes(networkJson);
+                _networking.Broadcast(data, CanvasModuleId, 1);
             }
             catch (Exception ex)
             {
@@ -318,7 +334,8 @@ public class HostViewModel : CanvasViewModel
                     }
 
                     RaiseRequestRedraw();
-                    NetworkMock.Broadcast(_clientIps, json);
+                    byte[] data = Encoding.UTF8.GetBytes(json);
+                    _networking.Broadcast(data, CanvasModuleId, 1);
                 }
                 else
                 {

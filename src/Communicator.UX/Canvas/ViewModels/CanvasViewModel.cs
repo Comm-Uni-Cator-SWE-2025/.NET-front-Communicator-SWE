@@ -5,7 +5,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Communicator.Canvas;
+using Communicator.Core.RPC;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -18,6 +20,13 @@ namespace Communicator.UX.Canvas.ViewModels;
 /// </summary>
 public class CanvasViewModel : INotifyPropertyChanged
 {
+    protected readonly IRPC _rpc;
+
+    public CanvasViewModel(IRPC rpc)
+    {
+        _rpc = rpc;
+    }
+
     // Implementation of INotifyPropertyChanged for data binding (Observer Pattern)
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -517,7 +526,7 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
     // --- NEW: Regularize Feature ---
-    public void RegularizeSelectedShape()
+    public async void RegularizeSelectedShape()
     {
         if (SelectedShape == null) return;
         CommitModification(); // Ensure any pending edits are saved first
@@ -525,37 +534,54 @@ public class CanvasViewModel : INotifyPropertyChanged
         // 1. Serialize Current Shape
         string inputJson = CanvasSerializer.SerializeShapeManual(SelectedShape);
 
-        // 2. Call the Black Box Function
-        string outputJson = ProcessingService.RegularizeShape(inputJson);
-
-        // 3. Deserialize
-        IShape? regularizedShape = CanvasSerializer.DeserializeShapeManual(outputJson);
-
-        if (regularizedShape != null)
+        try
         {
-            // In case the mock didn't change anything, let's force a visual change (Prototype pattern)
-            // to ensure the user sees something happening in this demo.
-            regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
+            // 2. Call the RPC Function
+            byte[] response = await _rpc.Call("canvas:regularize", Encoding.UTF8.GetBytes(inputJson));
+            string outputJson = Encoding.UTF8.GetString(response);
 
-            // 4. Create Modification Action
-            var action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
+            // 3. Deserialize
+            IShape? regularizedShape = CanvasSerializer.DeserializeShapeManual(outputJson);
 
-            // 5. Process
-            ProcessAction(action);
-            SelectedShape = regularizedShape; // Keep selected
+            if (regularizedShape != null)
+            {
+                // In case the mock didn't change anything, let's force a visual change (Prototype pattern)
+                // to ensure the user sees something happening in this demo.
+                regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
+
+                // 4. Create Modification Action
+                var action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
+
+                // 5. Process
+                ProcessAction(action);
+                SelectedShape = regularizedShape; // Keep selected
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Canvas] Regularize failed: {ex.Message}");
         }
     }
     // -------------------------------
 
     // --- NEW: Analyze Feature ---
     // --- NEW: Analyze Feature ---
-    public void PerformAnalysis(string imagePath)
+    public async void PerformAnalysis(string imagePath)
     {
         // Toggle visibility automatically
         IsAnalysisVisible = true;
         AnalysisResult = "Analyzing...";
-        string result = ProcessingService.AnalyzeCanvasImage(imagePath);
-        AnalysisResult = result;
+        
+        try
+        {
+            byte[] response = await _rpc.Call("canvas:describe", Encoding.UTF8.GetBytes(imagePath));
+            string result = Encoding.UTF8.GetString(response);
+            AnalysisResult = result;
+        }
+        catch (Exception ex)
+        {
+            AnalysisResult = $"Analysis failed: {ex.Message}";
+        }
     }
     // ----------------------------
     // Helper to calculate inverse actions for network transmission

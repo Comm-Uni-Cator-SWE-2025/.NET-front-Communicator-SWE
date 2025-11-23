@@ -1,22 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Communicator.Canvas;
+using Communicator.Core.RPC;
+using Communicator.Networking;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
-public class ClientViewModel : CanvasViewModel
+public class ClientViewModel : CanvasViewModel, IMessageListener
 {
-    private readonly string _myIp = "192.168.1.50";
-    private readonly string _hostIp = "127.0.0.1";
+    private readonly INetworking _networking;
+    private string _hostIp = "";
+    private int _hostPort = 0;
     private bool _suppressCommit = false;
+    private const int CanvasModuleId = 2;
 
-    public ClientViewModel()
+    public ClientViewModel(INetworking networking, IRPC rpc) : base(rpc)
     {
+        _networking = networking;
         CurrentUserId = "Client_" + Guid.NewGuid().ToString().Substring(0, 4);
-        NetworkMock.Register(_myIp, ProcessIncomingMessage);
+        
+        _networking.Subscribe(CanvasModuleId, this);
+        InitializeHostIp();
+    }
+
+    private async void InitializeHostIp()
+    {
+        try
+        {
+            byte[] response = await _rpc.Call("canvas:getHostIp", Array.Empty<byte>());
+            string hostString = Encoding.UTF8.GetString(response);
+            string[] parts = hostString.Split(':');
+            if (parts.Length == 2)
+            {
+                _hostIp = parts[0];
+                if (int.TryParse(parts[1], out int port))
+                {
+                    _hostPort = port;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Client] Failed to get host IP: {ex.Message}");
+        }
+    }
+
+    public void ReceiveData(byte[] data)
+    {
+        string json = Encoding.UTF8.GetString(data);
+        // Marshal to UI thread if necessary, but ViewModels usually handle property changes on UI thread automatically if bound correctly.
+        // However, ReceiveData comes from background thread.
+        System.Windows.Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
     }
 
     public override void CommitModification()
@@ -48,7 +86,14 @@ public class ClientViewModel : CanvasViewModel
 
         var msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
         string json = CanvasSerializer.SerializeNetworkMessage(msg);
-        NetworkMock.SendMessage(_hostIp, json);
+        
+        if (!string.IsNullOrEmpty(_hostIp))
+        {
+            byte[] data = Encoding.UTF8.GetBytes(json);
+            ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
+            _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
+        }
+        
         ShowGhostShape(action);
     }
 
@@ -63,7 +108,13 @@ public class ClientViewModel : CanvasViewModel
             CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
             var msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            NetworkMock.SendMessage(_hostIp, json);
+            
+            if (!string.IsNullOrEmpty(_hostIp))
+            {
+                byte[] data = Encoding.UTF8.GetBytes(json);
+                ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
+                _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
+            }
         }
     }
 
@@ -76,7 +127,13 @@ public class ClientViewModel : CanvasViewModel
         {
             var msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            NetworkMock.SendMessage(_hostIp, json);
+            
+            if (!string.IsNullOrEmpty(_hostIp))
+            {
+                byte[] data = Encoding.UTF8.GetBytes(json);
+                ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
+                _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
+            }
         }
     }
 

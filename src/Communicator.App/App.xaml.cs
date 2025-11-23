@@ -18,6 +18,7 @@ using Communicator.Core.UX.Services;
 using Communicator.App.Services;
 using Communicator.App.ViewModels;
 using Communicator.App.Views;
+using Communicator.Networking;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -48,6 +49,14 @@ public sealed partial class MainApp : Application
         ConfigureServices(services);
         Services = services.BuildServiceProvider();
 
+        // Initialize Networking with RPC Service
+        INetworking networking = Services.GetRequiredService<INetworking>();
+        IRPC rpc = Services.GetRequiredService<IRPC>();
+        if (networking is NetworkFront networkFront)
+        {
+            networkFront.ConsumeRPC(rpc);
+        }
+
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
         themeService.LoadSavedTheme();
@@ -63,7 +72,6 @@ public sealed partial class MainApp : Application
         };
 
         // Subscribe to RPC methods BEFORE starting connection (like Java)
-        IRPC rpc = Services.GetRequiredService<IRPC>();
         IRpcEventService rpcEventService = Services.GetRequiredService<IRpcEventService>();
         SubscribeRpcMethods(rpc, rpcEventService);
 
@@ -346,6 +354,9 @@ public sealed partial class MainApp : Application
 
         // Register RPC Service (for authentication via Controller backend)
         services.AddSingleton<IRPC, RPCService>();
+
+        // Register Networking Services
+        services.AddSingleton<INetworking, NetworkFront>();
 
         // Register ViewModels
         services.AddTransient<MainViewModel>();

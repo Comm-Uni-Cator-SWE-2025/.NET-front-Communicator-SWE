@@ -11,6 +11,8 @@
              xmlns:settingsViews="clr-namespace:Communicator.App.Views.Settings"
              xmlns:analyticsVm="clr-namespace:Communicator.UX.Analytics.ViewModels;assembly=Communicator.UX.Analytics"
              xmlns:analyticsViews="clr-namespace:Communicator.UX.Analytics.Views;assembly=Communicator.UX.Analytics"
+             xmlns:canvasVm="clr-namespace:Communicator.UX.Canvas.ViewModels;assembly=Communicator.UX.Canvas"
+             xmlns:canvasViews="clr-namespace:Communicator.UX.Canvas;assembly=Communicator.UX.Canvas"
              xmlns:converters="clr-namespace:Communicator.Core.UX.Converters;assembly=Communicator.Core">
     <Application.Resources>
         <ResourceDictionary>
@@ -50,8 +52,14 @@
             <DataTemplate DataType="{x:Type meetingVm:ScreenShareViewModel}">
                 <meetingViews:ScreenShareView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type meetingVm:WhiteboardViewModel}">
-                <meetingViews:WhiteboardView />
+            <DataTemplate DataType="{x:Type canvasVm:CanvasViewModel}">
+                <canvasViews:CanvasView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type canvasVm:HostViewModel}">
+                <canvasViews:CanvasView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type canvasVm:ClientViewModel}">
+                <canvasViews:CanvasView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type meetingVm:ChatViewModel}">
                 <meetingViews:ChatView />
