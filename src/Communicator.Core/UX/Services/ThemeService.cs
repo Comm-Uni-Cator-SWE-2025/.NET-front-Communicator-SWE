@@ -75,7 +75,7 @@ public class ThemeService : IThemeService
 
         try
         {
-            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), null);
+            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), default);
             var res = await _cloudLibrary.CloudGetAsync(req);
 
             if (res.Data.ValueKind != JsonValueKind.Undefined && res.Data.ValueKind != JsonValueKind.Null)
@@ -111,8 +111,9 @@ public class ThemeService : IThemeService
         {
             string themeValue = _currentTheme == AppTheme.Dark ? "dark" : "light";
             var data = new { color = themeValue };
+            var jsonData = JsonSerializer.SerializeToElement(data);
 
-            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), data);
+            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), jsonData);
             await _cloudLibrary.CloudPostAsync(req);
             System.Diagnostics.Debug.WriteLine($"Theme saved to cloud: {themeValue}");
         }
