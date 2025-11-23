@@ -117,7 +117,11 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         }
         else
         {
-            Whiteboard = new ClientViewModel(_networking, _rpc!);
+            var clientVM = new ClientViewModel(_networking, _rpc!);
+            Whiteboard = clientVM;
+            // Initialize client VM after creation (but ideally after joining meeting)
+            // Since we are in MeetingSessionViewModel, we assume we are joining/starting
+            clientVM.Initialize();
         }
 
         AIInsights = new AnalyticsViewModel(_themeService);

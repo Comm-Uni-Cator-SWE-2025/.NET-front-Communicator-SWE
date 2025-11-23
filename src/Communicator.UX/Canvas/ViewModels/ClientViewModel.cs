@@ -51,22 +51,29 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         CurrentUserId = "Client_" + Guid.NewGuid().ToString().Substring(0, 4);
 
         _networking.Subscribe(CanvasModuleId, this);
-        InitializeHostIp();
     }
 
-    private async void InitializeHostIp()
+    public async void Initialize()
+    {
+        await InitializeHostIp();
+    }
+
+    private async Task InitializeHostIp()
     {
         try
         {
             byte[] response = await _rpc.Call("canvas:getHostIp", Array.Empty<byte>());
+            System.Diagnostics.Debug.WriteLine("Received host IP response from RPC: " + Encoding.UTF8.GetString(response));
             string hostString = Encoding.UTF8.GetString(response);
             string[] parts = hostString.Split(':');
             if (parts.Length == 2)
             {
                 _hostIp = parts[0];
+                System.Diagnostics.Debug.WriteLine("Parsed host IP: " + _hostIp);
                 if (int.TryParse(parts[1], out int port))
                 {
                     _hostPort = port;
+                    System.Diagnostics.Debug.WriteLine("Parsed host port: " + _hostPort);
                 }
             }
         }
