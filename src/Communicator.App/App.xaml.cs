@@ -55,6 +55,7 @@ public sealed partial class MainApp : Application
         // Subscribe to UserLoggedIn to sync theme with cloud
         IAuthenticationService authService = Services.GetRequiredService<IAuthenticationService>();
         authService.UserLoggedIn += (s, args) => {
+            Console.WriteLine($"[App] UserLoggedIn event fired for: {args.User?.Email}");
             if (args.User != null && !string.IsNullOrEmpty(args.User.Email))
             {
                 themeService.SetUser(args.User.Email);
