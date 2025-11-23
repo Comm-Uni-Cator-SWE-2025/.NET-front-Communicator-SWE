@@ -38,6 +38,9 @@ public sealed partial class MainApp : Application
     {
         ArgumentNullException.ThrowIfNull(e);
 
+        // Load environment variables from .env file
+        DotNetEnv.Env.TraversePath().Load();
+
         base.OnStartup(e);
 
         // Configure Dependency Injection
@@ -48,6 +51,16 @@ public sealed partial class MainApp : Application
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
         themeService.LoadSavedTheme();
+
+        // Subscribe to UserLoggedIn to sync theme with cloud
+        IAuthenticationService authService = Services.GetRequiredService<IAuthenticationService>();
+        authService.UserLoggedIn += (s, args) => {
+            Console.WriteLine($"[App] UserLoggedIn event fired for: {args.User?.Email}");
+            if (args.User != null && !string.IsNullOrEmpty(args.User.Email))
+            {
+                themeService.SetUser(args.User.Email);
+            }
+        };
 
         // Subscribe to RPC methods BEFORE starting connection (like Java)
         IRPC rpc = Services.GetRequiredService<IRPC>();
@@ -68,29 +81,14 @@ public sealed partial class MainApp : Application
     {
         System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
 
-        // Subscribe to "subscribeAsViewer" - called when a new participant joins
-        // Matches Java: rpc.subscribe(Utils.SUBSCRIBE_AS_VIEWER, ...)
-        rpc.Subscribe("subscribeAsViewer", (byte[] data) => {
-            try
-            {
-                string viewerIP = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] New viewer subscribed: {viewerIP}");
 
-                rpcEventService.TriggerParticipantJoined(viewerIP);
-
-                return Array.Empty<byte>();
-            }
-            catch (ArgumentException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in subscribeAsViewer: {ex.Message}");
-                return Array.Empty<byte>();
-            }
-        });
 
         // Subscribe to UPDATE_UI to receive video/screen frames
-        rpc.Subscribe(Communicator.ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
+        rpc.Subscribe(ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
             try
             {
+                Console.WriteLine($"[App] UPDATE_UI Received UPDATE_UI with {data.Length} bytes");
+                System.Diagnostics.Debug.WriteLine("UPDATE UI : Triggering FrameReceived event");
                 rpcEventService.TriggerFrameReceived(data);
             }
             catch (ArgumentException ex)
@@ -101,7 +99,7 @@ public sealed partial class MainApp : Application
         });
 
         // Subscribe to STOP_SHARE to clear screen frames
-        rpc.Subscribe(Communicator.ScreenShare.Utils.STOP_SHARE, (byte[] data) => {
+        rpc.Subscribe(ScreenShare.Utils.STOP_SHARE, (byte[] data) => {
             try
             {
                 rpcEventService.TriggerStopShareReceived(data);
@@ -113,8 +111,8 @@ public sealed partial class MainApp : Application
             return Array.Empty<byte>();
         });
 
-        // Subscribe to "core/setIpToMailMap" - called when participant list updates
-        rpc.Subscribe("core/setIpToMailMap", (byte[] data) => {
+        // Subscribe to "core/updateParticipants" - called when participant list updates
+        rpc.Subscribe("core/updateParticipants", (byte[] data) => {
             try
             {
                 string json = System.Text.Encoding.UTF8.GetString(data);
@@ -126,33 +124,49 @@ public sealed partial class MainApp : Application
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/setIpToMailMap: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/updateParticipants: {ex.Message}");
                 return Array.Empty<byte>();
             }
             catch (System.Text.Json.JsonException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/setIpToMailMap: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/updateParticipants: {ex.Message}");
                 return Array.Empty<byte>();
             }
         });
 
-        // Subscribe to "unSubscribeAsViewer" - called when a participant leaves
-        rpc.Subscribe("unSubscribeAsViewer", (byte[] data) => {
+        // Subscribe to "core/logout"
+        rpc.Subscribe("core/logout", (byte[] data) => {
             try
             {
-                string viewerIP = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] Viewer left: {viewerIP}");
-
-                rpcEventService.TriggerParticipantLeft(viewerIP);
-
+                string message = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] Logout received: {message}");
+                rpcEventService.TriggerLogout(message);
                 return Array.Empty<byte>();
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in unSubscribeAsViewer: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/logout: {ex.Message}");
                 return Array.Empty<byte>();
             }
         });
+
+        // Subscribe to "core/endMeeting"
+        rpc.Subscribe("core/endMeeting", (byte[] data) => {
+            try
+            {
+                string message = System.Text.Encoding.UTF8.GetString(data);
+                System.Diagnostics.Debug.WriteLine($"[App] EndMeeting received: {message}");
+                rpcEventService.TriggerEndMeeting(message);
+                return Array.Empty<byte>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in core/endMeeting: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        });
+
+
 
         // --- Chat Subscriptions ---
 

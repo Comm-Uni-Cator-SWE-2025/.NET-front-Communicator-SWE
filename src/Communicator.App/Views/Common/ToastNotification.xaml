@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="Communicator.App.Views.ToastNotification" x:ClassModifier="public"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
              x:Name="ToastRoot"
              Width="380"
              Loaded="OnLoaded">
@@ -51,10 +52,9 @@
             </Grid.ColumnDefinitions>
 
             <!-- Icon -->
-            <TextBlock x:Name="IconText"
+            <icons:Icon x:Name="ToastIcon"
                        Grid.Column="0"
-                       FontFamily="Segoe MDL2 Assets"
-                       FontSize="20"
+                       IconSize="20"
                        Foreground="White"
                        VerticalAlignment="Center"
                        Margin="0,0,12,0"/>
@@ -72,9 +72,6 @@
             <!-- Close Button -->
             <Button x:Name="CloseButton"
                     Grid.Column="2"
-                    Content="&#xE711;"
-                    FontFamily="Segoe MDL2 Assets"
-                    FontSize="12"
                     Width="24"
                     Height="24"
                     Margin="12,0,0,0"
@@ -84,6 +81,7 @@
                     Cursor="Hand"
                     Click="CloseButton_Click"
                     VerticalAlignment="Center">
+                <icons:Icon IconName="x" IconSize="14" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Background" Value="Transparent"/>

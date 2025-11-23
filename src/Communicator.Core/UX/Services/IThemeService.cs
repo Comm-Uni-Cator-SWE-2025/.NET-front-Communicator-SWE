@@ -41,5 +41,11 @@ public interface IThemeService
     /// Saves the current theme preference to user settings.
     /// </summary>
     void SaveThemePreference();
+
+    /// <summary>
+    /// Sets the current user for cloud theme synchronization.
+    /// </summary>
+    /// <param name="username">The username (email) of the logged-in user.</param>
+    void SetUser(string? username);
 }
 

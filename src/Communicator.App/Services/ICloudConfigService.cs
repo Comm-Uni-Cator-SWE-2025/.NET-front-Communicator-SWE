@@ -23,5 +23,15 @@ public interface ICloudConfigService
     /// Gets the message broadcast endpoint URL.
     /// </summary>
     Uri MessageUrl { get; }
+
+    /// <summary>
+    /// Gets the join group endpoint URL.
+    /// </summary>
+    Uri JoinGroupUrl { get; }
+
+    /// <summary>
+    /// Gets the leave group endpoint URL.
+    /// </summary>
+    Uri LeaveGroupUrl { get; }
 }
 

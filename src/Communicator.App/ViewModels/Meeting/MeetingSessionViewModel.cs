@@ -11,16 +11,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Text;
-using Communicator.Controller.Serialization;
+using Communicator.App.Services;
 using Communicator.Controller.Meeting;
+using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
 using Communicator.ScreenShare;
-using Communicator.App.Services;
+using Communicator.UX.Analytics.ViewModels;
 
 namespace Communicator.App.ViewModels.Meeting;
 
@@ -29,19 +30,19 @@ namespace Communicator.App.ViewModels.Meeting;
 /// sub-features (video, screenshare, chat, whiteboard), navigation, and toolbar state.
 /// Merges the functionality of MeetingShellViewModel and MeetingViewModel.
 /// </summary>
-public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope, IDisposable
+public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 {
     private readonly MeetingToolbarViewModel _toolbarViewModel;
     private readonly IToastService _toastService;
     private readonly ICloudMessageService _cloudMessageService;
     private readonly ICloudConfigService _cloudConfig;
     private readonly INavigationService _navigationService;
+    private readonly IThemeService _themeService;
     private readonly UserProfile _currentUser;
-    private readonly Stack<MeetingTabViewModel> _backStack = new();
-    private readonly Stack<MeetingTabViewModel> _forwardStack = new();
     private MeetingTabViewModel? _currentTab;
-    private bool _suppressSelectionNotifications;
     private object? _currentPage;
+
+    private Dictionary<string, string> _ipToMailMap = new Dictionary<string, string>();
 
     // Meeting Session State
     private MeetingSession? _currentMeeting;
@@ -82,6 +83,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         ICloudMessageService cloudMessageService,
         ICloudConfigService cloudConfig,
         INavigationService navigationService,
+        IThemeService themeService,
         IRPC? rpc = null,
         IRpcEventService? rpcEventService = null)
     {
@@ -91,6 +93,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         _cloudMessageService = cloudMessageService ?? throw new ArgumentNullException(nameof(cloudMessageService));
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
         _rpc = rpc;
         _rpcEventService = rpcEventService;
 
@@ -98,10 +101,10 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         Participants = new ObservableCollection<ParticipantViewModel>();
 
         // Create sub-ViewModels with shared participant collection
-        VideoSession = new VideoSessionViewModel(_currentUser, Participants, _rpc, _rpcEventService);
+        VideoSession = new VideoSessionViewModel(_currentUser, Participants, this, _rpc, _rpcEventService);
         Chat = new ChatViewModel(_currentUser, _toastService, _rpc, _rpcEventService);
         Whiteboard = new WhiteboardViewModel(_currentUser);
-        AIInsights = new AIInsightsViewModel(_currentUser);
+        AIInsights = new AnalyticsViewModel(_themeService);
 
         // Create toolbar with tabs
         _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs());
@@ -127,45 +130,37 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync().ConfigureAwait(true), _ => CanSendQuickDoubt());
         DismissQuickDoubtCommand = new RelayCommand(param => DismissQuickDoubt(param as string));
 
-        RaiseNavigationStateChanged();
-
         // Start the meeting session
         StartMeeting();
 
         // Subscribe to RPC events via service (avoids late subscription error)
         if (_rpcEventService != null)
         {
-            _rpcEventService.ParticipantJoined += OnParticipantJoined;
-            _rpcEventService.ParticipantLeft += OnParticipantLeft;
             _rpcEventService.ParticipantsListUpdated += OnParticipantsListUpdated;
+            _rpcEventService.Logout += OnLogout;
+            _rpcEventService.EndMeeting += OnEndMeeting;
         }
 
         // Connect to HandWave and RPC
+        System.Diagnostics.Debug.WriteLine("[MeetingSession] Constructor: Calling InitializeServicesAsync");
         _ = InitializeServicesAsync();
     }
 
-    private void OnParticipantJoined(object? sender, RpcStringEventArgs e)
-    {
-        string viewerIP = e.Value;
-        UserProfile newUser = new(
-            email: $"{viewerIP}@example.com",
-            displayName: viewerIP,
-            role: ParticipantRole.STUDENT,
-            logoUrl: null
-        );
+    public Dictionary<string, string> IpToMailMap => _ipToMailMap;
 
-        // Update collection on UI thread
-        System.Windows.Application.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
+    private void OnLogout(object? sender, RpcStringEventArgs e)
+    {
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+            _toastService.ShowInfo($"Logged out: {e.Value}");
+            await CleanupAndNavigateBackAsync().ConfigureAwait(false);
+        });
     }
 
-    private void OnParticipantLeft(object? sender, RpcStringEventArgs e)
+    private void OnEndMeeting(object? sender, RpcStringEventArgs e)
     {
-        string viewerIP = e.Value;
-        // Update collection on UI thread
-        System.Windows.Application.Current.Dispatcher.Invoke(() => {
-            // Find participant by email (which we constructed as IP@example.com)
-            string email = $"{viewerIP}@example.com";
-            RemoveParticipant(email);
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+            _toastService.ShowInfo($"Meeting ended: {e.Value}");
+            await CleanupAndNavigateBackAsync().ConfigureAwait(false);
         });
     }
 
@@ -175,10 +170,12 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         try
         {
             // Deserialize the list of participants
-            // Expected format: {"ip": "email", ...} (Map<String, String> from Java)
-            Dictionary<string, string>? ipToMailMap = DataSerializer.Deserialize<Dictionary<string, string>>(Encoding.UTF8.GetBytes(participantsJson));
+            // Expected format: {"host:port": {"email": "...", "displayName": "...", "role": "..."}}
+            // Map<String, UserProfile> from Java (Key is "IP:Port")
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] ParticipantsListUpdated JSON: {participantsJson}");
+            Dictionary<string, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<string, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
 
-            if (ipToMailMap == null)
+            if (nodeToProfileMap == null)
             {
                 return;
             }
@@ -186,43 +183,42 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             System.Windows.Application.Current.Dispatcher.Invoke(() => {
                 // Sync our list with the backend list
 
-                // 1. Add new participants
-                foreach (KeyValuePair<string, string> kvp in ipToMailMap)
+                // 1. Add new participants or update existing ones
+                foreach (KeyValuePair<string, UserProfile> kvp in nodeToProfileMap)
                 {
-                    string ip = kvp.Key;
-                    string email = kvp.Value;
-
-                    // Handle Java ClientNode.toString() format: ClientNode[hostName=127.0.0.1, port=6945]
-                    if (ip.StartsWith("ClientNode[", StringComparison.Ordinal) && ip.Contains("hostName=", StringComparison.Ordinal))
+                    UserProfile profile = kvp.Value;
+                    string ipPort = kvp.Key;
+                    string ip = ipPort;
+                    int colonIndex = ipPort.IndexOf(':', StringComparison.Ordinal);
+                    if (colonIndex >= 0)
                     {
-                        int start = ip.IndexOf("hostName=", StringComparison.Ordinal) + 9;
-                        int end = ip.IndexOf(',', start);
-                        if (end == -1)
-                        {
-                            end = ip.IndexOf(']', start);
-                        }
-
-                        if (start > 8 && end > start)
-                        {
-                            ip = ip.Substring(start, end - start);
-                        }
+                        ip = ipPort.Substring(0, colonIndex);
                     }
 
-                    // Check if we already have this participant
-                    if (!Participants.Any(existing => existing.User.Email == email))
+                    _ipToMailMap[ip] = profile.Email ?? "";
+                    // Check if we already have this participant by Email
+                    ParticipantViewModel? existingParticipant = Participants.FirstOrDefault(p => p.User.Email == profile.Email);
+                    if (existingParticipant == null)
                     {
-                        UserProfile newUser = new(
-                            email: email,
-                            displayName: email,
-                            role: ParticipantRole.STUDENT,
-                            logoUrl: null
-                        );
-                        AddParticipant(newUser);
+                        // Ensure role is set if missing (default to STUDENT)
+                        if (profile.Role == 0) // Assuming 0 is default/unknown
+                        {
+                            profile.Role = ParticipantRole.STUDENT;
+                        }
+                        AddParticipant(profile);
+                    }
+                    else
+                    {
+                        // Update display name if changed
+                        if (existingParticipant.User.DisplayName != profile.DisplayName)
+                        {
+                            existingParticipant.User.DisplayName = profile.DisplayName;
+                        }
                     }
                 }
 
                 // 2. Remove participants not in the list (except self)
-                var emailsInBackend = new HashSet<string>(ipToMailMap.Values);
+                var emailsInBackend = new HashSet<string>(nodeToProfileMap.Values.Select(p => p.Email).Where(e => e != null)!);
 
                 // Don't remove ourselves
                 if (_currentUser.Email != null)
@@ -280,9 +276,9 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     public WhiteboardViewModel Whiteboard { get; }
 
     /// <summary>
-    /// Sub-ViewModel for AI insights functionality.
+    /// Sub-ViewModel for AI insights functionality (Powered by Analytics).
     /// </summary>
-    public AIInsightsViewModel AIInsights { get; }
+    public AnalyticsViewModel AIInsights { get; }
 
     public bool IsMeetingActive
     {
@@ -374,57 +370,14 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
     #endregion
 
-    #region Navigation
-
-    public bool CanNavigateBack => _backStack.Count > 0;
-
-    public bool CanNavigateForward => _forwardStack.Count > 0;
-
-    public event EventHandler? NavigationStateChanged;
-
-    public void NavigateBack()
-    {
-        if (!CanNavigateBack || _currentTab == null)
-        {
-            return;
-        }
-
-        MeetingTabViewModel target = _backStack.Pop();
-        _forwardStack.Push(_currentTab);
-        ActivateTabFromHistory(target);
-    }
-
-    public void NavigateForward()
-    {
-        if (!CanNavigateForward || _currentTab == null)
-        {
-            return;
-        }
-
-        MeetingTabViewModel target = _forwardStack.Pop();
-        _backStack.Push(_currentTab);
-        ActivateTabFromHistory(target);
-    }
-
-    private void RaiseNavigationStateChanged()
-    {
-        NavigationStateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
     private void OnSelectedTabChanged(object? sender, TabChangedEventArgs e)
     {
         MeetingTabViewModel? tab = e.Tab;
-        if (_suppressSelectionNotifications || tab == null || tab == _currentTab)
+        if (tab == null || tab == _currentTab)
         {
             return;
         }
 
-        if (_currentTab != null)
-        {
-            _backStack.Push(_currentTab);
-        }
-
-        _forwardStack.Clear();
         ActivateTab(tab);
     }
 
@@ -432,15 +385,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     {
         _currentTab = tab;
         CurrentPage = tab.ContentViewModel;
-        RaiseNavigationStateChanged();
-    }
-
-    private void ActivateTabFromHistory(MeetingTabViewModel tab)
-    {
-        _suppressSelectionNotifications = true;
-        _toolbarViewModel.SelectedTab = tab;
-        _suppressSelectionNotifications = false;
-        ActivateTab(tab);
     }
 
     private IEnumerable<MeetingTabViewModel> CreateTabs()
@@ -449,8 +393,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
         yield return new MeetingTabViewModel("Meeting", VideoSession);
         yield return new MeetingTabViewModel("Canvas", Whiteboard);
     }
-
-    #endregion
 
     #region Meeting Management
 
@@ -470,6 +412,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
             // Add current user to participants list if not already there
             AddParticipant(_currentUser);
+            _ipToMailMap[Utils.GetSelfIP() ?? ""] = _currentUser.Email ?? "";
 
             // Add existing participants from the session (if any)
             foreach (UserProfile participant in _currentMeeting.Participants.Values)
@@ -699,17 +642,45 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
     private bool CanSendQuickDoubt()
     {
-        return !string.IsNullOrWhiteSpace(QuickDoubtMessage) && _cloudMessageService.IsConnected;
+        // Allow command to execute even if disconnected, so we can show an error toast
+        return !string.IsNullOrWhiteSpace(QuickDoubtMessage);
     }
 
     /// <summary>
     /// Sends quick doubt message via cloud messaging service.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We need to log all send errors")]
     private async Task SendQuickDoubtAsync()
     {
+        System.Diagnostics.Debug.WriteLine($"[MeetingSession] SendQuickDoubtAsync called. Message='{QuickDoubtMessage}'");
+
         if (string.IsNullOrWhiteSpace(QuickDoubtMessage))
         {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Message is empty, aborting.");
             return;
+        }
+
+        if (!_cloudMessageService.IsConnected)
+        {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Not connected to cloud service.");
+            _toastService.ShowError("Not connected to chat server. Trying to reconnect...");
+
+            // Try to reconnect
+            try
+            {
+                string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+                string username = _currentUser.DisplayName ?? "Unknown User";
+                await _cloudMessageService.ConnectAsync(meetingId, username).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MeetingSession] Auto-reconnect failed: {ex.Message}");
+            }
+
+            if (!_cloudMessageService.IsConnected)
+            {
+                return;
+            }
         }
 
         try
@@ -718,10 +689,16 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             QuickDoubtSentMessage = QuickDoubtMessage.Trim();
             QuickDoubtTimestamp = DateTime.Now;
 
+            string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+            string username = _currentUser.DisplayName ?? "Unknown User";
+
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Sending QuickDoubt: '{QuickDoubtSentMessage}' to meeting '{meetingId}'");
+
             // Send via cloud message service
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.QuickDoubt,
-                _currentUser.DisplayName ?? "Unknown User",
+                meetingId,
+                username,
                 QuickDoubtSentMessage).ConfigureAwait(true);
 
             // Clear the input field and hide it
@@ -730,15 +707,15 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             // Note: We don't show the popup for the sender - only others will see it via SignalR
             // Keep the bubble open to show the sent message (no textbox)
         }
-        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] SendQuickDoubtAsync FAILED: {ex}");
             _toastService.ShowError($"Failed to send quick doubt: {ex.Message}");
             // Restore the message if sending failed
             QuickDoubtMessage = QuickDoubtSentMessage;
             QuickDoubtSentMessage = string.Empty;
             QuickDoubtTimestamp = null;
         }
-#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>
@@ -751,31 +728,10 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
 
         switch (e.MessageType)
         {
-            case CloudMessageType.UserJoined:
-                HandleUserJoined(e.SenderName);
-                break;
-
             case CloudMessageType.QuickDoubt:
                 HandleQuickDoubt(e.SenderName, e.Message);
                 break;
         }
-    }
-
-    /// <summary>
-    /// Handles user joined notifications by showing a toast.
-    /// </summary>
-    private void HandleUserJoined(string username)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            System.Diagnostics.Debug.WriteLine("[MeetingSession] HandleUserJoined: Username is empty, ignoring");
-            return;
-        }
-
-        System.Diagnostics.Debug.WriteLine($"[MeetingSession] HandleUserJoined: Showing toast for '{username}'");
-
-        // Show simple toast notification - no popup
-        _toastService.ShowInfo($"{username} joined!");
     }
 
     /// <summary>
@@ -841,24 +797,42 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
     /// <summary>
     /// Initializes RPC and cloud messaging services.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We need to log all startup errors")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "Logging for debug")]
     private async Task InitializeServicesAsync()
     {
+        Console.WriteLine("[MeetingSession] InitializeServicesAsync: Started");
+        System.Diagnostics.Debug.WriteLine("[MeetingSession] InitializeServicesAsync: Started");
         try
         {
-            // Connect to cloud messaging service
-            await _cloudMessageService.ConnectAsync(_currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
-            _toastService.ShowSuccess("Connected to cloud messaging service");
+            string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+            string username = _currentUser.DisplayName ?? "Unknown User";
 
-            // Notify other participants that this user has joined
-            await _cloudMessageService.SendMessageAsync(
-                CloudMessageType.UserJoined,
-                _currentUser.DisplayName ?? "Unknown User").ConfigureAwait(true);
+            Console.WriteLine($"[MeetingSession] Connecting to cloud with MeetingId={meetingId}, Username={username}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Connecting to cloud with MeetingId={meetingId}, Username={username}");
+
+            // Connect to cloud messaging service
+            await _cloudMessageService.ConnectAsync(meetingId, username).ConfigureAwait(true);
+
+            if (_cloudMessageService.IsConnected)
+            {
+                Console.WriteLine("[MeetingSession] CloudMessageService connected successfully");
+                System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService connected successfully");
+                _toastService.ShowSuccess("Connected to cloud messaging service");
+            }
+            else
+            {
+                Console.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
+                System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
+                _toastService.ShowError("Cloud service failed to connect (IsConnected=false)");
+            }
         }
-        catch (Exception ex) when (ex is InvalidOperationException || ex is System.Net.Http.HttpRequestException)
+        catch (Exception ex)
         {
+            Console.WriteLine($"[MeetingSession] InitializeServicesAsync FAILED: {ex}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] InitializeServicesAsync FAILED: {ex}");
             _toastService.ShowError($"Failed to initialize services: {ex.Message}");
         }
-#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>
@@ -953,7 +927,9 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             // Unsubscribe from RPC events
             if (_rpcEventService != null)
             {
-                _rpcEventService.ParticipantJoined -= OnParticipantJoined;
+                _rpcEventService.ParticipantsListUpdated -= OnParticipantsListUpdated;
+                _rpcEventService.Logout -= OnLogout;
+                _rpcEventService.EndMeeting -= OnEndMeeting;
             }
 
             // Unsubscribe from cloud message events
@@ -965,8 +941,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, INavigationScope
             // Dispose managed resources
             VideoSession.Dispose();
             _toolbarViewModel.SelectedTabChanged -= OnSelectedTabChanged;
-            _backStack.Clear();
-            _forwardStack.Clear();
         }
     }
 

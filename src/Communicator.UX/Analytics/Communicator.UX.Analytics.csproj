@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc2" />
+    <ProjectReference Include="..\..\Communicator.Core\Communicator.Core.csproj" />
+    <ProjectReference Include="..\..\Communicator.Icons\Communicator.Icons.csproj" />
+  </ItemGroup>
+</Project>

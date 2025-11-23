@@ -61,8 +61,7 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public bool IsMeetingActive => MeetingToolbar != null;
-    public bool ShowBackButton => IsMeetingActive || _navigationService.CanGoBack;
-    public bool ShowForwardButton => IsMeetingActive;
+    public bool ShowBackButton => !IsMeetingActive && _navigationService.CanGoBack;
 
     // Simplified: User info now comes from AuthenticationService
     public string? CurrentUserName => _authenticationService.CurrentUser?.DisplayName;
@@ -75,15 +74,12 @@ public sealed class MainViewModel : ObservableObject
 
     private INavigationScope? _navigationScope;
     private readonly RelayCommand _goBackCommand;
-    private readonly RelayCommand _goForwardCommand;
 
     public ICommand LogoutCommand { get; }
     public ICommand NavigateToSettingsCommand { get; }
     public ICommand GoBackCommand { get; }
-    public ICommand GoForwardCommand { get; }
 
     public bool CanGoBack => _navigationScope != null ? _navigationScope.CanNavigateBack : _navigationService.CanGoBack;
-    public bool CanGoForward => _navigationScope != null ? _navigationScope.CanNavigateForward : _navigationService.CanGoForward;
 
     /// <summary>
     /// Initializes commands, creates the initial authentication view, and subscribes to navigation events.
@@ -114,23 +110,21 @@ public sealed class MainViewModel : ObservableObject
             }
         };
 
+        // Subscribe to authentication events
+        _authenticationService.UserLoggedOut += OnUserLoggedOut;
+
         _authViewModel = CreateAuthViewModel();
         LogoutCommand = new RelayCommand(Logout);
         NavigateToSettingsCommand = new RelayCommand(NavigateToSettings);
         _goBackCommand = new RelayCommand(_ => GoBack(), _ => CanGoBack);
-        _goForwardCommand = new RelayCommand(_ => GoForward(), _ => CanGoForward);
         GoBackCommand = _goBackCommand;
-        GoForwardCommand = _goForwardCommand;
 
         // Subscribe to navigation changes
         _navigationService.NavigationChanged += (s, e) => {
             CurrentView = _navigationService.CurrentView;
             OnPropertyChanged(nameof(CanGoBack));
-            OnPropertyChanged(nameof(CanGoForward));
             OnPropertyChanged(nameof(ShowBackButton));
-            OnPropertyChanged(nameof(ShowForwardButton));
             _goBackCommand.RaiseCanExecuteChanged();
-            _goForwardCommand.RaiseCanExecuteChanged();
         };
 
         CurrentView = _authViewModel;
@@ -205,49 +199,41 @@ public sealed class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Executes forward navigation against the active scope or the global navigation service.
-    /// </summary>
-    private void GoForward()
-    {
-        if (_navigationScope != null)
-        {
-            if (_navigationScope.CanNavigateForward)
-            {
-                _navigationScope.NavigateForward();
-            }
-            return;
-        }
-
-        if (_navigationService.CanGoForward)
-        {
-            _navigationService.GoForward();
-        }
-    }
-
-    /// <summary>
     /// Clears shell state and returns to the authentication view.
     /// Uses AuthenticationService to clear user session.
     /// </summary>
-    private void Logout(object? obj)
+    private async void Logout(object? obj)
     {
-        // Cleanup auth view model
-        if (_authViewModel != null)
-        {
-            _authViewModel.LoggedIn -= OnLoggedIn;
-        }
-
         // Logout via authentication service
-        _authenticationService.Logout();
+        // This will trigger OnUserLoggedOut via event
+        // ConfigureAwait(false) to avoid deadlocks, but OnUserLoggedOut handles dispatching
+        await _authenticationService.LogoutAsync().ConfigureAwait(false);
+    }
 
-        // Notify UI that user properties changed
-        OnPropertyChanged(nameof(IsLoggedIn));
-        OnPropertyChanged(nameof(CurrentUserName));
-        OnPropertyChanged(nameof(CurrentUserEmail));
+    /// <summary>
+    /// Handles user logout event from AuthenticationService.
+    /// Resets the UI to the authentication screen.
+    /// </summary>
+    private void OnUserLoggedOut(object? sender, EventArgs e)
+    {
+        // Ensure UI updates happen on the UI thread
+        System.Windows.Application.Current.Dispatcher.Invoke(() => {
+            // Cleanup auth view model if it was attached
+            if (_authViewModel != null)
+            {
+                _authViewModel.LoggedIn -= OnLoggedIn;
+            }
 
-        // Clear navigation history and return to auth
-        _navigationService.ClearHistory();
-        _authViewModel = CreateAuthViewModel();
-        CurrentView = _authViewModel;
+            // Notify UI that user properties changed
+            OnPropertyChanged(nameof(IsLoggedIn));
+            OnPropertyChanged(nameof(CurrentUserName));
+            OnPropertyChanged(nameof(CurrentUserEmail));
+
+            // Clear navigation history and return to auth
+            _navigationService.ClearHistory();
+            _authViewModel = CreateAuthViewModel();
+            CurrentView = _authViewModel;
+        });
     }
 
     /// <summary>
@@ -280,11 +266,8 @@ public sealed class MainViewModel : ObservableObject
     private void OnNavigationScopeStateChanged(object? sender, EventArgs e)
     {
         OnPropertyChanged(nameof(CanGoBack));
-        OnPropertyChanged(nameof(CanGoForward));
         OnPropertyChanged(nameof(ShowBackButton));
-        OnPropertyChanged(nameof(ShowForwardButton));
         _goBackCommand.RaiseCanExecuteChanged();
-        _goForwardCommand.RaiseCanExecuteChanged();
     }
 
     /// <summary>
@@ -296,7 +279,6 @@ public sealed class MainViewModel : ObservableObject
             ? meetingSession.Toolbar
             : null;
         OnPropertyChanged(nameof(ShowBackButton));
-        OnPropertyChanged(nameof(ShowForwardButton));
     }
 }
 

@@ -14,7 +14,7 @@
             ClipToBounds="True">
         <Grid>
             <!-- Video/Screen Frame -->
-            <Image Source="{Binding VideoFrame}"
+            <Image Source="{Binding Frame}"
                    Stretch="UniformToFill"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center">
@@ -22,7 +22,7 @@
                     <Style TargetType="Image">
                         <Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasVideoFrame}" Value="True">
+                            <DataTrigger Binding="{Binding HasFrame}" Value="True">
                                 <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -36,7 +36,7 @@
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding HasVideoFrame}" Value="True">
+                            <DataTrigger Binding="{Binding HasFrame}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>

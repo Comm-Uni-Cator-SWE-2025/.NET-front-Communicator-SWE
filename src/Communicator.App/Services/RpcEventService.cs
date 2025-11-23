@@ -33,9 +33,9 @@ public interface IRpcEventService
 {
     event EventHandler<RpcDataEventArgs>? FrameReceived;
     event EventHandler<RpcDataEventArgs>? StopShareReceived;
-    event EventHandler<RpcStringEventArgs>? ParticipantJoined;
-    event EventHandler<RpcStringEventArgs>? ParticipantLeft;
     event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
+    event EventHandler<RpcStringEventArgs>? Logout;
+    event EventHandler<RpcStringEventArgs>? EndMeeting;
 
     // Chat Events
     event EventHandler<RpcDataEventArgs>? ChatMessageReceived;
@@ -46,9 +46,9 @@ public interface IRpcEventService
 
     void TriggerFrameReceived(byte[] data);
     void TriggerStopShareReceived(byte[] data);
-    void TriggerParticipantJoined(string viewerIp);
-    void TriggerParticipantLeft(string viewerIp);
     void TriggerParticipantsListUpdated(string participantsJson);
+    void TriggerLogout(string message);
+    void TriggerEndMeeting(string message);
 
     // Chat Triggers
     void TriggerChatMessageReceived(byte[] data);
@@ -62,9 +62,9 @@ public sealed class RpcEventService : IRpcEventService
 {
     public event EventHandler<RpcDataEventArgs>? FrameReceived;
     public event EventHandler<RpcDataEventArgs>? StopShareReceived;
-    public event EventHandler<RpcStringEventArgs>? ParticipantJoined;
-    public event EventHandler<RpcStringEventArgs>? ParticipantLeft;
     public event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
+    public event EventHandler<RpcStringEventArgs>? Logout;
+    public event EventHandler<RpcStringEventArgs>? EndMeeting;
 
     // Chat Events
     public event EventHandler<RpcDataEventArgs>? ChatMessageReceived;
@@ -75,6 +75,11 @@ public sealed class RpcEventService : IRpcEventService
 
     public void TriggerFrameReceived(byte[] data)
     {
+        ArgumentNullException.ThrowIfNull(data);
+
+
+        Console.WriteLine($"[App] UPDATE_UI 2 TriggerFrameReceived called Received UPDATE_UI with {data.Length} bytes" + FrameReceived);
+        System.Diagnostics.Debug.WriteLine("UPDATE UI: Got FrameReceived event" + FrameReceived);
         FrameReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 
@@ -83,19 +88,19 @@ public sealed class RpcEventService : IRpcEventService
         StopShareReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 
-    public void TriggerParticipantJoined(string viewerIp)
-    {
-        ParticipantJoined?.Invoke(this, new RpcStringEventArgs(viewerIp));
-    }
-
-    public void TriggerParticipantLeft(string viewerIp)
-    {
-        ParticipantLeft?.Invoke(this, new RpcStringEventArgs(viewerIp));
-    }
-
     public void TriggerParticipantsListUpdated(string participantsJson)
     {
         ParticipantsListUpdated?.Invoke(this, new RpcStringEventArgs(participantsJson));
+    }
+
+    public void TriggerLogout(string message)
+    {
+        Logout?.Invoke(this, new RpcStringEventArgs(message));
+    }
+
+    public void TriggerEndMeeting(string message)
+    {
+        EndMeeting?.Invoke(this, new RpcStringEventArgs(message));
     }
 
     // Chat Triggers

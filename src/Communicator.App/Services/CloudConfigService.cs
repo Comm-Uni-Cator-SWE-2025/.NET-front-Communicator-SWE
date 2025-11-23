@@ -31,6 +31,14 @@ public sealed class CloudConfigService : ICloudConfigService
     public Uri MessageUrl =>
         new(_configuration["CloudFunctions:MessageUrl"]
         ?? throw new InvalidOperationException("MessageUrl not configured in appsettings.json"));
+
+    public Uri JoinGroupUrl =>
+        new(_configuration["CloudFunctions:JoinGroupUrl"]
+        ?? throw new InvalidOperationException("JoinGroupUrl not configured in appsettings.json"));
+
+    public Uri LeaveGroupUrl =>
+        new(_configuration["CloudFunctions:LeaveGroupUrl"]
+        ?? throw new InvalidOperationException("LeaveGroupUrl not configured in appsettings.json"));
 }
 
 

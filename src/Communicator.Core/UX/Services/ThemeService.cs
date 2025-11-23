@@ -10,7 +10,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
+using Communicator.Cloud.CloudFunction.DataStructures;
+using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Communicator.Core.UX.Models;
 
 namespace Communicator.Core.UX.Services;
@@ -24,6 +28,11 @@ public class ThemeService : IThemeService
     private const string SettingsFileName = "settings.txt";
     private static readonly char[] s_lineSeparators = ['\n', '\r'];
     private AppTheme _currentTheme;
+    private string? _currentUsername;
+    private CloudFunctionLibrary? _cloudLibrary;
+    private const string ThemeContainer = "UX";
+    private const string ThemeType = "Theme";
+    private const string ThemeKey = "color";
 
     public event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
 
@@ -32,6 +41,116 @@ public class ThemeService : IThemeService
     public ThemeService()
     {
         _currentTheme = AppTheme.Light;
+        InitializeCloudLibrary();
+    }
+
+    private void InitializeCloudLibrary()
+    {
+        try
+        {
+            string? cloudUrl = Environment.GetEnvironmentVariable("CLOUD_BASE_URL");
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Initializing CloudFunctionLibrary. CLOUD_BASE_URL: {cloudUrl}");
+
+            // Only initialize if environment variable is set to avoid crashes
+            if (cloudUrl != null)
+            {
+                _cloudLibrary = new CloudFunctionLibrary();
+                System.Diagnostics.Debug.WriteLine("[ThemeService] CloudFunctionLibrary initialized successfully.");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[ThemeService] CLOUD_BASE_URL is missing. Cloud sync disabled.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Failed to initialize CloudFunctionLibrary: {ex.Message}");
+        }
+    }
+
+    public void SetUser(string? username)
+    {
+        System.Diagnostics.Debug.WriteLine($"[ThemeService] SetUser called with: {username}");
+        _currentUsername = username;
+        if (!string.IsNullOrEmpty(username))
+        {
+            LoadThemeFromCloud();
+        }
+    }
+
+    private async void LoadThemeFromCloud()
+    {
+        if (string.IsNullOrEmpty(_currentUsername))
+        {
+            System.Diagnostics.Debug.WriteLine("[ThemeService] LoadThemeFromCloud: Username is empty.");
+            return;
+        }
+        if (_cloudLibrary == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[ThemeService] LoadThemeFromCloud: CloudLibrary is null.");
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Loading theme from cloud for user: {_currentUsername}");
+            // Use JsonDocument.Parse("{}").RootElement instead of default to ensure valid JSON object
+            var emptyData = JsonDocument.Parse("{}").RootElement;
+            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), emptyData);
+            var res = await _cloudLibrary.CloudGetAsync(req);
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] CloudGetAsync response: {res.StatusCode} {res.Message}");
+
+            if (res.Data.ValueKind != JsonValueKind.Undefined && res.Data.ValueKind != JsonValueKind.Null)
+            {
+                string themeStr = "";
+                if (res.Data.ValueKind == JsonValueKind.Object && res.Data.TryGetProperty(ThemeKey, out var val))
+                {
+                    themeStr = val.GetString() ?? "";
+                }
+                else if (res.Data.ValueKind == JsonValueKind.String)
+                {
+                    themeStr = res.Data.GetString() ?? "";
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[ThemeService] Theme from cloud: {themeStr}");
+
+                if (!string.IsNullOrEmpty(themeStr))
+                {
+                    var theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
+                    Application.Current.Dispatcher.Invoke(() => SetTheme(theme));
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[ThemeService] No data in cloud response.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Failed to load theme from cloud: {ex.Message}");
+        }
+    }
+
+    private async void SaveThemeToCloud()
+    {
+        if (string.IsNullOrEmpty(_currentUsername)) return;
+        if (_cloudLibrary == null) return;
+
+        try
+        {
+            string themeValue = _currentTheme == AppTheme.Dark ? "dark" : "light";
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Saving theme to cloud: {themeValue} for user: {_currentUsername}");
+            var data = new { color = themeValue };
+            var jsonData = JsonSerializer.SerializeToElement(data);
+
+            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), jsonData);
+            await _cloudLibrary.CloudPostAsync(req);
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Theme saved to cloud successfully.");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] Failed to save theme to cloud: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -65,6 +184,7 @@ public class ThemeService : IThemeService
             Application.Current.Resources.MergedDictionaries.Add(newTheme);
 
             SaveThemePreference();
+            SaveThemeToCloud();
 
             ThemeChanged?.Invoke(this, new ThemeChangedEventArgs(theme));
         }

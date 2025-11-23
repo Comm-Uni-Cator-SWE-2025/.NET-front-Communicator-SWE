@@ -68,9 +68,9 @@
                 SnapsToDevicePixels="True">
             <Border.Resources>
                 <Style x:Key="MeetingControlButtonStyle" TargetType="Button">
-                    <Setter Property="Width" Value="96" />
-                    <Setter Property="Padding" Value="8" />
-                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="Width" Value="80" />
+                    <Setter Property="Margin" Value="4,2" />
+                    <Setter Property="Padding" Value="0,8" />
                     <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
                     <Setter Property="BorderBrush" Value="Transparent" />
                     <Setter Property="BorderThickness" Value="0" />
@@ -97,6 +97,8 @@
                     </Setter>
                 </Style>
             </Border.Resources>
+            
+            <!-- Centered StackPanel with fixed-width buttons -->
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Center">
 
@@ -111,6 +113,7 @@
                                     Foreground="{DynamicResource ErrorBrush}" />
                         <TextBlock Text="Leave"
                                    FontSize="12"
+                                   Margin="0,4,0,0"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -118,7 +121,7 @@
                 <!-- Toggle Mute -->
                 <Button Command="{Binding ToggleMuteCommand}"
                         ToolTip="Toggle microphone"
-            Style="{StaticResource MeetingControlButtonStyle}">
+                        Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
                         <icons:Icon IconName="microphone" 
@@ -129,21 +132,17 @@
                                     IconSize="20" 
                                     Foreground="{DynamicResource ErrorBrush}"
                                     Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <TextBlock Text="Mute"
+                        <TextBlock Text="Audio"
                                    FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="Unmute"
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsMuted, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                   Margin="0,4,0,0"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Toggle Camera -->
                 <Button Command="{Binding ToggleCameraCommand}"
                         ToolTip="Toggle camera"
-            Style="{StaticResource MeetingControlButtonStyle}">
+                        Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
                         <icons:Icon IconName="video" 
@@ -154,14 +153,10 @@
                                     IconSize="20" 
                                     Foreground="{DynamicResource ErrorBrush}"
                                     Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <TextBlock Text="Camera Off"
+                        <TextBlock Text="Video"
                                    FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="Camera On"
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                   Margin="0,4,0,0"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -269,7 +264,8 @@
                                          Margin="0,0,0,8"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
                                          CaretBrush="{DynamicResource TextPrimaryBrush}"
-                                         Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=True}">
+                                         Visibility="{Binding QuickDoubtSentMessage, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=True}"
+                                         PreviewKeyDown="QuickDoubtTextBox_PreviewKeyDown">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">
                                             <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
@@ -322,7 +318,7 @@
                 <Button x:Name="RaiseHandButton"
                         Command="{Binding ToggleHandCommand}"
                         ToolTip="Raise hand"
-            Style="{StaticResource MeetingControlButtonStyle}">
+                        Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
                         <icons:Icon IconName="hand-stop" 
@@ -334,14 +330,10 @@
                                     Foreground="{DynamicResource WarningBrush}"
                                     Opacity="0.8"
                                     Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <TextBlock Text="Raise Hand"
+                        <TextBlock Text="Raise"
                                    FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="Lower Hand"
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsHandRaised, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                   Margin="0,4,0,0"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
                 </Grid>
@@ -349,7 +341,7 @@
                 <!-- Toggle Screen Share -->
                 <Button Command="{Binding ToggleScreenShareCommand}"
                         ToolTip="Toggle screen sharing"
-            Style="{StaticResource MeetingControlButtonStyle}">
+                        Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Center">
                         <icons:Icon IconName="screen-share" 
@@ -360,14 +352,10 @@
                                     IconSize="20" 
                                     Foreground="{DynamicResource SuccessBrush}"
                                     Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <TextBlock Text="Share Screen"
+                        <TextBlock Text="Share"
                                    FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
-                        <TextBlock Text="Stop Share"
-                                   FontSize="12"
-                                   HorizontalAlignment="Center"
-                                   Visibility="{Binding IsScreenSharing, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                   Margin="0,4,0,0"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
                 
@@ -382,6 +370,7 @@
                                     Foreground="{DynamicResource IconBrush}"/>
                         <TextBlock Text="Chat"
                                    FontSize="12"
+                                   Margin="0,4,0,0"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -397,6 +386,7 @@
                                     Foreground="{DynamicResource IconBrush}"/>
                         <TextBlock Text="People"
                                    FontSize="12"
+                                   Margin="0,4,0,0"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -446,47 +436,6 @@
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                            <!-- Test Recv Button (Only visible for Chat) -->
-                            <!-- <Button Command="{Binding SidePanelContent.TestRecvCommand}"
-                                    ToolTip="Test Receive Message"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    Padding="8"
-                                    Margin="0,0,4,0"
-                                    Cursor="Hand">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="border"
-                                                            Background="{TemplateBinding Background}"
-                                                            CornerRadius="4"
-                                                            Padding="{TemplateBinding Padding}">
-                                                        <icons:Icon IconName="message-circle" 
-                                                                    IconSize="16" 
-                                                                    Foreground="{DynamicResource IconBrush}"/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsPressed" Value="True">
-                                                            <Setter TargetName="border" Property="Background" Value="{DynamicResource ActiveOverlayBrush}"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SidePanelTitle}" Value="Chat">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button> -->
                             
                             <!-- Close Panel Button -->
                             <Button Command="{Binding CloseSidePanelCommand}"

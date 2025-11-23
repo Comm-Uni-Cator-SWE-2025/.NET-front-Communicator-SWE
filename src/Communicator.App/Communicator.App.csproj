@@ -18,12 +18,14 @@
     <ProjectReference Include="..\Communicator.Controller\Communicator.Controller.csproj" />
     <ProjectReference Include="..\Communicator.Core\Communicator.Core.csproj" />
     <ProjectReference Include="..\Communicator.Icons\Communicator.Icons.csproj" />
+    <ProjectReference Include="..\Communicator.UX\Analytics\Communicator.UX.Analytics.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="DotNetEnv" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
