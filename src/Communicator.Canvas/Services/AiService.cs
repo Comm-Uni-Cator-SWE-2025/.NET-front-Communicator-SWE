@@ -1,8 +1,8 @@
 ﻿/*
  * -----------------------------------------------------------------------------
- *  File: ShapeType.cs
- *  Owner: Sriram Nangunoori
- *  Roll Number : 112201019
+ *  File: AiService.cs
+ *  Owner: Shanmukha Sri Krishna
+ *  Roll Number : 112201013
  *  Module : Canvas
  *
  * -----------------------------------------------------------------------------
@@ -13,13 +13,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Communicator.Canvas;
-
-public enum ShapeType
+namespace Communicator.Canvas.Services;
+public class AiService
 {
-    FREEHAND = 0,
-    RECTANGLE = 1,
-    TRIANGLE = 3,
-    LINE = 4,
-    ELLIPSE = 5
+    // to be added in future
+    // was already mocked in ProcessingService.cs
 }

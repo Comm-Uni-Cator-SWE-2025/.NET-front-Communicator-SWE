@@ -1,4 +1,13 @@
-﻿namespace Communicator.Canvas;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: NetworkMessageType.cs
+ *  Owner: Sriram Nangunoori
+ *  Roll Number : 112201019
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+namespace Communicator.Canvas;
 
 /// <summary>
 /// Defines the type of network message being sent.

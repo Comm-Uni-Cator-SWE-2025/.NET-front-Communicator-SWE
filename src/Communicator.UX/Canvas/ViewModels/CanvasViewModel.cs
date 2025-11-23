@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: CanvasViewModel.cs
+ *  Owner: Pranitha Muluguru
+ *  Roll Number : 112201004
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -37,30 +46,136 @@ public class CanvasViewModel : INotifyPropertyChanged
     // --- Properties ---
 
     /// <summary>
-    /// Indicates if this instance is the Host (Server) or Client.
+    /// Event triggered when a property changes, notifying the UI to update.
     /// </summary>
-    public virtual bool IsHost => false;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// Event triggered when the visual canvas needs to be repainted.
     /// </summary>
     public event Action? RequestRedraw;
-    protected void RaiseRequestRedraw()
-    {
-        RequestRedraw?.Invoke();
-    }
+
+    // --- Enumerations ---
 
     /// <summary>
     /// Enumeration for the current interaction tool selected by the user.
     /// </summary>
-    public enum DrawingMode { Select, FreeHand, StraightLine, Rectangle, EllipseShape, TriangleShape }
+    public enum DrawingMode
+    {
+        Select,
+        FreeHand,
+        StraightLine,
+        Rectangle,
+        EllipseShape,
+        TriangleShape
+    }
 
+    // --- Private Fields ---
+
+    /// <summary>
+    /// Backing field for the current drawing mode.
+    /// </summary>
     private DrawingMode _currentMode = DrawingMode.FreeHand;
+
+    /// <summary>
+    /// Stores the list of points tracked during a mouse drag operation.
+    /// </summary>
+    private List<Point> _trackedPoints = new();
+
+    /// <summary>
+    /// Indicates if the user is currently dragging/moving an existing shape.
+    /// </summary>
+    private bool _isMovingShape = false;
+
+    /// <summary>
+    /// The coordinate where a move operation began.
+    /// </summary>
+    private Point _moveStartPoint;
+
+    /// <summary>
+    /// A snapshot of the shape before it began moving, used for delta calculations.
+    /// </summary>
+    private IShape? _originalShapeForMove;
+
+    /// <summary>
+    /// Backing field for the currently selected color.
+    /// </summary>
+    private Color _currentColor = Color.Black;
+
+    /// <summary>
+    /// Backing field for the currently selected stroke thickness.
+    /// </summary>
+    private double _currentThickness = 2.0;
+
+    /// <summary>
+    /// Backing field for the selected shape.
+    /// </summary>
+    protected IShape? _selectedShape;
+
+    /// <summary>
+    /// Backing field for the analysis result text.
+    /// </summary>
+    private string _analysisResult = "Ready to analyze...";
+
+    /// <summary>
+    /// Backing field to toggle the visibility of the analysis side panel.
+    /// </summary>
+    private bool _isAnalysisVisible = false;
+
+    // --- Public Properties & Fields ---
+
+    /// <summary>
+    /// Indicates if the mouse is currently being tracked (button held down).
+    /// </summary>
+    public bool _isTracking = false;
+
+    /// <summary>
+    /// Public accessor to check if a shape is being moved.
+    /// </summary>
+    public bool IsMovingShape => _isMovingShape;
+
+    /// <summary>
+    /// Represents the physical boundaries of the canvas area.
+    /// </summary>
+    public Rectangle CanvasBounds { get; set; }
+
+    /// <summary>
+    /// The main dictionary storing all shapes on the canvas, keyed by Shape ID.
+    /// </summary>
+    public Dictionary<string, IShape> _shapes = new();
+
+    /// <summary>
+    /// Manages the Undo/Redo stacks.
+    /// </summary>
+    protected readonly StateManager _stateManager = new();
+
+    /// <summary>
+    /// Used to store the state of a shape before modification for Undo purposes.
+    /// </summary>
+    public IShape? _originalShapeForUndo = null;
+
+    /// <summary>
+    /// The ID of the current user (e.g., "Client_1234" or "Host_Admin").
+    /// </summary>
+    public string CurrentUserId { get; set; } = "user_default";
+
+    /// <summary>
+    /// Collection of shapes meant to be displayed transiently (e.g., remote user drawing).
+    /// </summary>
+    public List<IShape> GhostShapes { get; } = new();
+
+    /// <summary>
+    /// Indicates if this instance is the Host (Server) or Client.
+    /// </summary>
+    public virtual bool IsHost => false;
+
+    /// <summary>
+    /// Gets or sets the current drawing tool.
+    /// </summary>
     public DrawingMode CurrentMode
     {
         get => _currentMode;
-        set
-        {
+        set {
             if (_currentMode != value)
             {
                 _currentMode = value;
@@ -74,34 +189,13 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
-    // Collection of shapes meant to be displayed transiently (e.g., remote user drawing)
-    public List<IShape> GhostShapes { get; } = new();
-
-    // State for tracking mouse movement during drawing/dragging
-    private List<Point> _trackedPoints = new();
-    public bool _isTracking = false;
-    private bool _isMovingShape = false;
-    public bool IsMovingShape => _isMovingShape;
-    private Point _moveStartPoint;
-    private IShape? _originalShapeForMove;
-
-    public Rectangle CanvasBounds { get; set; }
-    public Dictionary<string, IShape> _shapes = new();
-    protected readonly StateManager _stateManager = new();
-
-    // Used to store the state of a shape before modification for Undo purposes
-    public IShape? _originalShapeForUndo = null;
-
-    public string CurrentUserId { get; set; } = "user_default";
-
-    // --- Visual Properties ---
-
-    private Color _currentColor = Color.Black;
+    /// <summary>
+    /// Gets or sets the color used for new shapes or the selected shape.
+    /// </summary>
     public Color CurrentColor
     {
         get => _currentColor;
-        set
-        {
+        set {
             if (_currentColor == value)
             {
                 return;
@@ -110,11 +204,9 @@ public class CanvasViewModel : INotifyPropertyChanged
             _currentColor = value;
             OnPropertyChanged();
 
-            // Immediate Feedback: Update selected shape if one exists
             if (SelectedShape != null && SelectedShape.Color != value)
             {
                 _originalShapeForUndo ??= SelectedShape;
-                // Prototype Pattern: Create a new instance with updated color
                 IShape newShape = SelectedShape.WithUpdates(value, null, CurrentUserId);
                 _selectedShape = newShape;
                 OnPropertyChanged(nameof(SelectedShape));
@@ -122,12 +214,13 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
-    private double _currentThickness = 2.0;
+    /// <summary>
+    /// Gets or sets the line thickness for new shapes or the selected shape.
+    /// </summary>
     public double CurrentThickness
     {
         get => _currentThickness;
-        set
-        {
+        set {
             if (_currentThickness == value)
             {
                 return;
@@ -146,15 +239,13 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
-    protected IShape? _selectedShape;
     /// <summary>
     /// The currently selected shape for editing.
     /// </summary>
     public IShape? SelectedShape
     {
         get => _selectedShape;
-        set
-        {
+        set {
             if (_selectedShape != value)
             {
                 // If we were editing a previous shape, ensure changes are committed
@@ -183,46 +274,98 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// The most recently created shape, exposed for reference.
+    /// </summary>
     public IShape? LastCreatedShape { get; private set; }
-    // --- NEW: Analysis Result Text ---
-    private string _analysisResult = "Ready to analyze...";
+
+    /// <summary>
+    /// Textual result from the AI analysis service.
+    /// </summary>
     public string AnalysisResult
     {
         get => _analysisResult;
-        set
-        {
+        set {
             _analysisResult = value;
             OnPropertyChanged();
         }
     }
-    // --- Core Logic ---
-    // New property to toggle the side panel
-    private bool _isAnalysisVisible = false;
+
+    /// <summary>
+    /// Controls the visibility of the AI analysis panel in the UI.
+    /// </summary>
     public bool IsAnalysisVisible
     {
         get => _isAnalysisVisible;
-        set { _isAnalysisVisible = value; OnPropertyChanged(); }
+        set {
+            _isAnalysisVisible = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Generates a temporary shape for previewing while drawing.
+    /// </summary>
+    public IShape? CurrentPreviewShape
+    {
+        get {
+            if (!_isTracking || _trackedPoints.Count < 2 || CurrentMode == DrawingMode.Select)
+            {
+                return null;
+            }
+
+            ShapeType? type = CurrentMode switch {
+                DrawingMode.FreeHand => ShapeType.FREEHAND,
+                DrawingMode.StraightLine => ShapeType.LINE,
+                DrawingMode.Rectangle => ShapeType.RECTANGLE,
+                DrawingMode.EllipseShape => ShapeType.ELLIPSE,
+                DrawingMode.TriangleShape => ShapeType.TRIANGLE,
+                _ => null
+            };
+
+            if (type.HasValue)
+            {
+                // Factory Pattern
+                return ShapeFactory.CreateShape(type.Value, _trackedPoints, CurrentColor, CurrentThickness, CurrentUserId);
+            }
+            return null;
+        }
+    }
+
+    // --- Methods ---
+
+    /// <summary>
+    /// Helper method to invoke the PropertyChanged event.
+    /// </summary>
+    /// <param name="propertyName">The name of the property that changed.</param>
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    /// <summary>
+    /// Helper method to invoke the RequestRedraw event.
+    /// </summary>
+    protected void RaiseRequestRedraw()
+    {
+        RequestRedraw?.Invoke();
     }
 
     /// <summary>
     /// Updates the local dictionary with a new/modified shape.
     /// Also handles synchronization if the updated shape was currently selected.
     /// </summary>
+    /// <param name="shape">The shape object to update or add.</param>
     protected void UpdateShapeFromNetwork(IShape shape)
     {
-        // 1. Update Dictionary (Single Source of Truth)
         _shapes[shape.ShapeId] = shape;
 
-        // 2. Sync Selection
-        // If the shape updated from the network is the one the user has selected,
-        // we must update the reference to prevent "stale object" issues.
         if (_selectedShape != null && _selectedShape.ShapeId == shape.ShapeId)
         {
             _selectedShape = shape;
             OnPropertyChanged(nameof(SelectedShape));
             _originalShapeForUndo = null; // Reset baseline
 
-            // Sync UI sliders/pickers
             if (_currentThickness != shape.Thickness)
             {
                 _currentThickness = shape.Thickness;
@@ -240,6 +383,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// Template Method for processing actions. 
     /// Derived classes (Client/Host) override this to add networking logic.
     /// </summary>
+    /// <param name="action">The action to process.</param>
     protected virtual void ProcessAction(CanvasAction action)
     {
         ApplyActionLocally(action);
@@ -254,11 +398,10 @@ public class CanvasViewModel : INotifyPropertyChanged
         if (_originalShapeForUndo != null && SelectedShape != null &&
             _originalShapeForUndo.ShapeId == SelectedShape.ShapeId)
         {
-            // Check if actual changes occurred
             if (_originalShapeForUndo.Color != SelectedShape.Color ||
                 _originalShapeForUndo.Thickness != SelectedShape.Thickness)
             {
-                var action = new CanvasAction(CanvasActionType.Modify, _originalShapeForUndo, SelectedShape);
+                CanvasAction action = new CanvasAction(CanvasActionType.Modify, _originalShapeForUndo, SelectedShape);
                 ProcessAction(action);
             }
         }
@@ -276,10 +419,9 @@ public class CanvasViewModel : INotifyPropertyChanged
             return;
         }
 
-        // Prototype Pattern: Create a deleted copy
         IShape deletedShape = SelectedShape.WithDelete(CurrentUserId);
 
-        var deleteAction = new CanvasAction(
+        CanvasAction deleteAction = new CanvasAction(
             CanvasActionType.Delete,
             SelectedShape,
             deletedShape
@@ -289,14 +431,11 @@ public class CanvasViewModel : INotifyPropertyChanged
         SelectedShape = null;
     }
 
-    // --- Interaction Logic ---
-
     /// <summary>
     /// Handles the completion of a mouse interaction (drawing or dropping).
     /// </summary>
     public void StopTracking()
     {
-        // Case 1: Finishing a Move operation
         if (_isMovingShape)
         {
             _isMovingShape = false;
@@ -305,14 +444,13 @@ public class CanvasViewModel : INotifyPropertyChanged
                 !_originalShapeForMove.Points.SequenceEqual(SelectedShape.Points))
             {
                 // Create Modify Action for the move
-                var action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, SelectedShape);
+                CanvasAction action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, SelectedShape);
                 ProcessAction(action);
             }
             _originalShapeForMove = null;
             return;
         }
 
-        // Case 2: Finishing a Drawing operation
         if (CurrentMode == DrawingMode.Select || !_isTracking)
         {
             _isTracking = false;
@@ -325,10 +463,7 @@ public class CanvasViewModel : INotifyPropertyChanged
             return;
         }
 
-        // --- REFACTORED: Use ShapeFactory ---
-        // Map DrawingMode to ShapeType
-        ShapeType? typeToCreate = CurrentMode switch
-        {
+        ShapeType? typeToCreate = CurrentMode switch {
             DrawingMode.FreeHand => ShapeType.FREEHAND,
             DrawingMode.StraightLine => ShapeType.LINE,
             DrawingMode.Rectangle => ShapeType.RECTANGLE,
@@ -339,7 +474,6 @@ public class CanvasViewModel : INotifyPropertyChanged
 
         if (typeToCreate.HasValue && _trackedPoints.Count >= 2)
         {
-            // Factory Pattern creates the concrete instance
             IShape newShape = ShapeFactory.CreateShape(
                 typeToCreate.Value,
                 _trackedPoints,
@@ -348,12 +482,16 @@ public class CanvasViewModel : INotifyPropertyChanged
                 CurrentUserId
             );
 
-            var action = new CanvasAction(CanvasActionType.Create, null, newShape);
+            CanvasAction action = new CanvasAction(CanvasActionType.Create, null, newShape);
             ProcessAction(action);
             LastCreatedShape = newShape;
         }
     }
 
+    /// <summary>
+    /// Initiates tracking when the mouse is pressed.
+    /// </summary>
+    /// <param name="point">The coordinate where tracking started.</param>
     public void StartTracking(Point point)
     {
         CommitModification();
@@ -381,16 +519,22 @@ public class CanvasViewModel : INotifyPropertyChanged
         _trackedPoints.Add(point);
         if (CurrentMode != DrawingMode.FreeHand)
         {
-            _trackedPoints.Add(point); // Add duplicate for preview
+            _trackedPoints.Add(point);
         }
     }
 
+    /// <summary>
+    /// Attempts to select a shape at a specific coordinate.
+    /// </summary>
+    /// <param name="point">The coordinate to test for a hit.</param>
     public void SelectShapeAt(Point point)
     {
         CommitModification();
         SelectedShape = null;
-        if (_shapes == null) { return; }
-        // Reverse iterate to select top-most shape first
+        if (_shapes == null)
+        {
+            return;
+        }
         foreach (IShape shape in _shapes.Values.Reverse())
         {
             if (!shape.IsDeleted && shape.IsHit(point))
@@ -401,10 +545,12 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Updates tracking data as the mouse moves.
+    /// </summary>
+    /// <param name="point">The current mouse coordinate.</param>
     public void TrackPoint(Point point)
     {
-        // --- FIX: Clamp the point to be within the Canvas Bounds ---
-        // This prevents drawing or dragging shapes outside the visible area.
         int x = point.X;
         int y = point.Y;
 
@@ -413,9 +559,7 @@ public class CanvasViewModel : INotifyPropertyChanged
             x = Math.Max(CanvasBounds.Left, Math.Min(x, CanvasBounds.Right));
             y = Math.Max(CanvasBounds.Top, Math.Min(y, CanvasBounds.Bottom));
         }
-        
         Point clampedPoint = new Point(x, y);
-        // -----------------------------------------------------------
 
         if (_isMovingShape && SelectedShape != null && _originalShapeForMove != null)
         {
@@ -437,34 +581,9 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
-    public IShape? CurrentPreviewShape
-    {
-        get
-        {
-            if (!_isTracking || _trackedPoints.Count < 2 || CurrentMode == DrawingMode.Select)
-            {
-                return null;
-            }
-
-            ShapeType? type = CurrentMode switch
-            {
-                DrawingMode.FreeHand => ShapeType.FREEHAND,
-                DrawingMode.StraightLine => ShapeType.LINE,
-                DrawingMode.Rectangle => ShapeType.RECTANGLE,
-                DrawingMode.EllipseShape => ShapeType.ELLIPSE,
-                DrawingMode.TriangleShape => ShapeType.TRIANGLE,
-                _ => null
-            };
-
-            if (type.HasValue)
-            {
-                // Factory Pattern
-                return ShapeFactory.CreateShape(type.Value, _trackedPoints, CurrentColor, CurrentThickness, CurrentUserId);
-            }
-            return null;
-        }
-    }
-
+    /// <summary>
+    /// Undoes the last action in the state manager.
+    /// </summary>
     public virtual void Undo()
     {
         CommitModification();
@@ -477,6 +596,9 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Redoes the last undone action in the state manager.
+    /// </summary>
     public virtual void Redo()
     {
         SelectedShape = null;
@@ -488,6 +610,10 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Applies an action to the local state manager and dictionary.
+    /// </summary>
+    /// <param name="action">The action to apply.</param>
     protected void ApplyActionLocally(CanvasAction action)
     {
         _stateManager.AddAction(action);
@@ -498,6 +624,11 @@ public class CanvasViewModel : INotifyPropertyChanged
         RaiseRequestRedraw();
     }
 
+    /// <summary>
+    /// Updates the shapes dictionary based on an Undo or Redo action.
+    /// </summary>
+    /// <param name="action">The action being processed.</param>
+    /// <param name="isUndo">True if undoing, False if redoing.</param>
     protected void SyncDictionaryFromAction(CanvasAction action, bool isUndo)
     {
         IShape? shapeToApply = isUndo ? action.PrevShape : action.NewShape;
@@ -506,7 +637,6 @@ public class CanvasViewModel : INotifyPropertyChanged
         {
             if (isUndo)
             {
-                // Undo Creation = Soft Delete
                 if (action.NewShape != null)
                 {
                     UpdateShapeFromNetwork(action.NewShape.WithDelete("system"));
@@ -525,34 +655,31 @@ public class CanvasViewModel : INotifyPropertyChanged
             UpdateShapeFromNetwork(shapeToApply);
         }
     }
-    // --- NEW: Regularize Feature ---
+
+    /// <summary>
+    /// Uses the processing service to regularize the selected shape (make it geometrically perfect).
+    /// </summary>
     public async void RegularizeSelectedShape()
     {
         if (SelectedShape == null) return;
         CommitModification(); // Ensure any pending edits are saved first
 
-        // 1. Serialize Current Shape
         string inputJson = CanvasSerializer.SerializeShapeManual(SelectedShape);
 
         try
         {
-            // 2. Call the RPC Function
             byte[] response = await _rpc.Call("canvas:regularize", Encoding.UTF8.GetBytes(inputJson));
             string outputJson = Encoding.UTF8.GetString(response);
 
-            // 3. Deserialize
             IShape? regularizedShape = CanvasSerializer.DeserializeShapeManual(outputJson);
 
-            if (regularizedShape != null)
-            {
-                // In case the mock didn't change anything, let's force a visual change (Prototype pattern)
-                // to ensure the user sees something happening in this demo.
-                regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
+        if (regularizedShape != null)
+        {
+            regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
 
-                // 4. Create Modification Action
-                var action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
+            CanvasAction action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
 
-                // 5. Process
+
                 ProcessAction(action);
                 SelectedShape = regularizedShape; // Keep selected
             }
@@ -562,16 +689,16 @@ public class CanvasViewModel : INotifyPropertyChanged
             Console.WriteLine($"[Canvas] Regularize failed: {ex.Message}");
         }
     }
-    // -------------------------------
 
-    // --- NEW: Analyze Feature ---
-    // --- NEW: Analyze Feature ---
+    /// <summary>
+    /// Triggers the analysis of a canvas image path.
+    /// </summary>
+    /// <param name="imagePath">File path to the image to analyze.</param>
     public async void PerformAnalysis(string imagePath)
     {
         // Toggle visibility automatically
         IsAnalysisVisible = true;
         AnalysisResult = "Analyzing...";
-        
         try
         {
             byte[] response = await _rpc.Call("canvas:describe", Encoding.UTF8.GetBytes(imagePath));
@@ -583,8 +710,13 @@ public class CanvasViewModel : INotifyPropertyChanged
             AnalysisResult = $"Analysis failed: {ex.Message}";
         }
     }
-    // ----------------------------
-    // Helper to calculate inverse actions for network transmission
+
+    /// <summary>
+    /// Helper method to generate the inverse of an action (for networking undo).
+    /// </summary>
+    /// <param name="original">The original action.</param>
+    /// <param name="userId">The ID of the user performing the inverse.</param>
+    /// <returns>A new CanvasAction representing the inverse operation.</returns>
     protected CanvasAction GetInverseAction(CanvasAction original, string userId)
     {
         switch (original.ActionType)
@@ -606,6 +738,9 @@ public class CanvasViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Saves the current shapes dictionary to a JSON file.
+    /// </summary>
     public void SaveShapes()
     {
         if (_shapes == null)
@@ -613,8 +748,7 @@ public class CanvasViewModel : INotifyPropertyChanged
             return;
         }
 
-        SaveFileDialog saveDialog = new SaveFileDialog
-        {
+        SaveFileDialog saveDialog = new SaveFileDialog {
             Filter = "Canvas JSON (*.json)|*.json",
             FileName = "canvas_shapes.json"
         };
@@ -627,10 +761,17 @@ public class CanvasViewModel : INotifyPropertyChanged
                 File.WriteAllText(saveDialog.FileName, json);
                 Console.WriteLine($"[Host] Shapes saved to {saveDialog.FileName}");
             }
-            catch (Exception ex) { Console.WriteLine($"[Host] Save failed: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Host] Save failed: {ex.Message}");
+            }
         }
     }
 
+    /// <summary>
+    /// Loads the canvas state from a JSON dictionary string.
+    /// </summary>
+    /// <param name="jsonDictionary">The JSON string representing the dictionary of shapes.</param>
     public void ApplyRestore(string jsonDictionary)
     {
         try

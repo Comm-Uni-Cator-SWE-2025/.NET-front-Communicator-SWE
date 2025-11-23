@@ -1,4 +1,13 @@
-﻿using System; // <-- ADDED for Guid
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: State.cs
+ *  Owner: Sami Mohiddin
+ *  Roll Number : 132201032
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System; // <-- ADDED for Guid
 
 namespace Communicator.Canvas;
 

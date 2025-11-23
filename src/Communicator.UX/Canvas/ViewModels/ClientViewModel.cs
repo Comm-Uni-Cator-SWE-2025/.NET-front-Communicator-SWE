@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ClientViewModel.cs
+ *  Owner: Sami Mohiddin
+ *  Roll Number : 132201032
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,14 +19,38 @@ using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
-public class ClientViewModel : CanvasViewModel, IMessageListener
+/// <summary>
+/// Represents the Client-side logic for the collaborative canvas.
+/// Handles sending actions to the host and processing incoming network messages.
+/// </summary>
+public class ClientViewModel : CanvasViewModel
 {
     private readonly INetworking _networking;
-    private string _hostIp = "";
+
+    /// <summary>
+    /// The IP address of this client machine.
+    /// </summary>
+    private readonly string _myIp = "192.168.1.50";
+
+    /// <summary>
+    /// The IP address of the host/server machine.
+    /// </summary>
+    private readonly string _hostIp = "";
+
     private int _hostPort = 0;
+
+    /// <summary>
+    /// Flag to prevent infinite loops when committing changes triggered by network updates.
+    /// </summary>
     private bool _suppressCommit = false;
+
     private const int CanvasModuleId = 2;
 
+
+    /// <summary>
+    /// Initializes a new instance of the ClientViewModel.
+    /// Registers the network listener and assigns a unique user ID.
+    /// </summary>
     public ClientViewModel(INetworking networking, IRPC rpc) : base(rpc)
     {
         _networking = networking;
@@ -57,6 +90,11 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         System.Windows.Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
     }
 
+
+    /// <summary>
+    /// Commits the current modification to the state.
+    /// Suppressed if the change is coming from the network to avoid loops.
+    /// </summary>
     public override void CommitModification()
     {
         if (_suppressCommit)
@@ -67,6 +105,10 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         base.CommitModification();
     }
 
+    /// <summary>
+    /// Processes an action locally and sends it to the Host.
+    /// </summary>
+    /// <param name="action">The action performed by the user.</param>
     protected override void ProcessAction(CanvasAction action)
     {
         if (action.ActionType == CanvasActionType.Modify && action.PrevShape != null)
@@ -77,14 +119,20 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
                 if (SelectedShape != null && SelectedShape.ShapeId == action.PrevShape.ShapeId)
                 {
                     _suppressCommit = true;
-                    try { base.SelectedShape = action.PrevShape; }
-                    finally { _suppressCommit = false; }
+                    try
+                    {
+                        base.SelectedShape = action.PrevShape;
+                    }
+                    finally
+                    {
+                        _suppressCommit = false;
+                    }
                 }
                 RaiseRequestRedraw();
             }
         }
 
-        var msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
+        NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
         string json = CanvasSerializer.SerializeNetworkMessage(msg);
         
         if (!string.IsNullOrEmpty(_hostIp))
@@ -97,6 +145,9 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         ShowGhostShape(action);
     }
 
+    /// <summary>
+    /// Sends an Undo request to the Host.
+    /// </summary>
     public override void Undo()
     {
         CommitModification();
@@ -106,7 +157,7 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         if (actionToUndo != null)
         {
             CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
-            var msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
+            NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             
             if (!string.IsNullOrEmpty(_hostIp))
@@ -118,6 +169,9 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         }
     }
 
+    /// <summary>
+    /// Sends a Redo request to the Host.
+    /// </summary>
     public override void Redo()
     {
         SelectedShape = null;
@@ -125,9 +179,8 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
 
         if (actionToRedo != null)
         {
-            var msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
+            NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            
             if (!string.IsNullOrEmpty(_hostIp))
             {
                 byte[] data = Encoding.UTF8.GetBytes(json);
@@ -137,6 +190,11 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         }
     }
 
+
+    /// <summary>
+    /// Displays a temporary "ghost" shape to give immediate feedback before server confirmation.
+    /// </summary>
+    /// <param name="action">The action containing the shape to display.</param>
     private async void ShowGhostShape(CanvasAction action)
     {
         if (action.NewShape != null)
@@ -153,6 +211,10 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         }
     }
 
+    /// <summary>
+    /// Handles incoming JSON messages from the network.
+    /// </summary>
+    /// <param name="json">The serialized network message.</param>
     public void ProcessIncomingMessage(string json)
     {
         NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
@@ -161,7 +223,6 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
             return;
         }
 
-        // --- HANDLE RESTORE ---
         if (msg.MessageType == NetworkMessageType.RESTORE)
         {
             Console.WriteLine("[Client] Received RESTORE command.");
@@ -171,12 +232,11 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
             }
             return;
         }
-        // ---------------------
 
         CanvasAction action = msg.Action;
         if (action == null)
         {
-            return; // Safety
+            return;
         }
 
         bool isMyAction = false;
@@ -207,12 +267,21 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
 
         switch (msg.MessageType)
         {
-            case NetworkMessageType.NORMAL: HandleNormalMessage(action, isMyAction); break;
-            case NetworkMessageType.UNDO: HandleUndoMessage(action, isMyAction); break;
-            case NetworkMessageType.REDO: HandleRedoMessage(action, isMyAction); break;
+            case NetworkMessageType.NORMAL:
+                HandleNormalMessage(action, isMyAction);
+                break;
+            case NetworkMessageType.UNDO:
+                HandleUndoMessage(action, isMyAction);
+                break;
+            case NetworkMessageType.REDO:
+                HandleRedoMessage(action, isMyAction);
+                break;
         }
     }
 
+    /// <summary>
+    /// Handles a standard Create/Modify/Delete message from the Host.
+    /// </summary>
     private void HandleNormalMessage(CanvasAction action, bool isMyAction)
     {
         if (isMyAction)
@@ -229,13 +298,15 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         {
             if (action.NewShape != null)
             {
-                // KEY FIX: Use helper to ensure SelectedShape isn't stale
                 UpdateShapeFromNetwork(action.NewShape);
                 RaiseRequestRedraw();
             }
         }
     }
 
+    /// <summary>
+    /// Handles an Undo message from the Host.
+    /// </summary>
     private void HandleUndoMessage(CanvasAction action, bool isMyAction)
     {
         if (isMyAction)
@@ -244,12 +315,14 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         }
         if (action.NewShape != null)
         {
-            // KEY FIX
             UpdateShapeFromNetwork(action.NewShape);
         }
         RaiseRequestRedraw();
     }
 
+    /// <summary>
+    /// Handles a Redo message from the Host.
+    /// </summary>
     private void HandleRedoMessage(CanvasAction action, bool isMyAction)
     {
         if (isMyAction)
@@ -258,7 +331,6 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         }
         if (action.NewShape != null)
         {
-            // KEY FIX
             UpdateShapeFromNetwork(action.NewShape);
         }
         RaiseRequestRedraw();

@@ -1,4 +1,13 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: Canvas.xaml.cs & Canvas.xaml
+ *  Owner: Sami Mohiddin
+ *  Roll Number : 132201032
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;

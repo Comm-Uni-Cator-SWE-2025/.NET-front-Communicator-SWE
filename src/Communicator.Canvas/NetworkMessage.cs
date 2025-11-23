@@ -1,4 +1,13 @@
-﻿namespace Communicator.Canvas;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: NetworkMessage.cs
+ *  Owner: Sriram Nangunoori
+ *  Roll Number : 112201019
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+namespace Communicator.Canvas;
 
 /// <summary>
 /// Represents a C# object for a network message, which can be

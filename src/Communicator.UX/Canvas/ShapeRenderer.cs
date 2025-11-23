@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: ShapeRenderer.cs
+ *  Owner: Pranitha Muluguru
+ *  Roll Number : 112201004
+ *  Module : Canvas
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
