@@ -136,8 +136,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         // Subscribe to RPC events via service (avoids late subscription error)
         if (_rpcEventService != null)
         {
-            _rpcEventService.ParticipantJoined += OnParticipantJoined;
-            _rpcEventService.ParticipantLeft += OnParticipantLeft;
             _rpcEventService.ParticipantsListUpdated += OnParticipantsListUpdated;
             _rpcEventService.Logout += OnLogout;
             _rpcEventService.EndMeeting += OnEndMeeting;
@@ -165,31 +163,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         });
     }
 
-    private void OnParticipantJoined(object? sender, RpcStringEventArgs e)
-    {
-        string viewerIP = e.Value;
-        UserProfile newUser = new(
-            email: $"{viewerIP}@example.com",
-            displayName: viewerIP,
-            role: ParticipantRole.STUDENT,
-            logoUrl: null
-        );
-
-        // Update collection on UI thread
-        System.Windows.Application.Current.Dispatcher.Invoke(() => AddParticipant(newUser));
-    }
-
-    private void OnParticipantLeft(object? sender, RpcStringEventArgs e)
-    {
-        string viewerIP = e.Value;
-        // Update collection on UI thread
-        System.Windows.Application.Current.Dispatcher.Invoke(() => {
-            // Find participant by email (which we constructed as IP@example.com)
-            string email = $"{viewerIP}@example.com";
-            RemoveParticipant(email);
-        });
-    }
-
     private void OnParticipantsListUpdated(object? sender, RpcStringEventArgs e)
     {
         string participantsJson = e.Value;
@@ -197,8 +170,9 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         {
             // Deserialize the list of participants
             // Expected format: {"host:port": {"email": "...", "displayName": "...", "role": "..."}}
-            // Map<ClientNode, UserProfile> from Java
-            Dictionary<ClientNode, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<ClientNode, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
+            // Map<String, UserProfile> from Java (Key is "IP:Port")
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] ParticipantsListUpdated JSON: {participantsJson}");
+            Dictionary<string, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<string, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
 
             if (nodeToProfileMap == null)
             {
@@ -209,11 +183,18 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
                 // Sync our list with the backend list
 
                 // 1. Add new participants or update existing ones
-                foreach (KeyValuePair<ClientNode, UserProfile> kvp in nodeToProfileMap)
+                foreach (KeyValuePair<string, UserProfile> kvp in nodeToProfileMap)
                 {
                     UserProfile profile = kvp.Value;
+                    string ipPort = kvp.Key;
+                    string ip = ipPort;
+                    int colonIndex = ipPort.IndexOf(':', StringComparison.Ordinal);
+                    if (colonIndex >= 0)
+                    {
+                        ip = ipPort.Substring(0, colonIndex);
+                    }
 
-                    _ipToMailMap[kvp.Key.HostName] = profile.Email ?? "";
+                    _ipToMailMap[ip] = profile.Email ?? "";
                     // Check if we already have this participant by Email
                     ParticipantViewModel? existingParticipant = Participants.FirstOrDefault(p => p.User.Email == profile.Email);
                     if (existingParticipant == null)
@@ -920,8 +901,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
             // Unsubscribe from RPC events
             if (_rpcEventService != null)
             {
-                _rpcEventService.ParticipantJoined -= OnParticipantJoined;
-                _rpcEventService.ParticipantLeft -= OnParticipantLeft;
                 _rpcEventService.ParticipantsListUpdated -= OnParticipantsListUpdated;
                 _rpcEventService.Logout -= OnLogout;
                 _rpcEventService.EndMeeting -= OnEndMeeting;

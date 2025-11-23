@@ -33,8 +33,6 @@ public interface IRpcEventService
 {
     event EventHandler<RpcDataEventArgs>? FrameReceived;
     event EventHandler<RpcDataEventArgs>? StopShareReceived;
-    event EventHandler<RpcStringEventArgs>? ParticipantJoined;
-    event EventHandler<RpcStringEventArgs>? ParticipantLeft;
     event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
     event EventHandler<RpcStringEventArgs>? Logout;
     event EventHandler<RpcStringEventArgs>? EndMeeting;
@@ -48,8 +46,6 @@ public interface IRpcEventService
 
     void TriggerFrameReceived(byte[] data);
     void TriggerStopShareReceived(byte[] data);
-    void TriggerParticipantJoined(string viewerIp);
-    void TriggerParticipantLeft(string viewerIp);
     void TriggerParticipantsListUpdated(string participantsJson);
     void TriggerLogout(string message);
     void TriggerEndMeeting(string message);
@@ -66,8 +62,6 @@ public sealed class RpcEventService : IRpcEventService
 {
     public event EventHandler<RpcDataEventArgs>? FrameReceived;
     public event EventHandler<RpcDataEventArgs>? StopShareReceived;
-    public event EventHandler<RpcStringEventArgs>? ParticipantJoined;
-    public event EventHandler<RpcStringEventArgs>? ParticipantLeft;
     public event EventHandler<RpcStringEventArgs>? ParticipantsListUpdated;
     public event EventHandler<RpcStringEventArgs>? Logout;
     public event EventHandler<RpcStringEventArgs>? EndMeeting;
@@ -92,16 +86,6 @@ public sealed class RpcEventService : IRpcEventService
     public void TriggerStopShareReceived(byte[] data)
     {
         StopShareReceived?.Invoke(this, new RpcDataEventArgs(data));
-    }
-
-    public void TriggerParticipantJoined(string viewerIp)
-    {
-        ParticipantJoined?.Invoke(this, new RpcStringEventArgs(viewerIp));
-    }
-
-    public void TriggerParticipantLeft(string viewerIp)
-    {
-        ParticipantLeft?.Invoke(this, new RpcStringEventArgs(viewerIp));
     }
 
     public void TriggerParticipantsListUpdated(string participantsJson)

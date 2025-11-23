@@ -364,6 +364,8 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     /// </summary>
     private void UpdateSortedParticipants()
     {
+        System.Diagnostics.Debug.WriteLine("[App] Updating sorted participants list.");
+        Console.WriteLine($"[App] Updating sorted participants list. Count: {Participants.Count}");
         var sorted = Participants.OrderByDescending(p => p.IsScreenSharing).ToList();
 
         SortedParticipants.Clear();

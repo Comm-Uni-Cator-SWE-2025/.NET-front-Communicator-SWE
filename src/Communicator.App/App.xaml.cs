@@ -81,24 +81,7 @@ public sealed partial class MainApp : Application
     {
         System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
 
-        // Subscribe to "subscribeAsViewer" - called when a new participant joins
-        // Matches Java: rpc.subscribe(Utils.SUBSCRIBE_AS_VIEWER, ...)
-        rpc.Subscribe("subscribeAsViewer", (byte[] data) => {
-            try
-            {
-                string viewerIP = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] New viewer subscribed: {viewerIP}");
 
-                rpcEventService.TriggerParticipantJoined(viewerIP);
-
-                return Array.Empty<byte>();
-            }
-            catch (ArgumentException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in subscribeAsViewer: {ex.Message}");
-                return Array.Empty<byte>();
-            }
-        });
 
         // Subscribe to UPDATE_UI to receive video/screen frames
         rpc.Subscribe(ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
@@ -183,23 +166,7 @@ public sealed partial class MainApp : Application
             }
         });
 
-        // Subscribe to "unSubscribeAsViewer" - called when a participant leaves
-        rpc.Subscribe("unSubscribeAsViewer", (byte[] data) => {
-            try
-            {
-                string viewerIP = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] Viewer left: {viewerIP}");
 
-                rpcEventService.TriggerParticipantLeft(viewerIP);
-
-                return Array.Empty<byte>();
-            }
-            catch (ArgumentException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in unSubscribeAsViewer: {ex.Message}");
-                return Array.Empty<byte>();
-            }
-        });
 
         // --- Chat Subscriptions ---
 
