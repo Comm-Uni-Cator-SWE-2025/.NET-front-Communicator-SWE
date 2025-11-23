@@ -87,10 +87,15 @@ public class NegotiateFunctionTests
         using var reader = new StreamReader(httpResponse.Body);
         string responseBody = await reader.ReadToEndAsync();
 
-        Dictionary<string, object> json = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody)!;
+        Dictionary<string, JsonElement> json = 
+            JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(responseBody)!;
 
-        Assert.Equal("ok", json["status"]!.ToString());
-        Assert.Equal("Test123", json["meetingId"]!.ToString());
+        // Validate connection info fields
+        Assert.Equal(fakeConnectionInfo.Url, json["url"].GetString());
+        Assert.Equal(fakeConnectionInfo.AccessToken, json["accessToken"].GetString());
+
+        // Validate meetingId
+        Assert.Equal("Test123", json["meetingId"].GetString());
 
         _mockLogger.Verify(
             log => log.Log(
