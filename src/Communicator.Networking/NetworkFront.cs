@@ -3,17 +3,18 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Text;
+using Communicator.Core.RPC;
 
 namespace Communicator.Networking;
 public class NetworkFront : IController, INetworking
 {
     /** Variable to store the function mappings. */
-    private Dictionary<int, IMessageListener> _listeners;
+    private Dictionary<int, IMessageListener> _listeners = new Dictionary<int, IMessageListener>();
 
     /** Variable to track the number of functions. */
     private int _functionCount = 1;
     /** Variable to store the RPC. */
-    private IAbstractRPC _moduleRpc = null;
+    private IRPC _moduleRpc = null;
     public void SendData(byte[] data, ClientNode[] dest, int module, int priority)
     {
         int dataLength = data.Length;
@@ -127,7 +128,7 @@ public class NetworkFront : IController, INetworking
         _moduleRpc.Call("networkRPCCloseNetworking", new byte[0]);
     }
 
-    public void ConsumeRPC(IAbstractRPC rpc)
+    public void ConsumeRPC(IRPC rpc)
     {
         _moduleRpc = rpc;
         foreach (KeyValuePair<int, IMessageListener> listener in _listeners)

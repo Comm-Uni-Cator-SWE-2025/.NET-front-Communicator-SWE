@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: ParticipantTileControl.xaml.cs
- *  Owner: Geetheswar V
- *  Roll Number : 142201025
- *  Module : UX
+ *  Owner: UpdateNamesForEachModule
+ *  Roll Number :
+ *  Module : 
  *
  * -----------------------------------------------------------------------------
  */

@@ -20,8 +20,10 @@ using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
+using Communicator.Networking;
 using Communicator.ScreenShare;
 using Communicator.UX.Analytics.ViewModels;
+using Communicator.UX.Canvas.ViewModels;
 
 namespace Communicator.App.ViewModels.Meeting;
 
@@ -38,6 +40,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     private readonly ICloudConfigService _cloudConfig;
     private readonly INavigationService _navigationService;
     private readonly IThemeService _themeService;
+    private readonly INetworking _networking;
     private readonly UserProfile _currentUser;
     private MeetingTabViewModel? _currentTab;
     private object? _currentPage;
@@ -84,6 +87,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         ICloudConfigService cloudConfig,
         INavigationService navigationService,
         IThemeService themeService,
+        INetworking networking,
         IRPC? rpc = null,
         IRpcEventService? rpcEventService = null)
     {
@@ -94,6 +98,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
+        _networking = networking ?? throw new ArgumentNullException(nameof(networking));
         _rpc = rpc;
         _rpcEventService = rpcEventService;
 
@@ -103,7 +108,18 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         // Create sub-ViewModels with shared participant collection
         VideoSession = new VideoSessionViewModel(_currentUser, Participants, this, _rpc, _rpcEventService);
         Chat = new ChatViewModel(_currentUser, _toastService, _rpc, _rpcEventService);
-        Whiteboard = new WhiteboardViewModel(_currentUser);
+
+        // Initialize Whiteboard (Canvas)
+        bool isHost = _currentMeeting != null && _currentMeeting.CreatedBy == _currentUser.Email;
+        if (isHost)
+        {
+            Whiteboard = new HostViewModel(_networking, _rpc!);
+        }
+        else
+        {
+            Whiteboard = new ClientViewModel(_networking, _rpc!);
+        }
+
         AIInsights = new AnalyticsViewModel(_themeService);
 
         // Create toolbar with tabs
@@ -273,7 +289,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Sub-ViewModel for whiteboard/canvas functionality.
     /// </summary>
-    public WhiteboardViewModel Whiteboard { get; }
+    public CanvasViewModel Whiteboard { get; }
 
     /// <summary>
     /// Sub-ViewModel for AI insights functionality (Powered by Analytics).

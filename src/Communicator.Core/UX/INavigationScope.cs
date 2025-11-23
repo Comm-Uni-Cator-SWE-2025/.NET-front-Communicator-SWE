@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: INavigationScope.cs
- *  Owner: UpdateNamesForEachModule
- *  Roll Number :
- *  Module : 
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
  *
  * -----------------------------------------------------------------------------
  */
