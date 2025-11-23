@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Moq;
 using Xunit;
 
@@ -46,7 +47,7 @@ public class LoggerTests : IDisposable
     [Fact]
     public async Task InfoAsync_WritesToLocalFile()
     {
-        var mockCloud = new Mock<CloudFunctionLibrary>();
+        var mockCloud = new Mock<ICloudFunctionLibrary>();
         var logger = new CloudLogger("TestModule", mockCloud.Object);
         await logger.InfoAsync("Hello Info");
 
@@ -60,9 +61,9 @@ public class LoggerTests : IDisposable
     [Fact]
     public async Task WarnAsync_WritesToFile_AndCallsCloud()
     {
-        var mockCloud = new Mock<CloudFunctionLibrary>();
+        var mockCloud = new Mock<ICloudFunctionLibrary>();
         mockCloud
-            .Setup(m => m.SendLogAsync("TestModule", "WARNING", "Warn Test"))
+            .Setup(m => m.SendLogAsync("TestModule", "WARNING", "Warn Test", It.IsAny<System.Threading.CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var logger = new CloudLogger("TestModule", mockCloud.Object);
@@ -74,16 +75,16 @@ public class LoggerTests : IDisposable
         Assert.Contains("Warn Test", content);
 
         mockCloud.Verify(
-            m => m.SendLogAsync("TestModule", "WARNING", "Warn Test"),
+            m => m.SendLogAsync("TestModule", "WARNING", "Warn Test", It.IsAny<System.Threading.CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
     public async Task ErrorAsync_WithException_WritesToFile_AndCallsCloud()
     {
-        var mockCloud = new Mock<CloudFunctionLibrary>();
+        var mockCloud = new Mock<ICloudFunctionLibrary>();
         mockCloud
-            .Setup(m => m.SendLogAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(m => m.SendLogAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<System.Threading.CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var logger = new CloudLogger("TestModule", mockCloud.Object);
@@ -97,7 +98,7 @@ public class LoggerTests : IDisposable
         Assert.Contains("Something broke", content);
 
         mockCloud.Verify(m =>
-            m.SendLogAsync("TestModule", "ERROR", It.Is<string>(msg => msg.Contains("Something broke"))),
+            m.SendLogAsync("TestModule", "ERROR", It.Is<string>(msg => msg.Contains("Something broke")), It.IsAny<System.Threading.CancellationToken>()),
             Times.Once);
     }
 }

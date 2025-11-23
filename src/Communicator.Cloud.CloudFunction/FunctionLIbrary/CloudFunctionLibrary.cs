@@ -21,7 +21,7 @@ using Communicator.Cloud.CloudFunction.DataStructures;
 /// <summary>
 /// Function Library for calling Azure Cloud Function APIs asynchronously.
 /// </summary>
-public sealed class CloudFunctionLibrary : IDisposable
+public sealed class CloudFunctionLibrary : ICloudFunctionLibrary, IDisposable
 {
     /// <summary>Base URL of the Cloud Functions.</summary>
     private readonly string baseUrl;

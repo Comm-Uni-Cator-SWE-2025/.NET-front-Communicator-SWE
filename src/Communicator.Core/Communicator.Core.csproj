@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Communicator.Cloud.CloudFunction\Communicator.Cloud.CloudFunction.csproj" />
+    <ProjectReference Include="..\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>
