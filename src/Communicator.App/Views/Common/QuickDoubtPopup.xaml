@@ -1,0 +1,104 @@
+﻿<UserControl x:Class="Communicator.App.Views.QuickDoubtPopup" x:ClassModifier="public"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
+             mc:Ignorable="d" 
+             d:DesignHeight="80" d:DesignWidth="380"
+             Loaded="OnLoaded">
+    <Border Background="{DynamicResource CardBackgroundBrush}"
+            BorderBrush="{DynamicResource WarningBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="14,10"
+            MinWidth="320"
+            MaxWidth="380"
+            Margin="0,0,0,6"
+            HorizontalAlignment="Left"
+            RenderTransformOrigin="0,1">
+        <Border.RenderTransform>
+            <TranslateTransform X="0"/>
+        </Border.RenderTransform>
+        <Border.Effect>
+            <DropShadowEffect Color="Black" 
+                              Opacity="0.2" 
+                              BlurRadius="12" 
+                              ShadowDepth="2"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Icon -->
+            <Border Grid.Column="0"
+                    Width="36"
+                    Height="36"
+                    VerticalAlignment="Center"
+                    Margin="0,0,10,0">
+                <icons:Icon IconName="hand-stop"
+                            IconSize="20"
+                            Foreground="{DynamicResource WarningBrush}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Message Content -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SenderName, RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='Unknown User'}"
+                           FontWeight="SemiBold"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           Margin="0,0,0,3"/>
+                <TextBlock Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue='Quick doubt message...'}"
+                           TextWrapping="Wrap"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           MaxWidth="240"
+                           TextTrimming="CharacterEllipsis"
+                           MaxHeight="40"/>
+            </StackPanel>
+            
+            <!-- Close Button -->
+            <Button Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="8,0,0,0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="CloseButton_Click"
+                    VerticalAlignment="Top">
+                <icons:Icon IconName="x"
+                            IconSize="14"
+                            Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="12">
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>
+

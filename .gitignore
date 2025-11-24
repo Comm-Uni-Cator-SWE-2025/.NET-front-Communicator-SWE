@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+Temp/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -416,3 +418,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Application configuration files with sensitive data
+# Protect cloud function URLs and secrets
+**/appsettings.json
+!**/appsettings.example.json

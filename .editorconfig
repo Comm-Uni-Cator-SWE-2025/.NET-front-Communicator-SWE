@@ -304,3 +304,9 @@ dotnet_diagnostic.RS0061.severity = error
 # Enforce XML documentation for all public types, methods, properties, and fields
 [*.cs]
 dotnet_diagnostic.CS1591.severity = error
+
+# CA1515: Make types internal
+dotnet_diagnostic.CA1515.severity = none
+
+# CA1812: Avoid uninstantiated internal classes
+dotnet_diagnostic.CA1812.severity = none

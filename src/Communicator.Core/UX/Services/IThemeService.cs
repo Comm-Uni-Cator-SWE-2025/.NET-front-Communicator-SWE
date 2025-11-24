@@ -1,0 +1,51 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: IThemeService.cs
+ *  Owner: Pramodh Sai
+ *  Roll Number : 112201029
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
+using Communicator.Core.UX.Models;
+
+namespace Communicator.Core.UX.Services;
+
+/// <summary>
+/// Service interface for managing application themes.
+/// </summary>
+public interface IThemeService
+{
+    /// <summary>
+    /// Event raised when the theme changes.
+    /// </summary>
+    event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
+
+    /// <summary>
+    /// Gets the current active theme.
+    /// </summary>
+    AppTheme CurrentTheme { get; }
+
+    /// <summary>
+    /// Sets the application theme.
+    /// </summary>
+    void SetTheme(AppTheme theme);
+
+    /// <summary>
+    /// Loads the saved theme preference from user settings.
+    /// </summary>
+    void LoadSavedTheme();
+
+    /// <summary>
+    /// Saves the current theme preference to user settings.
+    /// </summary>
+    void SaveThemePreference();
+
+    /// <summary>
+    /// Sets the current user for cloud theme synchronization.
+    /// </summary>
+    /// <param name="username">The username (email) of the logged-in user.</param>
+    void SetUser(string? username);
+}
+
