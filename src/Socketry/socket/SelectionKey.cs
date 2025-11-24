@@ -1,61 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace socket
+namespace NewSocket;
+
+public class SelectionKey
 {
-    public class SelectionKey
+    public static int OP_READ = 1;
+    public static int OP_WRITE = 2;
+    public static int OP_CONNECT = 4;
+    private object? _att;
+    private bool _isValid = true;
+    private bool _isReadable = false;
+    private bool _isWritable = false;
+    private bool _isConnectable = false;
+
+    public void SetAtt(object att)
     {
-        public static int OP_READ = 1;
-        public static int OP_WRITE = 2;
-        public static int OP_CONNECT = 4;
-        private Object att;
-        private bool isValid = true;
-        private bool isReadable = false;
-        private bool isWritable = false;
-        private bool isConnectable = false;
+        this._att = att;
+    }
 
-        public void setAtt(Object att)
-        {
-            this.att = att;
-        }
+    public void SetReadable(bool val)
+    {
+        _isReadable = val;
+    }
+    public void SetWritable(bool val)
+    {
+        _isWritable = val;
+    }
+    public void SetConnectable(bool val)
+    {
+        _isConnectable = val;
+    }
 
-        public void setReadable(bool val)
-        {
-            isReadable = val;
-        }
-        public void setWritable(bool val)
-        {
-            isWritable = val;
-        }
-        public void setConnectable(bool val)
-        {
-            isConnectable = val;
-        }
+    public bool IsValid()
+    {
+        return _isValid;
+    }
 
-        public bool IsValid()
-        {
-            return isValid;
-        }
+    public bool IsReadable()
+    {
+        return _isReadable;
+    }
+    public bool IsWritable()
+    {
+        return _isWritable;
+    }
+    public bool IsConnectable()
+    {
+        return _isConnectable;
+    }
 
-        public bool IsReadable()
-        {
-            return isReadable;
-        }
-        public bool IsWritable()
-        {
-            return isWritable;
-        }
-        public bool IsConnectable()
-        {
-            return isConnectable;
-        }
-
-        public Object Attachment()
-        {
-            return att;
-        }
+    public object Attachment()
+    {
+        return _att;
     }
 }

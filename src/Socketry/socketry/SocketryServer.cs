@@ -1,124 +1,125 @@
-﻿using packetparser;
-using socket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using Packetparser;
+using NewSocket;
 
-namespace socketry
+namespace Socketry;
+
+public class SocketryServer : Socketry
 {
-    public class SocketryServer : Socketry
+    private static short s_lINK_PORT_STATUS = (short)10000;
+
+    public SocketryServer(int serverPort, Dictionary<string, Func<byte[], byte[]>> procedures)
     {
-        private static short LINK_PORT_STATUS = (short)10000;
+        this.SetProcedures(procedures);
 
-        public SocketryServer(int serverPort, Dictionary<String, Func<byte[], byte[]>> _procedures)
+        IServerSocket initServer = StartAt(serverPort);
+        if (initServer == null)
         {
-            this.SetProcedures(_procedures);
+            // throw exception
+        }
+        initServer.ConfigureBlocking(true);
 
-            IServerSocket initServer = StartAt(serverPort);
-            if (initServer == null) { 
-                // throw exception
-            }
-            initServer.ConfigureBlocking(true);
+        ISocket clientInitChannel = initServer.Accept();
 
-            ISocket clientInitChannel = initServer.Accept();
+        Link link = new Link(clientInitChannel);
+        link.ConfigureBlocking(true);
 
-            Link link = new Link(clientInitChannel);
-            link.ConfigureBlocking(true);
+        Packet initPacket = link.GetPacket();
 
-            Packet initPacket = link.GetPacket();
+        if (!(initPacket is not Packet.Init))
+        {
+            Console.WriteLine("Expected init packet...");
+            //throw exception
+        }
 
-            if(!(initPacket is not Packet.Init))
+        byte[] socketsPerTunnel = ((Packet.Init)initPacket).Channels;
+
+        List<IServerSocket> serverSockets = new List<IServerSocket>();
+        List<short> ports = new List<short>();
+        short currentPort = s_lINK_PORT_STATUS;
+
+        foreach (byte socketNum in socketsPerTunnel)
+        {
+            for (short i = 0; i < socketNum; i++)
             {
-                Console.WriteLine("Expected init packet...");
-                //throw exception
-            }
-
-            byte[] socketsPerTunnel = ((Packet.Init)initPacket).channels;
-
-            List<IServerSocket> serverSockets = new List<IServerSocket> ();
-            List<short> ports = new List<short> ();
-            short currentPort = LINK_PORT_STATUS;
-
-            foreach(byte socketNum in socketsPerTunnel)
-            {
-                for(short i = 0; i < socketNum; i++)
+                while (true)
                 {
-                    while (true)
+                    currentPort++;
+                    IServerSocket serverSocket = StartAt(currentPort);
+                    if (serverSocket == null)
                     {
-                        currentPort++;
-                        IServerSocket serverSocket = StartAt(currentPort);
-                        if (serverSocket == null) { 
-                            continue;
-                        }
-
-                        serverSockets.Add(serverSocket);
-                        ports.Add(currentPort);
-                        Console.WriteLine($"[SocketryServer] Opened port: {currentPort}");
-                        break;
+                        continue;
                     }
+
+                    serverSockets.Add(serverSocket);
+                    ports.Add(currentPort);
+                    Console.WriteLine($"[SocketryServer] Opened port: {currentPort}");
+                    break;
                 }
             }
-
-            short[] portsArray = new short[ports.Count];
-            for(int i = 0; i < ports.Count; i++)
-            {
-                portsArray[i] = ports[i];
-            }
-
-            Packet acceptPacket = new Packet.Accept(portsArray);
-            link.SendPacket(acceptPacket);
-
-            List<ISocket> clientSockets = new List<ISocket> ();
-
-            foreach (IServerSocket serverSocket in serverSockets)
-            {
-                serverSocket.ConfigureBlocking (true);
-                ISocket clientChannel = serverSocket.Accept();
-                clientSockets.Add(clientChannel);
-            }
-
-            this.SetTunnelsFromSockets(clientSockets.ToArray(), socketsPerTunnel);
-
         }
 
-        public void SetTunnelsFromSockets(ISocket[] sockets, byte[] socketsPerTunnel)
+        short[] portsArray = new short[ports.Count];
+        for (int i = 0; i < ports.Count; i++)
         {
-            List<Tunnel> tunnels = new List<Tunnel>();
-
-            byte LastSocketNum = 0;
-            foreach (byte socketNum in socketsPerTunnel)
-            {
-                List<ISocket> socketsForTunnel = sockets.Skip(LastSocketNum).Take(socketNum).ToList();
-                LastSocketNum += socketNum;
-                try
-                {
-                    Tunnel tunnel = new Tunnel(socketsForTunnel.ToArray<ISocket>());
-                    tunnels.Add(tunnel);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                }
-            }
-            this._tunnels = tunnels.ToArray();
+            portsArray[i] = ports[i];
         }
 
-        private IServerSocket StartAt(int serverPort)
+        Packet acceptPacket = new Packet.Accept(portsArray);
+        link.SendPacket(acceptPacket);
+
+        List<ISocket> clientSockets = new List<ISocket>();
+
+        foreach (IServerSocket serverSocket in serverSockets)
         {
-            IServerSocket serverSocketChannel;
+            serverSocket.ConfigureBlocking(true);
+            ISocket clientChannel = serverSocket.Accept();
+            clientSockets.Add(clientChannel);
+        }
+
+        this.SetTunnelsFromSockets(clientSockets.ToArray(), socketsPerTunnel);
+
+    }
+
+    public void SetTunnelsFromSockets(ISocket[] sockets, byte[] socketsPerTunnel)
+    {
+        List<Tunnel> tunnels = new List<Tunnel>();
+
+        byte lastSocketNum = 0;
+        foreach (byte socketNum in socketsPerTunnel)
+        {
+            List<ISocket> socketsForTunnel = sockets.Skip(lastSocketNum).Take(socketNum).ToList();
+            lastSocketNum += socketNum;
             try
             {
-                serverSocketChannel = new ServerSocketTCP();
-                serverSocketChannel.Bind(new IPEndPoint(IPAddress.Loopback, serverPort));
-                return serverSocketChannel;
+                Tunnel tunnel = new Tunnel(socketsForTunnel.ToArray<ISocket>());
+                tunnels.Add(tunnel);
             }
-            catch (Exception e) { 
-                Console.WriteLine(e.ToString());
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
-            return null;
         }
+        this._tunnels = tunnels.ToArray();
+    }
+
+    private IServerSocket StartAt(int serverPort)
+    {
+        IServerSocket serverSocketChannel;
+        try
+        {
+            serverSocketChannel = new ServerSocketTCP();
+            serverSocketChannel.Bind(new IPEndPoint(IPAddress.Loopback, serverPort));
+            return serverSocketChannel;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.ToString());
+        }
+        return null;
     }
 }

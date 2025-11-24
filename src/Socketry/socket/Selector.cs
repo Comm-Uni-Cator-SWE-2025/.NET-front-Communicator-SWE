@@ -1,97 +1,104 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
-namespace socket
+namespace NewSocket;
+
+public class Selector
 {
-    public class Selector
+    List<Socket> _readSocketList;
+    List<Socket> _writesocketList;
+    List<Socket> _connectsocketList;
+    Dictionary<Socket, object> _readRegisteredSockets;
+    Dictionary<Socket, object> _writeRegisteredSockets;
+    Dictionary<Socket, object> _connectRegisteredSockets;
+    private Selector() { }
+    public static Selector Open()
     {
-        List<Socket> ReadSocketList;
-        List<Socket> WritesocketList;
-        List<Socket> ConnectsocketList;
-        Dictionary<Socket, Object> ReadRegisteredSockets;
-        Dictionary<Socket, Object> WriteRegisteredSockets;
-        Dictionary<Socket, Object> ConnectRegisteredSockets;
-        private Selector() {}
-        public static Selector Open()
-        {
-            Selector sel = new Selector();
-            sel.ReadSocketList = new List<Socket>();
-            sel.WritesocketList = new List<Socket>();
-            sel.ConnectsocketList = new List<Socket>();
-            sel.ReadRegisteredSockets = new Dictionary<Socket, Object>();
-            sel.WriteRegisteredSockets = new Dictionary<Socket, Object>();
-            sel.ConnectRegisteredSockets = new Dictionary<Socket, Object>();
-            return sel;
-        }
+        Selector sel = new Selector {
+            _readSocketList = new List<Socket>(),
+            _writesocketList = new List<Socket>(),
+            _connectsocketList = new List<Socket>(),
+            _readRegisteredSockets = new Dictionary<Socket, object>(),
+            _writeRegisteredSockets = new Dictionary<Socket, object>(),
+            _connectRegisteredSockets = new Dictionary<Socket, object>()
+        };
+        return sel;
+    }
 
-        public SelectionKey register(Socket sock, int ops, Object att)
+    public SelectionKey Register(Socket sock, int ops, object att)
+    {
+        switch (ops)
         {
-            switch (ops)
-            {
-                case 1:
-                    ReadSocketList.Add(sock);
-                    ReadRegisteredSockets.Add(sock, att);
-                    break;
-                case 2:
-                    WritesocketList.Add(sock);
-                    WriteRegisteredSockets.Add(sock, att);
-                    break;
-                case 4:
-                    ConnectsocketList.Add(sock);
-                    ConnectRegisteredSockets.Add(sock, att);
-                    break;
-                default:
-                    Console.WriteLine($"Unknown operation {ops}");
-                    break;
-            }
-            // meh. is this really required?
-            // its wrong but nowhere its used so well ignore it for now
+            case 1:
+                _readSocketList.Add(sock);
+                _readRegisteredSockets.Add(sock, att);
+                break;
+            case 2:
+                _writesocketList.Add(sock);
+                _writeRegisteredSockets.Add(sock, att);
+                break;
+            case 4:
+                _connectsocketList.Add(sock);
+                _connectRegisteredSockets.Add(sock, att);
+                break;
+            default:
+                Console.WriteLine($"Unknown operation {ops}");
+                break;
+        }
+        // meh. is this really required?
+        // its wrong but nowhere its used so well ignore it for now
+        SelectionKey key = new SelectionKey();
+        key.SetAtt(att);
+        return key;
+    }
+
+    public int Select()
+    {
+        // copy lists :(
+        List<Socket> checkRead = new List<Socket>(_readSocketList);
+        List<Socket> checkWrite = new List<Socket>(_writesocketList);
+        List<Socket> checkConnect = new List<Socket>(_connectsocketList);
+        Socket.Select(checkRead, checkWrite, checkConnect, 1000);
+        return checkRead.Count + checkWrite.Count + checkConnect.Count;
+    }
+
+    public ISet<SelectionKey> SelectedKeys()
+    {
+        // this is peak.
+        List<Socket> checkRead = new List<Socket>(_readSocketList);
+        List<Socket> checkWrite = new List<Socket>(_writesocketList);
+        List<Socket> checkConnect = new List<Socket>(_connectsocketList);
+        Socket.Select(checkRead, checkWrite, checkConnect, 1000);
+        ISet<SelectionKey> keys = new HashSet<SelectionKey>();
+        foreach (Socket s in checkRead)
+        {
             SelectionKey key = new SelectionKey();
-            key.setAtt(att);
-            return key;
+            key.SetReadable(true);
+            key.SetAtt(_readRegisteredSockets[s]);
+            keys.Add(key);
         }
-
-        public int Select()
+        foreach (Socket s in checkWrite)
         {
-            // copy lists :(
-            List<Socket> CheckRead = new List<Socket>(ReadSocketList);
-            List<Socket> CheckWrite = new List<Socket>(WritesocketList);
-            List<Socket> CheckConnect = new List<Socket>(ConnectsocketList);
-            Socket.Select(CheckRead, CheckWrite, CheckConnect, 1000);
-            return CheckRead.Count + CheckWrite.Count + CheckConnect.Count;
+            SelectionKey key = new SelectionKey();
+            key.SetWritable(true);
+            key.SetAtt(_writeRegisteredSockets[s]);
+            keys.Add(key);
         }
-
-        public ISet<SelectionKey> SelectedKeys()
+        foreach (Socket s in checkConnect)
         {
-            // this is peak.
-            List<Socket> CheckRead = new List<Socket>(ReadSocketList);
-            List<Socket> CheckWrite = new List<Socket>(WritesocketList);
-            List<Socket> CheckConnect = new List<Socket>(ConnectsocketList);
-            Socket.Select(CheckRead, CheckWrite, CheckConnect, 1000);
-            ISet<SelectionKey> keys = new HashSet<SelectionKey>();
-            foreach (Socket s in CheckRead) {
-                SelectionKey key = new SelectionKey();
-                key.setReadable(true);
-                key.setAtt(ReadRegisteredSockets[s]);
-                keys.Add(key);
-            }
-            foreach (Socket s in CheckWrite) {
-                SelectionKey key = new SelectionKey();
-                key.setWritable(true);
-                key.setAtt(WriteRegisteredSockets[s]);
-                keys.Add(key);
-            }
-            foreach (Socket s in CheckConnect) {
-                SelectionKey key = new SelectionKey();
-                key.setConnectable(true);
-                key.setAtt(ConnectRegisteredSockets[s]);
-                keys.Add(key);
-            }
-            return keys;
+            SelectionKey key = new SelectionKey();
+            key.SetConnectable(true);
+            key.SetAtt(_connectRegisteredSockets[s]);
+            keys.Add(key);
         }
+        return keys;
+    }
+
+    internal SelectionKey Register(Socket osSocket, int ops, object att)
+    {
+        throw new NotImplementedException();
     }
 }

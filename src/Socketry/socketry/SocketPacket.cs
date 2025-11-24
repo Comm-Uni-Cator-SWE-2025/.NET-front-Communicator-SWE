@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace socketry
+namespace Socketry;
+
+public class SocketPacket
 {
-    public class SocketPacket
-    {
-        public int BytesLeft;
-        public MemoryStream Content;
+    public int _bytesLeft;
+    public MemoryStream _content;
 
-        public SocketPacket(int contentLength, MemoryStream content)
-        {
-            this.BytesLeft = contentLength;
-            this.Content = content;
-        }
+    public SocketPacket(int contentLength, MemoryStream content)
+    {
+        this._bytesLeft = contentLength;
+        this._content = content;
     }
 }
