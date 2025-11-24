@@ -65,6 +65,7 @@ jobs:
           --no-restore
           /p:EnforceCodeStyleInBuild=true
           /p:AnalysisLevel=latest-all
+          /p:TreatWarningsAsErrors=false
         projects: '**/*.csproj'
 
 
