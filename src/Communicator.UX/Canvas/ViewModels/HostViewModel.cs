@@ -66,7 +66,7 @@ public class HostViewModel : CanvasViewModel
 
     public override void ReceiveData(byte[] data)
     {
-        string json = Encoding.UTF8.GetString(data);
+        string json = DataSerializer.Deserialize<string>(data);
         System.Windows.Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
     }
 

@@ -58,7 +58,7 @@ public class ClientViewModel : CanvasViewModel
         {
             System.Diagnostics.Debug.WriteLine("[Client] Requesting canvas history...");
             byte[] response = await _rpc.Call("canvas:getHistory", Array.Empty<byte>());
-            
+
             if (response != null && response.Length > 0)
             {
                 // Deserialize list of byte arrays (history items)
@@ -74,7 +74,7 @@ public class ClientViewModel : CanvasViewModel
                         // And 'data' passed to handleNetworkMessage is what we sent.
                         // We send DataSerializer.Serialize(json).
                         // So each item in history is byte[] representing serialized string.
-                        
+
                         string json = DataSerializer.Deserialize<string>(item);
                         ProcessIncomingMessage(json);
                     }
@@ -140,10 +140,10 @@ public class ClientViewModel : CanvasViewModel
         NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
         string json = CanvasSerializer.SerializeNetworkMessage(msg);
         byte[] data = DataSerializer.Serialize(json);
-        
+
         // Send to Host for verification
         _rpc.Call("canvas:sendToHost", data);
-        
+
         ShowGhostShape(action);
     }
 
@@ -163,7 +163,7 @@ public class ClientViewModel : CanvasViewModel
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
 
             byte[] data = DataSerializer.Serialize(json);
-            
+
             // Send to Host for verification
             _rpc.Call("canvas:sendToHost", data);
         }
