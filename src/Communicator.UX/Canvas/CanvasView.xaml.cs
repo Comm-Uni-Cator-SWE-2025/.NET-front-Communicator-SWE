@@ -7,20 +7,20 @@
  *
  * -----------------------------------------------------------------------------
  */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Communicator.Canvas;
 using Communicator.UX.Canvas.ViewModels;
-using System.Windows.Media.Imaging;
-using System.IO;
 using Microsoft.Win32;
-using System;
 using Drawing = System.Drawing;
 
 namespace Communicator.UX.Canvas;
@@ -29,7 +29,7 @@ public partial class CanvasView : UserControl
 {
     private CanvasViewModel? _vm;
     private UIElement? _currentPreviewElement = null;
-    private Rectangle? _selectionBox = null;
+    private Rectangle? _selectionbox = null;
     private UIElement? _selectionInfo = null; // <--- ADD THIS FIELD
     // --- FIXED: Panning State ---
     private bool _isPanning = false;
@@ -45,14 +45,12 @@ public partial class CanvasView : UserControl
         InitializeComponent();
         this.Loaded += CanvasView_Loaded;
 
-        ThicknessSlider.PreviewMouseLeftButtonUp += (s, e) =>
-        {
+        ThicknessSlider.PreviewMouseLeftButtonUp += (s, e) => {
             _vm?.CommitModification();
         };
 
         // Keep bounds updated on resize
-        this.SizeChanged += (s, e) => 
-        {
+        this.SizeChanged += (s, e) => {
             if (_vm != null && CanvasBorder.ActualWidth > 0 && CanvasBorder.ActualHeight > 0)
             {
                 _vm.CanvasBounds = new Drawing.Rectangle(0, 0, (int)CanvasBorder.ActualWidth, (int)CanvasBorder.ActualHeight);
@@ -109,7 +107,7 @@ public partial class CanvasView : UserControl
             if (_vm is HostViewModel hostVm)
             {
                 // Fire and forget the async task
-                Task.Run(async () => await hostVm.DownloadLastCloudSnapshot());
+                Task.Run(hostVm.DownloadLastCloudSnapshot);
                 e.Handled = true;
             }
         }
@@ -128,7 +126,10 @@ public partial class CanvasView : UserControl
 
     private void BtnAnalyze_Click(object sender, RoutedEventArgs e)
     {
-        if (_vm == null) return;
+        if (_vm == null)
+        {
+            return;
+        }
 
         string tempPath = System.IO.Path.GetTempFileName() + ".png";
 
@@ -144,14 +145,20 @@ public partial class CanvasView : UserControl
     }
     private void BtnCloseAnalysis_Click(object sender, RoutedEventArgs e)
     {
-        if (_vm != null) _vm.IsAnalysisVisible = false;
+        if (_vm != null)
+        {
+            _vm.IsAnalysisVisible = false;
+        }
     }
     private void SaveCanvasToPath(string filePath)
     {
         FrameworkElement elementToRender = CanvasBorder;
 
         // Force layout update if needed, though ActualWidth usually suffices
-        if (elementToRender.ActualWidth == 0 || elementToRender.ActualHeight == 0) return;
+        if (elementToRender.ActualWidth == 0 || elementToRender.ActualHeight == 0)
+        {
+            return;
+        }
 
         RenderTargetBitmap rtb = new RenderTargetBitmap(
             (int)elementToRender.ActualWidth,
@@ -166,16 +173,13 @@ public partial class CanvasView : UserControl
         PngBitmapEncoder pngEncoder = new PngBitmapEncoder();
         pngEncoder.Frames.Add(BitmapFrame.Create(rtb));
 
-        using (FileStream fs = System.IO.File.OpenWrite(filePath))
-        {
-            pngEncoder.Save(fs);
-        }
+        using FileStream fs = System.IO.File.OpenWrite(filePath);
+        pngEncoder.Save(fs);
     }
 
     private void SaveCanvasSnapshot()
     {
-        SaveFileDialog dialog = new SaveFileDialog
-        {
+        SaveFileDialog dialog = new SaveFileDialog {
             FileName = "screen shot",
             DefaultExt = ".png",
             Filter = "PNG Image (.png)|*.png"
@@ -204,7 +208,7 @@ public partial class CanvasView : UserControl
         // Initialize bounds with ActualWidth/Height if available, else fall back to Width/Height
         int w = (int)(CanvasBorder.ActualWidth > 0 ? CanvasBorder.ActualWidth : CanvasBorder.Width);
         int h = (int)(CanvasBorder.ActualHeight > 0 ? CanvasBorder.ActualHeight : CanvasBorder.Height);
-        
+
         _vm.CanvasBounds = new Drawing.Rectangle(0, 0, w, h);
 
         _vm.PropertyChanged += Vm_PropertyChanged;
@@ -241,7 +245,7 @@ public partial class CanvasView : UserControl
             }
         }
 
-        UpdateSelectionBox();
+        Updateselectionbox();
     }
 
     // --- MOUSE HANDLERS ---
@@ -334,7 +338,7 @@ public partial class CanvasView : UserControl
     {
         _isPanning = true;
         // KEY FIX: Capture position relative to stationary container
-        _panLastPosition = e.GetPosition(this); 
+        _panLastPosition = e.GetPosition(this);
         (sender as UIElement)?.CaptureMouse();
     }
     // -------------------------------
@@ -364,45 +368,41 @@ public partial class CanvasView : UserControl
     private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (_vm == null) { return; }
-        if (e.PropertyName == nameof(CanvasViewModel.SelectedShape)) { UpdateSelectionBox(); }
+        if (e.PropertyName == nameof(CanvasViewModel.SelectedShape)) { Updateselectionbox(); }
         if (e.PropertyName == nameof(CanvasViewModel.CurrentMode)) { UpdateToolButtons(); }
         if (e.PropertyName == nameof(CanvasViewModel.CurrentColor)) { UpdateCurrentColorUI(); }
     }
 
-    private void UpdateSelectionBox()
+    private void Updateselectionbox()
     {
         // 1. Clear existing selection visuals
-        if (_selectionBox != null)
+        if (_selectionbox != null)
         {
-            DrawArea.Children.Remove(_selectionBox);
-            _selectionBox = null;
+            DrawArea.Children.Remove(_selectionbox);
+            _selectionbox = null;
         }
 
-        // <--- ADD THIS BLOCK --->
         if (_selectionInfo != null)
         {
             DrawArea.Children.Remove(_selectionInfo);
             _selectionInfo = null;
         }
-        // <--- END ADD --->
 
         // 2. Re-draw if a shape is selected
         if (_vm != null && _vm.SelectedShape != null && !_vm.SelectedShape.IsDeleted)
         {
-            var bounds = _vm.SelectedShape.GetBoundingBox();
+            Drawing.Rectangle bounds = _vm.SelectedShape.GetBoundingBox();
 
             // Draw the box
-            _selectionBox = ShapeRenderer.CreateSelectionBox(bounds);
-            DrawArea.Children.Add(_selectionBox);
+            _selectionbox = ShapeRenderer.Createselectionbox(bounds);
+            DrawArea.Children.Add(_selectionbox);
 
-            // <--- ADD THIS LOGIC --->
             // Only show the text info if we are NOT currently dragging/moving the shape
             if (!_vm.IsMovingShape)
             {
                 _selectionInfo = ShapeRenderer.CreateSelectionInfo(_vm.SelectedShape, bounds);
                 DrawArea.Children.Add(_selectionInfo);
             }
-            // <--- END ADD --->
         }
     }
 
@@ -429,22 +429,64 @@ public partial class CanvasView : UserControl
             case CanvasViewModel.DrawingMode.TriangleShape: BtnTriangle.Background = selectedBrush; break;
         }
     }
-    
-    private void BtnSelect_Click(object sender, RoutedEventArgs e) { if(_vm!=null) _vm.CurrentMode = CanvasViewModel.DrawingMode.Select; }
-    private void BtnFreehand_Click(object sender, RoutedEventArgs e) { if(_vm!=null) _vm.CurrentMode = CanvasViewModel.DrawingMode.FreeHand; }
-    private void BtnLine_Click(object sender, RoutedEventArgs e) { if(_vm!=null) _vm.CurrentMode = CanvasViewModel.DrawingMode.StraightLine; }
-    private void BtnRectangle_Click(object sender, RoutedEventArgs e) { if(_vm!=null) _vm.CurrentMode = CanvasViewModel.DrawingMode.Rectangle; }
-    private void BtnTriangle_Click(object sender, RoutedEventArgs e) { if(_vm!=null) _vm.CurrentMode = CanvasViewModel.DrawingMode.TriangleShape; }
-    private void BtnEllipse_Click(object sender, RoutedEventArgs e) { if(_vm!=null) _vm.CurrentMode = CanvasViewModel.DrawingMode.EllipseShape; }
+
+    private void BtnSelect_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            _vm.CurrentMode = CanvasViewModel.DrawingMode.Select;
+        }
+    }
+    private void BtnFreehand_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            _vm.CurrentMode = CanvasViewModel.DrawingMode.FreeHand;
+        }
+    }
+    private void BtnLine_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            _vm.CurrentMode = CanvasViewModel.DrawingMode.StraightLine;
+        }
+    }
+    private void BtnRectangle_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            _vm.CurrentMode = CanvasViewModel.DrawingMode.Rectangle;
+        }
+    }
+    private void BtnTriangle_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            _vm.CurrentMode = CanvasViewModel.DrawingMode.TriangleShape;
+        }
+    }
+    private void BtnEllipse_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            _vm.CurrentMode = CanvasViewModel.DrawingMode.EllipseShape;
+        }
+    }
     private void BtnUndo_Click(object sender, RoutedEventArgs e) { _vm?.Undo(); }
     private void BtnRedo_Click(object sender, RoutedEventArgs e) { _vm?.Redo(); }
     private void BtnSave_Click(object sender, RoutedEventArgs e)
     {
-        if (_vm != null && _vm.IsHost) _vm.SaveShapes();
+        if (_vm != null && _vm.IsHost)
+        {
+            _vm.SaveShapes();
+        }
     }
     private void BtnRestore_Click(object sender, RoutedEventArgs e)
     {
-        if (_vm is HostViewModel hostVm) hostVm.RestoreShapes();
+        if (_vm is HostViewModel hostVm)
+        {
+            hostVm.RestoreShapes();
+        }
     }
     private void BtnDelete_Click(object sender, RoutedEventArgs e) { _vm?.DeleteSelectedShape(); }
     private void CurrentColorButton_Click(object sender, RoutedEventArgs e) { ColorPopup.IsOpen = true; }

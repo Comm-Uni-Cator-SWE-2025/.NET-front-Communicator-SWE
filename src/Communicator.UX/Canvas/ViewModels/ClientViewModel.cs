@@ -11,12 +11,12 @@
  *
  * -----------------------------------------------------------------------------
  */
+using System.Collections.Generic;
 using Communicator.Canvas;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Communicator.Core.UX.Services;
-using System.Collections.Generic;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -57,7 +57,7 @@ public class ClientViewModel : CanvasViewModel
         try
         {
             System.Diagnostics.Debug.WriteLine("[Client] Requesting canvas history...");
-            byte[] response = await _rpc.Call("canvas:getHistory", Array.Empty<byte>());
+            byte[] response = await Rpc.Call("canvas:getHistory", Array.Empty<byte>());
 
             if (response != null && response.Length > 0)
             {
@@ -142,7 +142,7 @@ public class ClientViewModel : CanvasViewModel
         byte[] data = DataSerializer.Serialize(json);
 
         // Send to Host for verification
-        _rpc.Call("canvas:sendToHost", data);
+        Rpc.Call("canvas:sendToHost", data);
 
         ShowGhostShape(action);
     }
@@ -154,7 +154,7 @@ public class ClientViewModel : CanvasViewModel
     {
         CommitModification();
         SelectedShape = null;
-        CanvasAction? actionToUndo = _stateManager.PeekUndo();
+        CanvasAction? actionToUndo = StateManager.PeekUndo();
 
         if (actionToUndo != null)
         {
@@ -165,7 +165,7 @@ public class ClientViewModel : CanvasViewModel
             byte[] data = DataSerializer.Serialize(json);
 
             // Send to Host for verification
-            _rpc.Call("canvas:sendToHost", data);
+            Rpc.Call("canvas:sendToHost", data);
         }
     }
 
@@ -175,16 +175,16 @@ public class ClientViewModel : CanvasViewModel
     public override void Redo()
     {
         SelectedShape = null;
-        CanvasAction? actionToRedo = _stateManager.PeekRedo();
+        CanvasAction? actionToRedo = StateManager.PeekRedo();
 
         if (actionToRedo != null)
         {
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            
+
             // Send to Host for verification
-            _rpc.Call("canvas:sendToHost", data);
+            Rpc.Call("canvas:sendToHost", data);
         }
     }
 
@@ -231,7 +231,7 @@ public class ClientViewModel : CanvasViewModel
             return;
         }
 
-        CanvasAction action = msg.Action;
+        CanvasAction? action = msg.Action;
         if (action == null)
         {
             return;
@@ -247,7 +247,7 @@ public class ClientViewModel : CanvasViewModel
         {
             if (msg.MessageType == NetworkMessageType.UNDO)
             {
-                CanvasAction? localUndo = _stateManager.PeekUndo();
+                CanvasAction? localUndo = StateManager.PeekUndo();
                 if (localUndo != null && localUndo.ActionId == action.ActionId)
                 {
                     isMyAction = true;
@@ -255,7 +255,7 @@ public class ClientViewModel : CanvasViewModel
             }
             else if (msg.MessageType == NetworkMessageType.REDO)
             {
-                CanvasAction? localRedo = _stateManager.PeekRedo();
+                CanvasAction? localRedo = StateManager.PeekRedo();
                 if (localRedo != null && localRedo.ActionId == action.ActionId)
                 {
                     isMyAction = true;
@@ -309,7 +309,7 @@ public class ClientViewModel : CanvasViewModel
     {
         if (isMyAction)
         {
-            _stateManager.Undo();
+            StateManager.Undo();
         }
         if (action.NewShape != null)
         {
@@ -325,7 +325,7 @@ public class ClientViewModel : CanvasViewModel
     {
         if (isMyAction)
         {
-            _stateManager.Redo();
+            StateManager.Redo();
         }
         if (action.NewShape != null)
         {

@@ -32,17 +32,17 @@ namespace Communicator.UX.Canvas.ViewModels;
 /// </summary>
 public class CanvasViewModel : INotifyPropertyChanged
 {
-    protected readonly IRPC _rpc;
-    protected readonly IRpcEventService _rpcEventService;
+    protected readonly IRPC? Rpc;
+    protected readonly IRpcEventService? RpcEventService;
 
     public CanvasViewModel(IRPC rpc, IRpcEventService rpcEventService)
     {
-        _rpc = rpc;
-        _rpcEventService = rpcEventService;
+        Rpc = rpc;
+        RpcEventService = rpcEventService;
 
-        if (_rpcEventService != null)
+        if (RpcEventService != null)
         {
-            _rpcEventService.CanvasUpdateReceived += OnCanvasUpdateReceived;
+            RpcEventService.CanvasUpdateReceived += OnCanvasUpdateReceived;
         }
     }
 
@@ -162,7 +162,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// <summary>
     /// Manages the Undo/Redo stacks.
     /// </summary>
-    protected readonly StateManager _stateManager = new();
+    protected readonly StateManager StateManager = new();
 
     /// <summary>
     /// Used to store the state of a shape before modification for Undo purposes.
@@ -603,7 +603,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     {
         CommitModification();
         SelectedShape = null;
-        CanvasAction? undoneAction = _stateManager.Undo();
+        CanvasAction? undoneAction = StateManager.Undo();
         if (undoneAction != null)
         {
             SyncDictionaryFromAction(undoneAction, true);
@@ -617,7 +617,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     public virtual void Redo()
     {
         SelectedShape = null;
-        CanvasAction? redoneAction = _stateManager.Redo();
+        CanvasAction? redoneAction = StateManager.Redo();
         if (redoneAction != null)
         {
             SyncDictionaryFromAction(redoneAction, false);
@@ -631,7 +631,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// <param name="action">The action to apply.</param>
     protected void ApplyActionLocally(CanvasAction action)
     {
-        _stateManager.AddAction(action);
+        StateManager.AddAction(action);
         if (action.NewShape != null)
         {
             UpdateShapeFromNetwork(action.NewShape);
@@ -676,7 +676,11 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// </summary>
     public async void RegularizeSelectedShape()
     {
-        if (SelectedShape == null) return;
+        if (SelectedShape == null)
+        {
+            return;
+        }
+
         CommitModification(); // Ensure any pending edits are saved first
 
         string inputJson = CanvasSerializer.SerializeShapeManual(SelectedShape);
@@ -684,7 +688,7 @@ public class CanvasViewModel : INotifyPropertyChanged
         try
         {
             System.Diagnostics.Debug.WriteLine("[CanvasViewModel] RegularizeSelectedShape called with input: ");
-            byte[] response = await _rpc.Call("canvas:regularize", DataSerializer.Serialize(inputJson));
+            byte[] response = await Rpc.Call("canvas:regularize", DataSerializer.Serialize(inputJson));
             System.Diagnostics.Debug.WriteLine("[CanvasViewModel] RegularizeSelectedShape received response: ");
             string outputJson = DataSerializer.Deserialize<string>(response);
 
@@ -719,8 +723,9 @@ public class CanvasViewModel : INotifyPropertyChanged
         AnalysisResult = "Analyzing...";
         try
         {
-            byte[] response = await _rpc.Call("canvas:describe", Encoding.UTF8.GetBytes(imagePath));
+            byte[] response = await Rpc.Call("canvas:describe", Encoding.UTF8.GetBytes(imagePath));
             string result = Encoding.UTF8.GetString(response);
+            Console.WriteLine($"[CanvasViewModel] Analysis result received. {result}");
             AnalysisResult = result;
         }
         catch (Exception ex)
@@ -799,7 +804,7 @@ public class CanvasViewModel : INotifyPropertyChanged
             {
                 _shapes = loadedShapes;
                 SelectedShape = null;
-                _stateManager.ImportState(new SerializedActionStack());
+                StateManager.ImportState(new SerializedActionStack());
                 RaiseRequestRedraw();
                 Console.WriteLine("[Canvas] State Restored.");
             }

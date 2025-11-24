@@ -26,5 +26,5 @@ public record Entity(
     string Id,
     string Type,
     int LastN,
-    TimeRange TimeRange,
+    TimeRange? TimeRange,
     JsonElement Data);

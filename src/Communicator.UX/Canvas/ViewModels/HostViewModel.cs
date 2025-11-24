@@ -21,8 +21,8 @@ using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Microsoft.Win32;
 using Communicator.Core.UX.Services;
+using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -115,7 +115,7 @@ public class HostViewModel : CanvasViewModel
         {
             string shapesJson = CanvasSerializer.SerializeShapesDictionary(_shapes);
 
-            Entity _postEntity = new Entity(
+            Entity postEntity = new Entity(
                 Module: "Canvas",
                 Table: "Snapshots",
                 Id: Guid.NewGuid().ToString(),
@@ -125,10 +125,10 @@ public class HostViewModel : CanvasViewModel
                 Data: JsonDocument.Parse(shapesJson).RootElement
             );
 
-            CloudResponse _response = await _cloud.CloudPostAsync(_postEntity);
+            CloudResponse response = await _cloud.CloudPostAsync(postEntity);
 
             // Write to log file on Desktop
-            LogToDesktop($"Auto-save executed. Status: {_response.StatusCode}");
+            LogToDesktop($"Auto-save executed. Status: {response.StatusCode}");
         }
         catch (Exception ex)
         {
@@ -145,7 +145,7 @@ public class HostViewModel : CanvasViewModel
         try
         {
 
-            Entity _getEntity = new Entity(
+            Entity getEntity = new Entity(
                 Module: "Canvas",
                 Table: "Snapshots",
                 Id: "",
@@ -155,23 +155,23 @@ public class HostViewModel : CanvasViewModel
                 Data: JsonDocument.Parse("{}").RootElement
             );
 
-            CloudResponse _response = await _cloud.CloudGetAsync(_getEntity);
+            CloudResponse response = await _cloud.CloudGetAsync(getEntity);
 
             // 1. Check if we got data
-            if (_response.Data.ValueKind == JsonValueKind.Undefined || _response.Data.ValueKind == JsonValueKind.Null)
+            if (response.Data.ValueKind == JsonValueKind.Undefined || response.Data.ValueKind == JsonValueKind.Null)
             {
-                ShowPopup($"Cloud returned empty data. Status: {_response.StatusCode}", "Warning", MessageBoxImage.Warning);
+                ShowPopup($"Cloud returned empty data. Status: {response.StatusCode}", "Warning", MessageBoxImage.Warning);
                 return;
             }
 
             string finalJsonToSave = "";
 
             // 2. Unwrap the Array (LastN returns a list)
-            if (_response.Data.ValueKind == JsonValueKind.Array)
+            if (response.Data.ValueKind == JsonValueKind.Array)
             {
-                if (_response.Data.GetArrayLength() > 0)
+                if (response.Data.GetArrayLength() > 0)
                 {
-                    JsonElement firstEntity = _response.Data[0];
+                    JsonElement firstEntity = response.Data[0];
 
                     // 3. Extract the inner "data" property which holds our shapes
                     // We try both "data" and "Data" to be safe
@@ -195,7 +195,7 @@ public class HostViewModel : CanvasViewModel
             else
             {
                 // Not an array, just use it directly
-                finalJsonToSave = _response.Data.ToString();
+                finalJsonToSave = response.Data.ToString();
             }
 
             // 4. Save to Desktop
@@ -267,7 +267,7 @@ public class HostViewModel : CanvasViewModel
             byte[] data = DataSerializer.Serialize(json);
 
             // Broadcast to all clients via Java Backend
-            _rpc.Call("canvas:broadcast", data);
+            Rpc.Call("canvas:broadcast", data);
         }
         else
         {
@@ -283,7 +283,7 @@ public class HostViewModel : CanvasViewModel
     {
         CommitModification();
         SelectedShape = null;
-        CanvasAction? actionToUndo = _stateManager.PeekUndo();
+        CanvasAction? actionToUndo = StateManager.PeekUndo();
         base.Undo();
 
         if (actionToUndo != null)
@@ -292,9 +292,9 @@ public class HostViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            
+
             // Broadcast to all clients via Java Backend
-            _rpc.Call("canvas:broadcast", data);
+            Rpc.Call("canvas:broadcast", data);
         }
     }
 
@@ -304,7 +304,7 @@ public class HostViewModel : CanvasViewModel
     public override void Redo()
     {
         SelectedShape = null;
-        CanvasAction? actionToRedo = _stateManager.PeekRedo();
+        CanvasAction? actionToRedo = StateManager.PeekRedo();
         base.Redo();
 
         if (actionToRedo != null)
@@ -312,9 +312,9 @@ public class HostViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            
+
             // Broadcast to all clients via Java Backend
-            _rpc.Call("canvas:broadcast", data);
+            Rpc.Call("canvas:broadcast", data);
         }
     }
 
@@ -342,9 +342,9 @@ public class HostViewModel : CanvasViewModel
 
                 Console.WriteLine("[Host] Broadcasting RESTORE command...");
                 byte[] data = DataSerializer.Serialize(networkJson);
-                
+
                 // Broadcast to all clients via Java Backend
-                _rpc.Call("canvas:broadcast", data);
+                Rpc.Call("canvas:broadcast", data);
             }
             catch (Exception ex)
             {
@@ -381,9 +381,9 @@ public class HostViewModel : CanvasViewModel
 
                     RaiseRequestRedraw();
                     byte[] data = DataSerializer.Serialize(json);
-                    
+
                     // Broadcast to all clients via Java Backend
-                    _rpc.Call("canvas:broadcast", data);
+                    Rpc.Call("canvas:broadcast", data);
                 }
                 else
                 {

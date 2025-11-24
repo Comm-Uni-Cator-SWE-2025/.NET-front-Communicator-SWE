@@ -57,7 +57,7 @@ public static class ProcessingService
     /// </summary>
     public static string AnalyzeCanvasImage(string imagePath)
     {
-        if (!File.Exists(imagePath)) return "Error: Image file not found.";
+        if (!File.Exists(imagePath)) { return "Error: Image file not found."; }
 
         // Simulating processing time
         Thread.Sleep(500);
