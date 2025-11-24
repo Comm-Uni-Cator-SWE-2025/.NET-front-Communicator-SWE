@@ -861,6 +861,9 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
                 System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
                 _toastService.ShowError("Cloud service failed to connect (IsConnected=false)");
             }
+
+            // Initialize Canvas (Whiteboard) - specifically for Clients to fetch history
+            await InitializeCanvasAsync().ConfigureAwait(true);
         }
         catch (Exception ex)
         {
