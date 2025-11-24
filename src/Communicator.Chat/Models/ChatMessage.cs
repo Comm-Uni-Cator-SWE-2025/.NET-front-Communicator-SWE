@@ -17,8 +17,8 @@
         public string QuotedContent { get; }
 
         // Helper properties
-        public bool HasQuote => !string.IsNullOrEmpty(QuotedContent);
-        public bool IsFileMessage => !string.IsNullOrEmpty(FileName);
+        public bool HasQuote => !string.IsNullOrWhiteSpace(QuotedContent);
+        public bool IsFileMessage => !string.IsNullOrWhiteSpace(FileName);
 
         public ChatMessage(
             string messageId,
