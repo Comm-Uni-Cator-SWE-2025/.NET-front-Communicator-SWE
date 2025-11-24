@@ -40,18 +40,9 @@ public partial class CanvasView : UserControl
     private const double MAX_ZOOM = 5.0;
     private const double MIN_ZOOM = 0.5;
 
-    public static readonly DependencyProperty HeaderProperty = DependencyProperty.Register(
-        "Header", typeof(string), typeof(CanvasView), new PropertyMetadata("Canvas"));
-
-    public string Header
-    {
-        get => (string)GetValue(HeaderProperty); set => SetValue(HeaderProperty, value);
-    }
-
     public CanvasView()
     {
         InitializeComponent();
-        HeaderLabel.Text = Header;
         this.Loaded += CanvasView_Loaded;
 
         ThicknessSlider.PreviewMouseLeftButtonUp += (s, e) =>
@@ -71,7 +62,6 @@ public partial class CanvasView : UserControl
 
     private void CanvasView_Loaded(object sender, RoutedEventArgs e)
     {
-        HeaderLabel.Text = Header;
         if (DataContext is CanvasViewModel vm)
         {
             _vm = vm;
