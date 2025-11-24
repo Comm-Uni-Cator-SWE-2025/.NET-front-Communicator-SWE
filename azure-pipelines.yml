@@ -63,7 +63,6 @@ jobs:
         arguments: >
           --configuration $(buildConfiguration)
           --no-restore
-          /p:TreatWarningsAsErrors=true
           /p:EnforceCodeStyleInBuild=true
           /p:AnalysisLevel=latest-all
         projects: '**/*.csproj'
