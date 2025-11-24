@@ -74,6 +74,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 
     // Meeting State
     private bool _isMeetingActive;
+    private string _meetingLink = string.Empty;
 
     /// <summary>
     /// Builds meeting tabs for the supplied user and initializes navigation state.
@@ -124,7 +125,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         AIInsights = new AnalyticsViewModel(_themeService);
 
         // Create toolbar with tabs
-        _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs());
+        _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(), this);
         _toolbarViewModel.SelectedTabChanged += OnSelectedTabChanged;
         _currentTab = _toolbarViewModel.SelectedTab;
         if (_currentTab != null)
@@ -146,6 +147,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         CloseSidePanelCommand = new RelayCommand(_ => CloseSidePanel());
         SendQuickDoubtCommand = new RelayCommand(async _ => await SendQuickDoubtAsync().ConfigureAwait(true), _ => CanSendQuickDoubt());
         DismissQuickDoubtCommand = new RelayCommand(param => DismissQuickDoubt(param as string));
+        CopyMeetingLinkCommand = new RelayCommand(_ => CopyMeetingLink());
 
         // Start the meeting session
         StartMeeting();
@@ -401,6 +403,13 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     public ICommand CloseSidePanelCommand { get; }
     public ICommand SendQuickDoubtCommand { get; }
     public ICommand DismissQuickDoubtCommand { get; }
+    public ICommand CopyMeetingLinkCommand { get; }
+
+    public string MeetingLink
+    {
+        get => _meetingLink;
+        set => SetProperty(ref _meetingLink, value);
+    }
 
     #endregion
 
@@ -821,6 +830,32 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         if (doubtToRemove != null)
         {
             ActiveQuickDoubts.Remove(doubtToRemove);
+        }
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Need to handle all clipboard exceptions")]
+    internal void CopyMeetingLink()
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(_meetingLink))
+            {
+                System.Windows.Clipboard.SetText(_meetingLink);
+                _toastService.ShowSuccess("Meeting link copied to clipboard");
+            }
+            else if (_currentMeeting != null && !string.IsNullOrWhiteSpace(_currentMeeting.MeetingId))
+            {
+                System.Windows.Clipboard.SetText(_currentMeeting.MeetingId);
+                _toastService.ShowSuccess("Meeting ID copied to clipboard");
+            }
+            else
+            {
+                _toastService.ShowWarning("No meeting link available");
+            }
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError($"Failed to copy: {ex.Message}");
         }
     }
 

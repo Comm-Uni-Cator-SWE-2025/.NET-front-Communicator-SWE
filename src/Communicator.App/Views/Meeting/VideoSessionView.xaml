@@ -4,31 +4,112 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Communicator.App.Views.Meeting"
+             xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="900"
-             Background="{DynamicResource AppBackgroundBrush}">
-    <Grid>
-        <!-- Participants Grid -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled"
-                      Padding="16">
-            <ItemsControl ItemsSource="{Binding Participants}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Rows="{Binding GridRows}"
-                                     Columns="{Binding GridColumns}"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Padding="4">
-                            <local:ParticipantTileControl/>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+             Background="{DynamicResource AppBackgroundBrush}"
+             Loaded="UserControl_Loaded"
+             SizeChanged="UserControl_SizeChanged">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid x:Name="MainGrid">
+        <!-- Grid View -->
+        <Grid x:Name="GridViewContainer">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMaximized}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            
+            <ScrollViewer x:Name="MainScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="16"
+                          ScrollChanged="MainScrollViewer_ScrollChanged">
+                <ItemsControl ItemsSource="{Binding Participants}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="{Binding GridRows}"
+                                         Columns="{Binding GridColumns}"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="4">
+                                <local:ParticipantTileControl MaximizeRequested="ParticipantTileControl_MaximizeRequested"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Maximized View -->
+        <Grid x:Name="MaximizedViewContainer">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMaximized}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Main Maximized Participant -->
+            <Grid Grid.Column="0" Margin="10">
+                <local:ParticipantTileControl DataContext="{Binding MaximizedParticipant}"/>
+                
+                <!-- Restore Button -->
+                <Button HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="10"
+                        Width="40"
+                        Height="40"
+                        Background="#CC000000"
+                        BorderThickness="0"
+                        Click="RestoreButton_Click"
+                        Cursor="Hand"
+                        ToolTip="Restore Grid">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <icons:Icon IconName="minimize" IconSize="20" Foreground="White"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- Sidebar Thumbnails -->
+            <ScrollViewer Grid.Column="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="5">
+                <ItemsControl ItemsSource="{Binding Participants}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Height="150" Margin="0,0,0,10">
+                                <local:ParticipantTileControl MaximizeRequested="ParticipantTileControl_MaximizeRequested"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
 
         <!-- Empty State -->
         <StackPanel HorizontalAlignment="Center"

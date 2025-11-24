@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Input;
 using Communicator.Core.UX;
 
 namespace Communicator.App.ViewModels.Meeting;
@@ -34,16 +35,20 @@ public sealed class TabChangedEventArgs : EventArgs
 public sealed class MeetingToolbarViewModel : ObservableObject
 {
     private MeetingTabViewModel? _selectedTab;
+    private readonly MeetingSessionViewModel? _sessionViewModel;
 
     /// <summary>
     /// Initializes the toolbar with a predefined set of tabs.
     /// </summary>
-    public MeetingToolbarViewModel(IEnumerable<MeetingTabViewModel> tabs)
+    public MeetingToolbarViewModel(IEnumerable<MeetingTabViewModel> tabs, MeetingSessionViewModel? sessionViewModel = null)
     {
         ArgumentNullException.ThrowIfNull(tabs);
 
         Tabs = new ObservableCollection<MeetingTabViewModel>(tabs);
         _selectedTab = Tabs.FirstOrDefault();
+        _sessionViewModel = sessionViewModel;
+
+        CopyMeetingLinkCommand = new RelayCommand(_ => CopyMeetingLink());
     }
 
     public ObservableCollection<MeetingTabViewModel> Tabs { get; }
@@ -63,6 +68,13 @@ public sealed class MeetingToolbarViewModel : ObservableObject
     /// Raised whenever the selected tab changes so the shell can update navigation stacks.
     /// </summary>
     public event EventHandler<TabChangedEventArgs>? SelectedTabChanged;
+
+    public ICommand CopyMeetingLinkCommand { get; }
+
+    private void CopyMeetingLink()
+    {
+        _sessionViewModel?.CopyMeetingLink();
+    }
 }
 
 
