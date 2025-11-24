@@ -48,6 +48,8 @@ public class CanvasViewModel : INotifyPropertyChanged
 
     private void OnCanvasUpdateReceived(object? sender, RpcDataEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine("[CanvasViewModel] OnCanvasUpdateReceived called");
+        System.Diagnostics.Debug.WriteLine(Encoding.UTF8.GetString(e.Data.ToArray()));
         ReceiveData(e.Data.ToArray());
     }
 

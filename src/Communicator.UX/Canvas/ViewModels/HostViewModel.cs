@@ -265,7 +265,7 @@ public class HostViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            
+
             // Broadcast to all clients via Java Backend
             _rpc.Call("canvas:broadcast", data);
         }
