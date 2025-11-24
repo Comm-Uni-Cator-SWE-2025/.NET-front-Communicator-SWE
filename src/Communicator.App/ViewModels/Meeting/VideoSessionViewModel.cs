@@ -45,6 +45,8 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     private int _gridRows = 1;
     private VideoViewMode _viewMode = VideoViewMode.Grid;
     private ParticipantViewModel? _focusedParticipant;
+    private bool _isMaximized;
+    private ParticipantViewModel? _maximizedParticipant;
     private readonly IRPC? _rpc;
     private readonly IRpcEventService? _rpcEventService;
 
@@ -67,6 +69,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         _meetingSessionViewModel = meetingSessionViewModel;
         _rpc = rpc;
         _rpcEventService = rpcEventService;
+        VisibleParticipants = new ObservableCollection<string>();
 
         // Create sorted view with screen sharers first
         SortedParticipants = new ObservableCollection<ParticipantViewModel>(
@@ -107,6 +110,11 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     public ObservableCollection<ParticipantViewModel> SortedParticipants { get; }
 
     /// <summary>
+    /// Collection of IDs of currently visible participants.
+    /// </summary>
+    public ObservableCollection<string> VisibleParticipants { get; }
+
+    /// <summary>
     /// Current view mode (Grid, VideoFocus, ScreenFocus).
     /// </summary>
     public VideoViewMode ViewMode
@@ -122,6 +130,24 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     {
         get => _focusedParticipant;
         private set => SetProperty(ref _focusedParticipant, value);
+    }
+
+    /// <summary>
+    /// Whether a participant is maximized.
+    /// </summary>
+    public bool IsMaximized
+    {
+        get => _isMaximized;
+        set => SetProperty(ref _isMaximized, value);
+    }
+
+    /// <summary>
+    /// The currently maximized participant.
+    /// </summary>
+    public ParticipantViewModel? MaximizedParticipant
+    {
+        get => _maximizedParticipant;
+        set => SetProperty(ref _maximizedParticipant, value);
     }
 
     /// <summary>
@@ -145,6 +171,82 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     {
         get => _gridRows;
         private set => SetProperty(ref _gridRows, value);
+    }
+
+    /// <summary>
+    /// Maximizes the specified participant.
+    /// </summary>
+    public void MaximizeParticipant(ParticipantViewModel participant)
+    {
+        MaximizedParticipant = participant;
+        IsMaximized = true;
+        ViewMode = VideoViewMode.VideoFocus;
+        FocusedParticipant = participant;
+    }
+
+    /// <summary>
+    /// Restores the grid view.
+    /// </summary>
+    public void RestoreGridView()
+    {
+        IsMaximized = false;
+        MaximizedParticipant = null;
+        ViewMode = VideoViewMode.Grid;
+        FocusedParticipant = null;
+    }
+
+    /// <summary>
+    /// Updates the list of visible participants.
+    /// </summary>
+    public void UpdateVisibleParticipants(System.Collections.Generic.List<string> visibleIds)
+    {
+        if (visibleIds == null)
+        {
+            return;
+        }
+
+        // Only update if changed to avoid unnecessary notifications
+        if (!visibleIds.SequenceEqual(VisibleParticipants))
+        {
+            VisibleParticipants.Clear();
+            foreach (string id in visibleIds)
+            {
+                if (!VisibleParticipants.Contains(id))
+                {
+                    VisibleParticipants.Add(id);
+                    // Find IP for this email (id is email)
+                    string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+
+                    if (!string.IsNullOrEmpty(ip))
+                    {
+                        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                        _rpc?.Call("subscribeAsViewer", subscriberPacket.Serialize());
+                    }
+                }
+            }
+
+            foreach (string existingId in VisibleParticipants.ToList())
+            {
+                if (!visibleIds.Contains(existingId))
+                {
+                    VisibleParticipants.Remove(existingId);
+
+                    // Find IP for this email (existingId is email)
+                    string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == existingId).Key;
+
+                    if (!string.IsNullOrEmpty(ip))
+                    {
+                        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                        _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
+                    }
+                }
+            }
+
+
+            Console.WriteLine($"[App] Visible participants updated: {string.Join(", ", visibleIds)}");
+            // Notify RPC or other services about visibility change if needed
+            // _rpc?.UpdateVisibleParticipants(visibleIds);
+        }
     }
 
     /// <summary>

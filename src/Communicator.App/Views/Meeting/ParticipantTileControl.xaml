@@ -167,6 +167,50 @@
                     </StackPanel>
                 </Grid>
             </Border>
+
+            <!-- Hover Overlay with Maximize Button -->
+            <Border x:Name="HoverOverlay"
+                    VerticalAlignment="Bottom"
+                    Height="40"
+                    Background="#CC000000"
+                    Opacity="0"
+                    IsHitTestVisible="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Username on the left (Duplicate for visibility in overlay) -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding DisplayName}"
+                               Foreground="White"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               TextTrimming="CharacterEllipsis"/>
+
+                    <!-- Maximize Icon (Plus/Expand) -->
+                    <Button Grid.Column="1"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Width="30"
+                            Height="30"
+                            Margin="0,0,10,0"
+                            Click="MaximizeButton_Click"
+                            VerticalAlignment="Center"
+                            Cursor="Hand"
+                            ToolTip="Maximize">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Grid Background="Transparent">
+                                    <icons:Icon IconName="maximize" IconSize="16" Foreground="White"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </UserControl>
