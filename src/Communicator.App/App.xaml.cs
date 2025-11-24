@@ -340,7 +340,7 @@ public sealed partial class MainApp : Application
     /// <summary>
     /// Configures all application services for dependency injection.
     /// </summary>
-    private static void ConfigureServices(IServiceCollection services)
+    internal static void ConfigureServices(IServiceCollection services)
     {
         // Register Configuration (loads appsettings.json)
         IConfiguration configuration = new ConfigurationBuilder()
