@@ -44,6 +44,9 @@ public interface IRpcEventService
     event EventHandler<RpcDataEventArgs>? FileSaveError;
     event EventHandler<RpcDataEventArgs>? MessageDeleted;
 
+    // Canvas Events
+    event EventHandler<RpcDataEventArgs>? CanvasUpdateReceived;
+
     void TriggerFrameReceived(byte[] data);
     void TriggerStopShareReceived(byte[] data);
     void TriggerParticipantsListUpdated(string participantsJson);
@@ -56,6 +59,9 @@ public interface IRpcEventService
     void TriggerFileSaveSuccess(byte[] data);
     void TriggerFileSaveError(byte[] data);
     void TriggerMessageDeleted(byte[] data);
+
+    // Canvas Triggers
+    void TriggerCanvasUpdateReceived(byte[] data);
 }
 
 public sealed class RpcEventService : IRpcEventService
@@ -72,6 +78,9 @@ public sealed class RpcEventService : IRpcEventService
     public event EventHandler<RpcDataEventArgs>? FileSaveSuccess;
     public event EventHandler<RpcDataEventArgs>? FileSaveError;
     public event EventHandler<RpcDataEventArgs>? MessageDeleted;
+
+    // Canvas Events
+    public event EventHandler<RpcDataEventArgs>? CanvasUpdateReceived;
 
     public void TriggerFrameReceived(byte[] data)
     {
@@ -127,6 +136,11 @@ public sealed class RpcEventService : IRpcEventService
     public void TriggerMessageDeleted(byte[] data)
     {
         MessageDeleted?.Invoke(this, new RpcDataEventArgs(data));
+    }
+
+    public void TriggerCanvasUpdateReceived(byte[] data)
+    {
+        CanvasUpdateReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 }
 

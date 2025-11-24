@@ -235,6 +235,20 @@ public sealed partial class MainApp : Application
             return Array.Empty<byte>();
         });
 
+        // --- Canvas Subscriptions ---
+
+        rpc.Subscribe("canvas:update", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerCanvasUpdateReceived(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in canvas:update: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
+
         System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
     }
 
