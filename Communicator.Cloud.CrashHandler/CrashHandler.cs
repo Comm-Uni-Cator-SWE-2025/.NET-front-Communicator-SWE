@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Communicator.Cloud.CloudFunction.FunctionLibrary;  // ADD THIS
+using Communicator.Cloud.CloudFunction.DataStructures;   // ADD THIS
 
 namespace Communicator.Cloud.CrashHandler;
 
@@ -58,7 +60,8 @@ public class CrashHandler : ICrashHandler
             // Do nothing...
         }
 
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        {
             Exception? exception = e.ExceptionObject as Exception;
 
             string exceptionName = exception.GetType().FullName;
@@ -94,10 +97,11 @@ public class CrashHandler : ICrashHandler
 
     private static JsonNode ToJsonNode(string eName, string timeStamp, string eMsg, string eDetails, string eTrace)
     {
-        var payload = new {
+        var payload = new
+        {
             ExceptionName = eName,
             TimestampUtc = timeStamp,
-            ExceptionMessage = eMsg, 
+            ExceptionMessage = eMsg,
             ExceptionDetails = eDetails,
             StackTrace = eTrace
         };

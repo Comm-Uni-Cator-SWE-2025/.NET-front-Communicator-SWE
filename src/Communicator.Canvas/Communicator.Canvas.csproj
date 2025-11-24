@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj" />
     <ProjectReference Include="..\Communicator.Networking\Communicator.Networking.csproj" />
   </ItemGroup>
 

@@ -53,7 +53,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communicator.Cloud.Logger",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Communicator.Cloud.CloudFunction", "Communicator.Cloud.CloudFunction", "{B353AB42-FAA6-25DF-68AF-ABE0F5587DA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudFunctionLIbrary", "src\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj", "{68FEA4CF-2061-493C-8B8B-40E2EA24944A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudFunctionLibrary", "src\Communicator.Cloud.CloudFunction\CloudFunctionLibrary.csproj", "{68FEA4CF-2061-493C-8B8B-40E2EA24944A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Analytics", "Analytics", "{E6257312-9465-0252-2CFF-4DF7D3B955B8}"
 EndProject

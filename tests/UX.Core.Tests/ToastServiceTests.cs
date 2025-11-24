@@ -11,7 +11,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, toast) => receivedToast = toast;  // FIXED
 
         service.ShowSuccess("Success message");
 
@@ -27,7 +27,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, toast) => receivedToast = toast;  // FIXED
 
         service.ShowError("Error message", 5000);
 
@@ -43,7 +43,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, toast) => receivedToast = toast;  // FIXED
 
         service.ShowWarning("Warning message");
 
@@ -58,7 +58,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, toast) => receivedToast = toast;  // FIXED
 
         service.ShowInfo("Info message");
 
