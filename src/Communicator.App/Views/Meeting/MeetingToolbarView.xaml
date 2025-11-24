@@ -4,12 +4,58 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+             xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
              mc:Ignorable="d"
              d:DesignHeight="48"
              d:DesignWidth="400"
              Background="Transparent">
     <Grid>
-        <ListBox ItemsSource="{Binding Tabs}"
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <!-- Copy Meeting Link Button -->
+        <Button Grid.Column="0"
+                Command="{Binding CopyMeetingLinkCommand}"
+                ToolTip="Copy meeting link"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="8"
+                Margin="0,0,8,0"
+                Cursor="Hand"
+                VerticalAlignment="Center"
+                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+            <icons:Icon IconName="link" IconSize="18" Foreground="{DynamicResource IconBrush}"/>
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="border"
+                                        Background="{TemplateBinding Background}"
+                                        CornerRadius="6"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource ActiveOverlayBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Button.Style>
+        </Button>
+        
+        <ListBox Grid.Column="1"
+                 ItemsSource="{Binding Tabs}"
                  SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                  Background="Transparent"
                  BorderThickness="0"
