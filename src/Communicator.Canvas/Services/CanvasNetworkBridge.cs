@@ -1,4 +1,10 @@
-﻿/*
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Communicator.Networking;
+/*
  * -----------------------------------------------------------------------------
  *  File: CanvasNetworkBridge.cs
  *  Owner: Shanmukha Sri Krishna
@@ -7,14 +13,6 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Communicator.Networking;
-using System;
 //to be implemented
 namespace Communicator.Canvas.Services;
 

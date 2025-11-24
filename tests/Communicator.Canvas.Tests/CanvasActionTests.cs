@@ -1,25 +1,32 @@
-﻿using System.Drawing;
-using Communicator.Canvas;
+﻿using Communicator.Canvas;
+using System.Drawing;
+using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Communicator.Canvas.Tests;
 
+[TestClass]
 public class CanvasActionTests
 {
-    [Fact]
-    public void Constructor_GeneratesActionId()
+    [TestMethod]
+    public void Constructor_NoId_GeneratesNewGuid()
     {
-        var shape = new FreeHand(new() { new(0, 0) }, Color.Black, 1, "u1");
+        var shape = new FreeHand(new List<Point> { new(0, 0) }, Color.Black, 1, "u1");
         var action = new CanvasAction(CanvasActionType.Create, null, shape);
-        Assert.False(string.IsNullOrWhiteSpace(action.ActionId));
+
+        Assert.IsFalse(string.IsNullOrWhiteSpace(action.ActionId));
+        Assert.IsTrue(Guid.TryParse(action.ActionId, out _));
     }
 
-    [Fact]
-    public void Constructor_WithProvidedId_UsesIt()
+    [TestMethod]
+    public void Constructor_WithId_SetsCorrectId()
     {
-        var shape = new FreeHand(new() { new(0, 0) }, Color.Black, 1, "u1");
+        var shape = new FreeHand(new List<Point> { new(0, 0) }, Color.Black, 1, "u1");
         string id = Guid.NewGuid().ToString();
         var action = new CanvasAction(id, CanvasActionType.Modify, shape, shape);
-        Assert.Equal(id, action.ActionId);
-        Assert.Equal(CanvasActionType.Modify, action.ActionType);
+
+        Assert.AreEqual(id, action.ActionId);
+        Assert.AreEqual(CanvasActionType.Modify, action.ActionType);
     }
 }

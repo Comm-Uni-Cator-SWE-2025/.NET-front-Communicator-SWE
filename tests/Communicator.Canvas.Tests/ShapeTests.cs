@@ -1,84 +1,112 @@
-﻿using System.Drawing;
-using Communicator.Canvas;
+﻿using Communicator.Canvas;
+using System.Drawing;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Communicator.Canvas.Tests;
 
+[TestClass]
 public class ShapeTests
 {
-    [Fact]
-    public void FreeHandBoundingBox()
+    [TestMethod]
+    public void GetBoundingBox_FreeHand_ReturnsCorrectDimensions()
     {
-        FreeHand f = new FreeHand(new() { new(0, 0), new(10, 5) }, Color.Red, 2, "u1");
+        var f = new FreeHand(new List<Point> { new(0, 0), new(10, 5) }, Color.Red, 2, "u1");
         Rectangle box = f.GetBoundingBox();
-        Assert.Equal(0, box.X);
-        Assert.Equal(0, box.Y);
-        Assert.Equal(10, box.Width);
-        Assert.Equal(5, box.Height);
+
+        Assert.AreEqual(0, box.X);
+        Assert.AreEqual(0, box.Y);
+        Assert.AreEqual(10, box.Width);
+        Assert.AreEqual(5, box.Height);
     }
 
-    [Fact]
-    public void FreeHandIsHitOnSegment()
+    [TestMethod]
+    public void GetBoundingBox_StraightLine_SinglePoint_ReturnsZeroSize()
     {
-        FreeHand f = new FreeHand(new() { new(0, 0), new(10, 10) }, Color.Red, 2, "u1");
-        Assert.True(f.IsHit(new Point(5, 5)));
+        var line = new StraightLine(new List<Point> { new(10, 10) }, Color.Black, 1, "u1");
+        Rectangle box = line.GetBoundingBox();
+
+        Assert.AreEqual(0, box.Width);
+        Assert.AreEqual(0, box.Height);
     }
 
-    [Fact]
-    public void StraightLineIsHit()
+    [TestMethod]
+    public void IsHit_FreeHand_ReturnsTrueOnSegment()
     {
-        StraightLine l = new StraightLine(new() { new(0, 0), new(10, 0) }, Color.Black, 2, "u1");
-        Assert.True(l.IsHit(new Point(5, 1)));
+        var f = new FreeHand(new List<Point> { new(0, 0), new(10, 10) }, Color.Red, 2, "u1");
+        Assert.IsTrue(f.IsHit(new Point(5, 5)));
     }
 
-    [Fact]
-    public void RectangleIsHitOnBorder()
+    [TestMethod]
+    public void IsHit_StraightLine_ReturnsTrueOnLine()
     {
-        RectangleShape r = new RectangleShape(new() { new(0, 0), new(10, 10) }, Color.Black, 2, "u1");
-        Assert.True(r.IsHit(new Point(0, 5)));
-        Assert.False(r.IsHit(new Point(5, 5)));
+        var l = new StraightLine(new List<Point> { new(0, 0), new(10, 0) }, Color.Black, 2, "u1");
+        Assert.IsTrue(l.IsHit(new Point(5, 1)));
     }
 
-    [Fact]
-    public void EllipseIsHitOnEdge()
+    [TestMethod]
+    public void IsHit_Rectangle_ReturnsTrueOnBorderOnly()
     {
-        EllipseShape e = new EllipseShape(new() { new(0, 0), new(10, 10) }, Color.Black, 2, "u1");
-        Assert.True(e.IsHit(new Point(5, 0)));
+        var r = new RectangleShape(new List<Point> { new(0, 0), new(10, 10) }, Color.Black, 2, "u1");
+        Assert.IsTrue(r.IsHit(new Point(0, 5)), "Should hit border");
+        Assert.IsFalse(r.IsHit(new Point(5, 5)), "Should not hit center");
     }
 
-    [Fact]
-    public void TriangleIsHitOnEdge()
+    [TestMethod]
+    public void IsHit_Ellipse_ReturnsTrueOnEdge()
     {
-        TriangleShape t = new TriangleShape(new() { new(0, 0), new(10, 10) }, Color.Black, 2, "u1");
-        Assert.True(t.IsHit(new Point(0, 5)));
+        var e = new EllipseShape(new List<Point> { new(0, 0), new(10, 10) }, Color.Black, 2, "u1");
+        Assert.IsTrue(e.IsHit(new Point(5, 0)));
     }
 
-    [Fact]
-    public void WithUpdatesChangesColorThickness()
+    [TestMethod]
+    public void IsHit_Triangle_ReturnsTrueOnEdge()
     {
-        FreeHand f = new FreeHand(new() { new(0, 0) }, Color.Red, 2, "u1");
+        var t = new TriangleShape(new List<Point> { new(0, 0), new(10, 10) }, Color.Black, 2, "u1");
+        Assert.IsTrue(t.IsHit(new Point(0, 5)));
+    }
+
+    [TestMethod]
+    public void WithUpdates_ReturnsCloneWithNewProperties()
+    {
+        var f = new FreeHand(new List<Point> { new(0, 0) }, Color.Red, 2, "u1");
         IShape f2 = f.WithUpdates(Color.Blue, 4, "u2");
-        Assert.Equal(Color.Blue, f2.Color);
-        Assert.Equal(4, f2.Thickness);
-        Assert.Equal(f.ShapeId, f2.ShapeId);
+
+        Assert.AreEqual(Color.Blue, f2.Color);
+        Assert.AreEqual(4, f2.Thickness);
+        Assert.AreEqual(f.ShapeId, f2.ShapeId);
     }
 
-    [Fact]
-    public void WithMoveClampsInsideBounds()
+    [TestMethod]
+    public void WithMove_ClampsShapeInsideBounds()
     {
-        RectangleShape r = new RectangleShape(new() { new(5, 5), new(15, 15) }, Color.Black, 2, "u1");
+        var r = new RectangleShape(new List<Point> { new(5, 5), new(15, 15) }, Color.Black, 2, "u1");
         IShape moved = r.WithMove(new Point(-10, -10), new Rectangle(0, 0, 100, 100), "u2");
         Rectangle box = moved.GetBoundingBox();
-        Assert.Equal(0, box.X);
-        Assert.Equal(0, box.Y);
+
+        Assert.AreEqual(0, box.X);
+        Assert.AreEqual(0, box.Y);
     }
 
-    [Fact]
-    public void DeleteResurrectFlags()
+    [TestMethod]
+    public void WithMove_ZeroSizeShape_ReturnsSameInstance()
     {
-        StraightLine l = new StraightLine(new() { new(0, 0), new(1, 1) }, Color.Black, 1, "u1");
+        // Logic optimization check: if bounds are empty, WithMove returns 'this'
+        var fh = new FreeHand(new List<Point> { new(3, 3) }, Color.Black, 1, "u1");
+        IShape moved = fh.WithMove(new Point(5, 5), new Rectangle(0, 0, 100, 100), "u2");
+
+        Assert.AreSame(fh, moved);
+    }
+
+    [TestMethod]
+    public void WithDelete_And_WithResurrect_ToggleIsDeletedFlag()
+    {
+        var l = new StraightLine(new List<Point> { new(0, 0), new(1, 1) }, Color.Black, 1, "u1");
+
         IShape deleted = l.WithDelete("u2");
-        Assert.True(deleted.IsDeleted);
+        Assert.IsTrue(deleted.IsDeleted);
+
         IShape restored = deleted.WithResurrect("u3");
-        Assert.False(restored.IsDeleted);
+        Assert.IsFalse(restored.IsDeleted);
     }
 }
