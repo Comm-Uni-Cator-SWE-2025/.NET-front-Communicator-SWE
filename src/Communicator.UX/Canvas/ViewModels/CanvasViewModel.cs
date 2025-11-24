@@ -676,11 +676,7 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// </summary>
     public async void RegularizeSelectedShape()
     {
-        if (SelectedShape == null)
-        {
-            return;
-        }
-
+        if (SelectedShape == null) return;
         CommitModification(); // Ensure any pending edits are saved first
 
         string inputJson = CanvasSerializer.SerializeShapeManual(SelectedShape);
@@ -697,11 +693,7 @@ public class CanvasViewModel : INotifyPropertyChanged
 
             if (regularizedShape != null)
             {
-                regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
-
                 CanvasAction action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
-
-
                 ProcessAction(action);
                 SelectedShape = regularizedShape; // Keep selected
             }
