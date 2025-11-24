@@ -40,7 +40,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     private readonly ICloudConfigService _cloudConfig;
     private readonly INavigationService _navigationService;
     private readonly IThemeService _themeService;
-    private readonly INetworking _networking;
+    // private readonly INetworking _networking; // Removed unused dependency
     private readonly UserProfile _currentUser;
     private MeetingTabViewModel? _currentTab;
     private object? _currentPage;
@@ -87,7 +87,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         ICloudConfigService cloudConfig,
         INavigationService navigationService,
         IThemeService themeService,
-        INetworking networking,
         IRPC? rpc = null,
         IRpcEventService? rpcEventService = null)
     {
@@ -98,7 +97,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
-        _networking = networking ?? throw new ArgumentNullException(nameof(networking));
+        // _networking = networking ?? throw new ArgumentNullException(nameof(networking));
         _rpc = rpc;
         _rpcEventService = rpcEventService;
 
