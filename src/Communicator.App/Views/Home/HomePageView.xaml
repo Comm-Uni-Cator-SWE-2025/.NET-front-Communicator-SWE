@@ -64,6 +64,7 @@
                         
                         <!-- TextBox for Meeting Link -->
                         <TextBox x:Name="MeetingLinkTextBox"
+                                 AutomationProperties.AutomationId="MeetingLinkInput"
                                  Text="{Binding MeetingLink, UpdateSourceTrigger=PropertyChanged}"
                                  Height="48"
                                  FontSize="15"
@@ -80,6 +81,7 @@
                             <!-- Join Meeting Button -->
                             <Button Grid.Column="0"
                                     Command="{Binding JoinMeetingCommand}"
+                                    AutomationProperties.AutomationId="JoinMeetingButton"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     Height="48">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -96,6 +98,7 @@
                             <!-- Create Meeting Button -->
                             <Button Grid.Column="2"
                                     Command="{Binding CreateMeetingCommand}"
+                                    AutomationProperties.AutomationId="CreateMeetingButton"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     Height="48">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

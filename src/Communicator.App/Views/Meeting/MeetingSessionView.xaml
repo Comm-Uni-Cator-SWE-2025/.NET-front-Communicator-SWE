@@ -104,6 +104,7 @@
 
                 <!-- Leave Meeting -->
                 <Button Command="{Binding LeaveMeetingCommand}"
+                        AutomationProperties.AutomationId="LeaveMeetingButton"
                         ToolTip="Leave meeting"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -120,6 +121,7 @@
 
                 <!-- Toggle Mute -->
                 <Button Command="{Binding ToggleMuteCommand}"
+                        AutomationProperties.AutomationId="ToggleMuteButton"
                         ToolTip="Toggle microphone"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -141,6 +143,7 @@
 
                 <!-- Toggle Camera -->
                 <Button Command="{Binding ToggleCameraCommand}"
+                        AutomationProperties.AutomationId="ToggleCameraButton"
                         ToolTip="Toggle camera"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -317,6 +320,7 @@
                     <!-- Raise Hand Button -->
                 <Button x:Name="RaiseHandButton"
                         Command="{Binding ToggleHandCommand}"
+                        AutomationProperties.AutomationId="RaiseHandButton"
                         ToolTip="Raise hand"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -340,6 +344,7 @@
 
                 <!-- Toggle Screen Share -->
                 <Button Command="{Binding ToggleScreenShareCommand}"
+                        AutomationProperties.AutomationId="ToggleScreenShareButton"
                         ToolTip="Toggle screen sharing"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -361,6 +366,7 @@
                 
                 <!-- Toggle Chat Panel -->
                 <Button Command="{Binding ToggleChatPanelCommand}"
+                        AutomationProperties.AutomationId="ToggleChatButton"
                         ToolTip="Toggle chat"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"
@@ -377,6 +383,7 @@
 
                 <!-- Toggle Participants Panel (NEW) -->
                 <Button Command="{Binding ToggleParticipantsPanelCommand}"
+                        AutomationProperties.AutomationId="ToggleParticipantsButton"
                         ToolTip="Toggle participants"
                         Style="{StaticResource MeetingControlButtonStyle}">
                     <StackPanel Orientation="Vertical"

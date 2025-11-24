@@ -13,6 +13,7 @@
  */
 using System.Windows;
 using System.Windows.Threading;
+using System.Linq;
 using Communicator.App.Services;
 using Communicator.App.ViewModels;
 using Communicator.App.Views;
@@ -46,9 +47,12 @@ public sealed partial class MainApp : Application
 
         base.OnStartup(e);
 
+        // Check for test mode
+        bool isTestMode = e.Args.Contains("--test-mode");
+
         // Configure Dependency Injection
         var services = new ServiceCollection();
-        ConfigureServices(services);
+        ConfigureServices(services, isTestMode);
         Services = services.BuildServiceProvider();
 
         // RPC Service
@@ -74,7 +78,56 @@ public sealed partial class MainApp : Application
 
         // Start RPC connection in background thread (like Java does)
         // This allows UI to appear while waiting for backend to connect
-        StartRpcConnectionInBackground(rpc, e.Args);
+
+        // Debug args
+        string argsStr = string.Join(", ", e.Args);
+        System.Diagnostics.Debug.WriteLine($"[App] Startup Args: {argsStr}");
+
+        if (e.Args.Contains("--test-mode"))
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("[App] Test mode detected. Skipping RPC connection.");
+
+                // Resolve services
+                MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
+                IAuthenticationService authenticationService = Services.GetRequiredService<IAuthenticationService>();
+                INavigationService navService = Services.GetRequiredService<INavigationService>();
+                Func<UserProfile, ViewModels.Home.HomePageViewModel> homeFactory = Services.GetRequiredService<Func<UserProfile, ViewModels.Home.HomePageViewModel>>();
+                ViewModels.Common.LoadingViewModel loadingViewModel = Services.GetRequiredService<ViewModels.Common.LoadingViewModel>();
+
+                // Ensure loading is off
+                loadingViewModel.IsBusy = false;
+
+                // Create dummy user
+                UserProfile dummyUser = new UserProfile(
+                    "test@example.com", 
+                    "Test User", 
+                    ParticipantRole.STUDENT, 
+                    new Uri("https://via.placeholder.com/150"));
+
+                // Auto-login
+                authenticationService.CompleteLogin(dummyUser);
+
+                // Navigate to Home
+                navService.NavigateTo(homeFactory(dummyUser));
+
+                // Show Main Window
+                MainView mainView = new MainView {
+                    DataContext = mainViewModel
+                };
+                mainView.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Test Mode Error: {ex.Message}\n{ex.StackTrace}", "Test Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+            }
+        }
+        else
+        {
+            StartRpcConnectionInBackground(rpc, e.Args);
+        }
     }
 
     /// <summary>
@@ -340,7 +393,7 @@ public sealed partial class MainApp : Application
     /// <summary>
     /// Configures all application services for dependency injection.
     /// </summary>
-    internal static void ConfigureServices(IServiceCollection services)
+    internal static void ConfigureServices(IServiceCollection services, bool isTestMode = false)
     {
         // Register Configuration (loads appsettings.json)
         IConfiguration configuration = new ConfigurationBuilder()
@@ -364,7 +417,14 @@ public sealed partial class MainApp : Application
         services.AddSingleton<IRpcEventService, RpcEventService>();
 
         // Register RPC Service (for authentication via Controller backend)
-        services.AddSingleton<IRPC, RPCService>();
+        if (isTestMode)
+        {
+            services.AddSingleton<IRPC, Services.MockRPCService>();
+        }
+        else
+        {
+            services.AddSingleton<IRPC, RPCService>();
+        }
 
         // Register ViewModels
         services.AddTransient<MainViewModel>();

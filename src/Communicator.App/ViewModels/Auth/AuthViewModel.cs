@@ -59,6 +59,7 @@ public sealed class AuthViewModel : ObservableObject
     }
 
     public ICommand SignInWithGoogleCommand { get; }
+    public ICommand DebugLoginCommand { get; }
 
     public AuthViewModel(IRPC rpc, IToastService toastService)
     {
@@ -66,6 +67,7 @@ public sealed class AuthViewModel : ObservableObject
         _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
 
         SignInWithGoogleCommand = new RelayCommand(SignInWithGoogle, _ => !IsLoading);
+        DebugLoginCommand = new RelayCommand(DebugLogin, _ => !IsLoading);
     }
 
     /// <summary>
@@ -111,6 +113,20 @@ public sealed class AuthViewModel : ObservableObject
                 _toastService.ShowError($"Authentication failed: {ex.Message}");
             }).Task.ConfigureAwait(true);
         }
+    }
+
+    private void DebugLogin(object? obj)
+    {
+#if DEBUG
+        System.Diagnostics.Debug.WriteLine("[AuthViewModel] Debug Login");
+        var dummyUser = new UserProfile {
+            Email = "debug@example.com",
+            DisplayName = "Debug User",
+            Role = ParticipantRole.INSTRUCTOR,
+            LogoUrl = new Uri("https://via.placeholder.com/150")
+        };
+        CurrentUser = dummyUser;
+#endif
     }
 
     /// <summary>
