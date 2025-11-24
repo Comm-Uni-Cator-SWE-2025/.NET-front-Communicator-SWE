@@ -22,6 +22,7 @@ using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Microsoft.Win32;
+using Communicator.Core.UX.Services;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -50,7 +51,7 @@ public class HostViewModel : CanvasViewModel
     /// <summary>
     /// Initializes the HostViewModel, registers network listeners, and starts the auto-save timer.
     /// </summary>
-    public HostViewModel(UserProfile user, IRPC rpc) : base(rpc)
+    public HostViewModel(UserProfile user, IRPC rpc, IRpcEventService rpcEventService) : base(rpc, rpcEventService)
     {
         CurrentUserId = user.DisplayName ?? "Host";
 
@@ -63,10 +64,10 @@ public class HostViewModel : CanvasViewModel
         LogToDesktop("HostViewModel initialized. Auto-save timer started.");
     }
 
-    public void ReceiveData(byte[] data)
+    public override void ReceiveData(byte[] data)
     {
         string json = Encoding.UTF8.GetString(data);
-        Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
+        System.Windows.Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
     }
 
 
@@ -264,7 +265,9 @@ public class HostViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            // Todo: Update every client using brodcast and update rpc methods
+            
+            // Broadcast to all clients via Java Backend
+            _rpc.Call("canvas:broadcast", data);
         }
         else
         {
@@ -289,7 +292,9 @@ public class HostViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            // Todo: Update every client using brodcast and update rpc methods
+            
+            // Broadcast to all clients via Java Backend
+            _rpc.Call("canvas:broadcast", data);
         }
     }
 
@@ -307,7 +312,9 @@ public class HostViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            // Todo: Update every client using brodcast and update rpc methods
+            
+            // Broadcast to all clients via Java Backend
+            _rpc.Call("canvas:broadcast", data);
         }
     }
 
@@ -335,7 +342,9 @@ public class HostViewModel : CanvasViewModel
 
                 Console.WriteLine("[Host] Broadcasting RESTORE command...");
                 byte[] data = DataSerializer.Serialize(networkJson);
-                // Todo: Update every client using brodcast and update rpc methods
+                
+                // Broadcast to all clients via Java Backend
+                _rpc.Call("canvas:broadcast", data);
             }
             catch (Exception ex)
             {
@@ -372,7 +381,9 @@ public class HostViewModel : CanvasViewModel
 
                     RaiseRequestRedraw();
                     byte[] data = DataSerializer.Serialize(json);
-                    // Todo: Update every client using brodcast and update rpc methods
+                    
+                    // Broadcast to all clients via Java Backend
+                    _rpc.Call("canvas:broadcast", data);
                 }
                 else
                 {

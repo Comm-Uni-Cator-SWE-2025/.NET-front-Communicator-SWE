@@ -19,6 +19,7 @@ using System.Text;
 using Communicator.Canvas;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
+using Communicator.Core.UX.Services;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -32,10 +33,27 @@ namespace Communicator.UX.Canvas.ViewModels;
 public class CanvasViewModel : INotifyPropertyChanged
 {
     protected readonly IRPC _rpc;
+    protected readonly IRpcEventService _rpcEventService;
 
-    public CanvasViewModel(IRPC rpc)
+    public CanvasViewModel(IRPC rpc, IRpcEventService rpcEventService)
     {
         _rpc = rpc;
+        _rpcEventService = rpcEventService;
+
+        if (_rpcEventService != null)
+        {
+            _rpcEventService.CanvasUpdateReceived += OnCanvasUpdateReceived;
+        }
+    }
+
+    private void OnCanvasUpdateReceived(object? sender, RpcDataEventArgs e)
+    {
+        ReceiveData(e.Data.ToArray());
+    }
+
+    public virtual void ReceiveData(byte[] data)
+    {
+        // Base implementation does nothing or can be overridden
     }
 
     // --- Properties ---

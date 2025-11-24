@@ -15,6 +15,8 @@ using Communicator.Canvas;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
+using Communicator.Core.UX.Services;
+using System.Collections.Generic;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -44,52 +46,48 @@ public class ClientViewModel : CanvasViewModel
     /// Initializes a new instance of the ClientViewModel.
     /// Registers the network listener and assigns a unique user ID.
     /// </summary>
-    public ClientViewModel(UserProfile user, IRPC rpc) : base(rpc)
+    public ClientViewModel(UserProfile user, IRPC rpc, IRpcEventService rpcEventService) : base(rpc, rpcEventService)
     {
         CurrentUserId = user.DisplayName ?? "Client_" + Guid.NewGuid().ToString().Substring(0, 4);
     }
 
     public async void Initialize()
     {
-        // No more old rpc function
-        //await InitializeHostIp();
+        // Request history from the backend/host
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("[Client] Requesting canvas history...");
+            byte[] response = await _rpc.Call("canvas:getHistory", Array.Empty<byte>());
+            
+            if (response != null && response.Length > 0)
+            {
+                // Deserialize list of byte arrays (history items)
+                List<byte[]> history = DataSerializer.Deserialize<List<byte[]>>(response);
+                if (history != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Client] Received {history.Count} history items.");
+                    foreach (byte[] item in history)
+                    {
+                        // Each item is a serialized NetworkMessage (string)
+                        // But wait, handleNetworkMessage stores 'data' which is byte[] of serialized string?
+                        // Let's check Java side. Java stores 'data' which is byte[].
+                        // And 'data' passed to handleNetworkMessage is what we sent.
+                        // We send DataSerializer.Serialize(json).
+                        // So each item in history is byte[] representing serialized string.
+                        
+                        string json = DataSerializer.Deserialize<string>(item);
+                        ProcessIncomingMessage(json);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Client] Failed to get history: {ex.Message}");
+        }
     }
 
-    //private async Task InitializeHostIp()
-    //{
-    //    try
-    //    {
-    //        System.Diagnostics.Debug.WriteLine("[Client] Requesting host IP from RPC...");
-    //        byte[] response = await _rpc.Call("canvas:getHostIp", Array.Empty<byte>());
-
-    //        if (response == null || response.Length == 0)
-    //        {
-    //            System.Diagnostics.Debug.WriteLine("[Client] Received empty response for host IP.");
-    //            return;
-    //        }
-
-    //        string hostString = Encoding.UTF8.GetString(response);
-    //        System.Diagnostics.Debug.WriteLine("[Client] Received host IP response: " + hostString);
-
-    //        string[] parts = hostString.Split(':');
-    //        if (parts.Length == 2)
-    //        {
-    //            _hostIp = parts[0];
-    //            if (int.TryParse(parts[1], out int port))
-    //            {
-    //                _hostPort = port;
-    //                System.Diagnostics.Debug.WriteLine($"[Client] Parsed Host: {_hostIp}:{_hostPort}");
-    //            }
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Console.WriteLine($"[Client] Failed to get host IP: {ex.Message}");
-    //        System.Diagnostics.Debug.WriteLine($"[Client] Failed to get host IP: {ex}");
-    //    }
-    //}
-
-    public void ReceiveData(byte[] data)
+    public override void ReceiveData(byte[] data)
     {
         string json = DataSerializer.Deserialize<string>(data);
         // Marshal to UI thread if necessary, but ViewModels usually handle property changes on UI thread automatically if bound correctly.
@@ -142,7 +140,10 @@ public class ClientViewModel : CanvasViewModel
         NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
         string json = CanvasSerializer.SerializeNetworkMessage(msg);
         byte[] data = DataSerializer.Serialize(json);
-        // Todo: Notify host and host verfies and update using brodcast rpc methods
+        
+        // Send to Host for verification
+        _rpc.Call("canvas:sendToHost", data);
+        
         ShowGhostShape(action);
     }
 
@@ -162,7 +163,9 @@ public class ClientViewModel : CanvasViewModel
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
 
             byte[] data = DataSerializer.Serialize(json);
-            // Todo: Notify host and host verfies and update using brodcast rpc methods
+            
+            // Send to Host for verification
+            _rpc.Call("canvas:sendToHost", data);
         }
     }
 
@@ -179,7 +182,9 @@ public class ClientViewModel : CanvasViewModel
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
-            // Todo: Notify host and host verfies and update using brodcast rpc methods
+            
+            // Send to Host for verification
+            _rpc.Call("canvas:sendToHost", data);
         }
     }
 

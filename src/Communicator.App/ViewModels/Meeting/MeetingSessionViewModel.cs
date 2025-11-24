@@ -113,11 +113,11 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         bool isHost = _currentMeeting != null && _currentMeeting.CreatedBy == _currentUser.Email;
         if (isHost)
         {
-            Whiteboard = new HostViewModel(_currentUser, _rpc!);
+            Whiteboard = new HostViewModel(_currentUser, _rpc!, _rpcEventService!);
         }
         else
         {
-            var clientVM = new ClientViewModel(_currentUser, _rpc!);
+            var clientVM = new ClientViewModel(_currentUser, _rpc!, _rpcEventService!);
             Whiteboard = clientVM;
             // Note: clientVM.Initialize() must be called after meeting join is confirmed
         }
