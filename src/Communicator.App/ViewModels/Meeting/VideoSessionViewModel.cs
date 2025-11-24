@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: VideoSessionViewModel.cs
- *  Owner: UpdateNamesForEachModule
- *  Roll Number :
- *  Module : 
+ *  Owner: Devansh Manoj Kesan
+ *  Roll Number : 142201017
+ *  Module : ScreenShare
  *
  * -----------------------------------------------------------------------------
  */
@@ -16,11 +16,11 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Communicator.App.Services;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.ScreenShare;
-using Communicator.App.Services;
 
 namespace Communicator.App.ViewModels.Meeting;
 

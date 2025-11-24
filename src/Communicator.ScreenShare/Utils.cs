@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Drawing;
 
 namespace Communicator.ScreenShare;
 public static class Utils
@@ -119,8 +119,7 @@ public static class Utils
     /// <param name="data">The data to write.</param>
     public static void WriteInt(Stream bufferOut, int data)
     {
-        // Note: Java's 'ByteArrayOutputStream.write(int)' writes the lowest 8 bits.
-        // C#'s 'Stream.WriteByte(byte)' does the same.
+        // 'Stream.WriteByte(byte)' writes the lowest 8 bits.
         bufferOut.WriteByte((byte)((data >> INT_MASK_24) & BYTE_MASK));
         bufferOut.WriteByte((byte)((data >> INT_MASK_16) & BYTE_MASK));
         bufferOut.WriteByte((byte)((data >> INT_MASK_8) & BYTE_MASK));
@@ -134,17 +133,12 @@ public static class Utils
     /// <returns>int[][] : ARGB matrix 0xAARRGGBB</returns>
     public static int[][] ConvertToRGBMatrix(Bitmap feed)
     {
-        // In C#, int[][] is a "jagged array" (an array of arrays),
-        // which is the direct equivalent of Java's int[][].
         int[][] matrix = new int[feed.Height][];
         for (int i = 0; i < feed.Height; i++)
         {
             matrix[i] = new int[feed.Width];
             for (int j = 0; j < feed.Width; j++)
             {
-                // .NET's GetPixel(x, y) returns a Color object.
-                // .ToArgb() returns the 32-bit ARGB int,
-                // which is equivalent to Java's BufferedImage.getRGB(x, y).
                 matrix[i][j] = feed.GetPixel(j, i).ToArgb();
             }
         }
@@ -161,19 +155,13 @@ public static class Utils
         // This forces the OS to choose the correct network interface.
         try
         {
-            // We use 'using' for IDisposable objects,
-            // which is the C# equivalent of try-with-resources.
             using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            // UdpClient(string, int) can also be used, but this
-            // is a more direct parallel to the Java DatagramSocket logic.
             socket.Connect("8.8.8.8", 10002);
-            IPEndPoint localEndPoint = socket.LocalEndPoint as IPEndPoint;
+            IPEndPoint? localEndPoint = socket.LocalEndPoint as IPEndPoint;
             return localEndPoint?.Address.ToString() ?? "127.0.0.1";
         }
         catch (SocketException e)
         {
-            // In C#, RuntimeException doesn't exist. We just use the base Exception.
-            // We pass the original exception as the 'innerException'.
             throw new Exception("Could not determine local IP address", e);
         }
     }
