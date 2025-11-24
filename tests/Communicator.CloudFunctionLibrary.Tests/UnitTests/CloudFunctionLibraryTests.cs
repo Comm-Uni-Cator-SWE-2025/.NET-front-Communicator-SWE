@@ -190,7 +190,7 @@ public class CloudFunctionLibraryRealTests : IDisposable
     public async Task Operations_WithValidData_ShouldHandleComplexJson()
     {
         // Arrange - Test with complex JSON structure
-        var complexData = JsonDocument.Parse("""
+        var complexData = JsonDocument.Parse($$"""
         {
             "user": {
                 "id": "user-123",
@@ -204,7 +204,7 @@ public class CloudFunctionLibraryRealTests : IDisposable
             },
             "action": "complex-test",
             "metadata": {
-                "timestamp": """ + DateTime.UtcNow.Ticks + @""",
+                "timestamp": "{{DateTime.UtcNow.Ticks}}",
                 "version": "1.0",
                 "tags": ["test", "integration", "complex"]
             },
@@ -219,109 +219,109 @@ public class CloudFunctionLibraryRealTests : IDisposable
         Entity testEntity = new Entity("ComplexTest", "TestTable", Guid.NewGuid().ToString(),
             "create", -1, new TimeRange(0, 0), complexData);
 
-// Act
-CloudResponse response = await _cloudFunctionLibrary.CloudCreateAsync(testEntity);
+        // Act
+        CloudResponse response = await _cloudFunctionLibrary.CloudCreateAsync(testEntity);
 
-// Assert
-Assert.NotNull(response);
-Console.WriteLine($"Complex JSON test - Status: {response.StatusCode}");
-Assert.True(response.StatusCode >= 200 && response.StatusCode < 500);
+        // Assert
+        Assert.NotNull(response);
+        Console.WriteLine($"Complex JSON test - Status: {response.StatusCode}");
+        Assert.True(response.StatusCode >= 200 && response.StatusCode < 500);
     }
 
     [Fact]
-public async Task Operations_WithCancellationToken_ShouldBeCancelable()
-{
-    // Arrange
-    Entity testEntity = new Entity("TestModule", "TestTable", Guid.NewGuid().ToString(),
-        "create", -1, new TimeRange(0, 0), JsonDocument.Parse("""{"test": "cancellation"}""").RootElement);
-
-    var cts = new CancellationTokenSource();
-    cts.CancelAfter(TimeSpan.FromMilliseconds(100)); // Cancel quickly
-
-    // Act & Assert
-    await Assert.ThrowsAsync<TaskCanceledException>(() =>
-        _cloudFunctionLibrary.CloudCreateAsync(testEntity, cts.Token));
-
-    Console.WriteLine("Cancellation test completed");
-}
-
-[Fact]
-public void Constructor_WithYourCloudBaseUrl_ShouldInitializeSuccessfully()
-{
-    // Arrange & Act
-    var exception = Record.Exception(() => new CloudFunctionLibrary());
-
-    // Assert
-    Assert.Null(exception);
-    Console.WriteLine($"Successfully initialized with CLOUD_BASE_URL: {Environment.GetEnvironmentVariable("CLOUD_BASE_URL")}");
-}
-
-[Fact]
-public async Task MultipleOperations_InSequence_ShouldWork()
-{
-    // Test a complete CRUD sequence
-    string testId = Guid.NewGuid().ToString();
-    Console.WriteLine($"Testing CRUD sequence with ID: {testId}");
-
-    // 1. CREATE
-    var createEntity = new Entity("TestModule", "TestTable", testId,
-        "create", -1, new TimeRange(0, 0),
-        JsonDocument.Parse($$"""{"id": "{{testId}}", "operation": "create", "step": 1}""").RootElement);
-
-    var createResponse = await _cloudFunctionLibrary.CloudCreateAsync(createEntity);
-    Console.WriteLine($"CREATE - Status: {createResponse.StatusCode}");
-
-    // 2. GET
-    var getEntity = new Entity("TestModule", "TestTable", testId,
-        "get", -1, new TimeRange(0, 0), JsonDocument.Parse("{}").RootElement);
-
-    var getResponse = await _cloudFunctionLibrary.CloudGetAsync(getEntity);
-    Console.WriteLine($"GET - Status: {getResponse.StatusCode}");
-
-    // 3. UPDATE
-    var updateEntity = new Entity("TestModule", "TestTable", testId,
-        "update", -1, new TimeRange(0, 0),
-        JsonDocument.Parse($$"""{"id": "{{testId}}", "operation": "update", "step": 2}""").RootElement);
-
-    var updateResponse = await _cloudFunctionLibrary.CloudUpdateAsync(updateEntity);
-    Console.WriteLine($"UPDATE - Status: {updateResponse.StatusCode}");
-
-    // 4. DELETE
-    var deleteEntity = new Entity("TestModule", "TestTable", testId,
-        "delete", -1, new TimeRange(0, 0), JsonDocument.Parse("{}").RootElement);
-
-    var deleteResponse = await _cloudFunctionLibrary.CloudDeleteAsync(deleteEntity);
-    Console.WriteLine($"DELETE - Status: {deleteResponse.StatusCode}");
-
-    // Assert all operations returned valid status codes
-    Assert.True(createResponse.StatusCode >= 200 && createResponse.StatusCode < 500);
-    Assert.True(getResponse.StatusCode >= 200 && getResponse.StatusCode < 500);
-    Assert.True(updateResponse.StatusCode >= 200 && updateResponse.StatusCode < 500);
-    Assert.True(deleteResponse.StatusCode >= 200 && deleteResponse.StatusCode < 500);
-
-    Console.WriteLine("CRUD sequence completed successfully");
-}
-
-public void Dispose()
-{
-    Dispose(true);
-    GC.SuppressFinalize(this);
-}
-
-protected virtual void Dispose(bool disposing)
-{
-    if (!_disposedValue)
+    public async Task Operations_WithCancellationToken_ShouldBeCancelable()
     {
-        if (disposing)
-        {
-            _cloudFunctionLibrary?.Dispose();
-            // Restore original environment variable if needed
-            if (_originalBaseUrl != null)
-            {
-                Environment.SetEnvironmentVariable("CLOUD_BASE_URL", _originalBaseUrl);
-            }
-        }
-        _disposedValue = true;
+        // Arrange
+        Entity testEntity = new Entity("TestModule", "TestTable", Guid.NewGuid().ToString(),
+            "create", -1, new TimeRange(0, 0), JsonDocument.Parse("""{"test": "cancellation"}""").RootElement);
+
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(100)); // Cancel quickly
+
+        // Act & Assert
+        await Assert.ThrowsAsync<TaskCanceledException>(() =>
+            _cloudFunctionLibrary.CloudCreateAsync(testEntity, cts.Token));
+
+        Console.WriteLine("Cancellation test completed");
     }
-}
+
+    [Fact]
+    public void Constructor_WithYourCloudBaseUrl_ShouldInitializeSuccessfully()
+    {
+        // Arrange & Act
+        var exception = Record.Exception(() => new CloudFunctionLibrary());
+
+        // Assert
+        Assert.Null(exception);
+        Console.WriteLine($"Successfully initialized with CLOUD_BASE_URL: {Environment.GetEnvironmentVariable("CLOUD_BASE_URL")}");
+    }
+
+    [Fact]
+    public async Task MultipleOperations_InSequence_ShouldWork()
+    {
+        // Test a complete CRUD sequence
+        string testId = Guid.NewGuid().ToString();
+        Console.WriteLine($"Testing CRUD sequence with ID: {testId}");
+
+        // 1. CREATE
+        var createEntity = new Entity("TestModule", "TestTable", testId,
+            "create", -1, new TimeRange(0, 0),
+            JsonDocument.Parse($$"""{"id": "{{testId}}", "operation": "create", "step": 1}""").RootElement);
+
+        var createResponse = await _cloudFunctionLibrary.CloudCreateAsync(createEntity);
+        Console.WriteLine($"CREATE - Status: {createResponse.StatusCode}");
+
+        // 2. GET
+        var getEntity = new Entity("TestModule", "TestTable", testId,
+            "get", -1, new TimeRange(0, 0), JsonDocument.Parse("{}").RootElement);
+
+        var getResponse = await _cloudFunctionLibrary.CloudGetAsync(getEntity);
+        Console.WriteLine($"GET - Status: {getResponse.StatusCode}");
+
+        // 3. UPDATE
+        var updateEntity = new Entity("TestModule", "TestTable", testId,
+            "update", -1, new TimeRange(0, 0),
+            JsonDocument.Parse($$"""{"id": "{{testId}}", "operation": "update", "step": 2}""").RootElement);
+
+        var updateResponse = await _cloudFunctionLibrary.CloudUpdateAsync(updateEntity);
+        Console.WriteLine($"UPDATE - Status: {updateResponse.StatusCode}");
+
+        // 4. DELETE
+        var deleteEntity = new Entity("TestModule", "TestTable", testId,
+            "delete", -1, new TimeRange(0, 0), JsonDocument.Parse("{}").RootElement);
+
+        var deleteResponse = await _cloudFunctionLibrary.CloudDeleteAsync(deleteEntity);
+        Console.WriteLine($"DELETE - Status: {deleteResponse.StatusCode}");
+
+        // Assert all operations returned valid status codes
+        Assert.True(createResponse.StatusCode >= 200 && createResponse.StatusCode < 500);
+        Assert.True(getResponse.StatusCode >= 200 && getResponse.StatusCode < 500);
+        Assert.True(updateResponse.StatusCode >= 200 && updateResponse.StatusCode < 500);
+        Assert.True(deleteResponse.StatusCode >= 200 && deleteResponse.StatusCode < 500);
+
+        Console.WriteLine("CRUD sequence completed successfully");
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _cloudFunctionLibrary?.Dispose();
+                // Restore original environment variable if needed
+                if (_originalBaseUrl != null)
+                {
+                    Environment.SetEnvironmentVariable("CLOUD_BASE_URL", _originalBaseUrl);
+                }
+            }
+            _disposedValue = true;
+        }
+    }
 }

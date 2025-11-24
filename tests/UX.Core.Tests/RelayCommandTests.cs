@@ -1,4 +1,4 @@
-﻿using UX.Core;
+﻿using Communicator.Core.UX;
 
 namespace UX.Core.Tests;
 
@@ -53,7 +53,8 @@ public class RelayCommandTests
         object? receivedParameter = null;
         var command = new RelayCommand(
             _ => { },
-            param => {
+            param =>
+            {
                 receivedParameter = param;
                 return true;
             });

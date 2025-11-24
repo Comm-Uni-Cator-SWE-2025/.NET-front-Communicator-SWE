@@ -1,4 +1,4 @@
-﻿using UX.Core;
+﻿using Communicator.Core.UX;
 
 namespace UX.Core.Tests;
 
@@ -29,7 +29,8 @@ public class ObservableObjectTests
         bool propertyChangedRaised = false;
         string? changedPropertyName = null;
 
-        viewModel.PropertyChanged += (sender, args) => {
+        viewModel.PropertyChanged += (sender, args) =>
+        {
             propertyChangedRaised = true;
             changedPropertyName = args.PropertyName;
         };
@@ -47,7 +48,8 @@ public class ObservableObjectTests
         var viewModel = new TestViewModel { Name = "John" };
         bool propertyChangedRaised = false;
 
-        viewModel.PropertyChanged += (sender, args) => {
+        viewModel.PropertyChanged += (sender, args) =>
+        {
             propertyChangedRaised = true;
         };
 
@@ -59,7 +61,8 @@ public class ObservableObjectTests
     [Fact]
     public void SetProperty_ReturnsTrue_WhenValueChanges()
     {
-        var viewModel = new TestViewModel {
+        var viewModel = new TestViewModel
+        {
             Age = 10
         };
 
@@ -86,7 +89,8 @@ public class ObservableObjectTests
         bool propertyChangedRaised = false;
         string? changedPropertyName = null;
 
-        viewModel.PropertyChanged += (sender, args) => {
+        viewModel.PropertyChanged += (sender, args) =>
+        {
             propertyChangedRaised = true;
             changedPropertyName = args.PropertyName;
         };
