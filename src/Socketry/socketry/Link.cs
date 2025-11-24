@@ -183,6 +183,7 @@ namespace socketry
             {
                 try
                 {
+                    Console.WriteLine($"Writing packet of length {socketData.Length} to client channel.");
                     _clientChannel.Write(socketData);
                 }
                 catch (IOException e)

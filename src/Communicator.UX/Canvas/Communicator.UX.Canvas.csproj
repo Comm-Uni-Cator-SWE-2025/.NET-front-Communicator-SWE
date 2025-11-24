@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Communicator.Canvas\Communicator.Canvas.csproj" />
     <ProjectReference Include="..\..\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj" />
+    <ProjectReference Include="..\..\Communicator.Controller\Communicator.Controller.csproj" />
     <ProjectReference Include="..\..\Communicator.Networking\Communicator.Networking.csproj" />
     <ProjectReference Include="..\..\Communicator.Core\Communicator.Core.csproj" />
   </ItemGroup>

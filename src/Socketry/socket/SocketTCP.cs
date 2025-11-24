@@ -58,7 +58,9 @@ namespace socket
 
         public int Write(MemoryStream src)
         {
-            return _osSocket.Send(src.GetBuffer());
+            byte[] buffer = src.GetBuffer();
+            Console.WriteLine($"Sending message ({buffer.Length} bytes):");
+            return _osSocket.Send(buffer);
         }
 
         public long Write(MemoryStream src, int offset, int length)

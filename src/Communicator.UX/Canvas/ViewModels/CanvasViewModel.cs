@@ -1,4 +1,8 @@
-﻿/*
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+/*
  * -----------------------------------------------------------------------------
  *  File: CanvasViewModel.cs
  *  Owner: Pranitha Muluguru
@@ -7,15 +11,13 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Communicator.Canvas;
+using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Microsoft.Win32;
 
@@ -661,16 +663,19 @@ public class CanvasViewModel : INotifyPropertyChanged
 
         try
         {
-            byte[] response = await _rpc.Call("canvas:regularize", Encoding.UTF8.GetBytes(inputJson));
-            string outputJson = Encoding.UTF8.GetString(response);
+            System.Diagnostics.Debug.WriteLine("[CanvasViewModel] RegularizeSelectedShape called with input: ");
+            byte[] response = await _rpc.Call("canvas:regularize", DataSerializer.Serialize(inputJson));
+            System.Diagnostics.Debug.WriteLine("[CanvasViewModel] RegularizeSelectedShape received response: ");
+            string outputJson = DataSerializer.Deserialize<string>(response);
 
             IShape? regularizedShape = CanvasSerializer.DeserializeShapeManual(outputJson);
+            System.Diagnostics.Debug.WriteLine("[CanvasViewModel] Regularized shape deserialized.");
 
-        if (regularizedShape != null)
-        {
-            regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
+            if (regularizedShape != null)
+            {
+                regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
 
-            CanvasAction action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
+                CanvasAction action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
 
 
                 ProcessAction(action);

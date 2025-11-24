@@ -427,7 +427,7 @@ public partial class CanvasView : UserControl
         BtnTriangle.ClearValue(Button.BackgroundProperty);
 
         Brush? selectedBrush = Brushes.LightSteelBlue;
-        try { selectedBrush = (Brush)FindResource("GlassyPressedBrush"); } catch { }
+        // try { selectedBrush = (Brush)FindResource("GlassyPressedBrush"); } catch { }
 
         switch (_vm.CurrentMode)
         {
