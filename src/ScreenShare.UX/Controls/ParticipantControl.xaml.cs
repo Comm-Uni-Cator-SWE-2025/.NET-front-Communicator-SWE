@@ -16,6 +16,10 @@ namespace ScreenShare.UX.Controls
             DependencyProperty.Register("Username", typeof(string), typeof(ParticipantControl), 
                 new PropertyMetadata("You", OnUsernameChanged));
 
+        public static readonly DependencyProperty ParticipantDataProperty =
+            DependencyProperty.Register("ParticipantData", typeof(object), typeof(ParticipantControl), 
+                new PropertyMetadata(null));
+
         public string Initial
         {
             get { return (string)GetValue(InitialProperty); }
@@ -26,6 +30,12 @@ namespace ScreenShare.UX.Controls
         {
             get { return (string)GetValue(UsernameProperty); }
             set { SetValue(UsernameProperty, value); }
+        }
+
+        public object ParticipantData
+        {
+            get { return GetValue(ParticipantDataProperty); }
+            set { SetValue(ParticipantDataProperty, value); }
         }
 
         public ParticipantControl()

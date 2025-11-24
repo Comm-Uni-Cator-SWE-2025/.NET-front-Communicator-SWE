@@ -1,9 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace WpfApp1.Controls
+namespace ScreenShare.UX.Controls
 {
     /// <summary>
     /// Interaction logic for ParticipantsListControl.xaml

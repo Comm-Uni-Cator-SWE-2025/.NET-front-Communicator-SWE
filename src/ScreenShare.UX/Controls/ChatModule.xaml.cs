@@ -1,6 +1,6 @@
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
-namespace WpfApp1.Controls
+namespace ScreenShare.UX.Controls
 {
     /// <summary>
     /// Interaction logic for ChatModule.xaml

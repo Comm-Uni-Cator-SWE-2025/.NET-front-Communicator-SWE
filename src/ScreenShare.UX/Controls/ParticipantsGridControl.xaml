@@ -6,31 +6,182 @@
              xmlns:local="clr-namespace:ScreenShare.UX.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <ScrollViewer x:Name="ParticipantsScrollViewer"
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl x:Name="ParticipantsItemsControl">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid x:Name="ParticipantUniformGrid" 
-                               Rows="1" 
-                               Columns="1"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Background="#E8E4DD" 
-                            BorderBrush="#D0CCC4" 
-                            BorderThickness="1"
-                            MinHeight="200">
-                        <local:ParticipantControl 
-                            Initial="{Binding Initial}" 
-                            Username="{Binding Username}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"/>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </ScrollViewer>
+    <Grid>
+        <!-- Normal Grid View -->
+        <ScrollViewer x:Name="ParticipantsScrollViewer"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Visibility="Visible">
+            <ItemsControl x:Name="ParticipantsItemsControl">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid x:Name="ParticipantUniformGrid" 
+                                   Rows="1" 
+                                   Columns="1"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#E8E4DD" 
+                                BorderBrush="#D0CCC4" 
+                                BorderThickness="1"
+                                MinHeight="200"
+                                MouseEnter="ParticipantBorder_MouseEnter"
+                                MouseLeave="ParticipantBorder_MouseLeave">
+                            <Grid>
+                                <!-- Participant Control -->
+                                <local:ParticipantControl 
+                                    Initial="{Binding Initial}" 
+                                    Username="{Binding Username}"
+                                    ParticipantData="{Binding}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                                
+                                <!-- Hover Overlay at Bottom -->
+                                <Border x:Name="HoverOverlay"
+                                        VerticalAlignment="Bottom"
+                                        Height="40"
+                                        Background="#CC000000"
+                                        Opacity="0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Username on the left -->
+                                        <TextBlock Grid.Column="0"
+                                                  Text="{Binding Username}"
+                                                  Foreground="White"
+                                                  FontSize="14"
+                                                  VerticalAlignment="Center"
+                                                  Margin="10,0,0,0"/>
+
+                                        <!-- Maximize Icon (Plus/Expand) -->
+                                        <Button Grid.Column="1"
+                                               Background="Transparent"
+                                               BorderThickness="0"
+                                               Width="30"
+                                               Height="30"
+                                               Margin="0,0,10,0"
+                                               Click="MaximizeButton_Click"
+                                               Tag="{Binding}"
+                                               VerticalAlignment="Center"
+                                               Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate>
+                                                    <Grid>
+                                                        <!-- Plus/Expand Icon -->
+                                                        <Path Data="M 8,8 L 16,8 M 12,4 L 12,12" 
+                                                              Stroke="White" 
+                                                              StrokeThickness="2"
+                                                              HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Maximized View with Sidebar -->
+        <Grid x:Name="MaximizedView" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="140"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Main Maximized Participant -->
+            <Border Grid.Column="0"
+                    Background="#E8E4DD"
+                    BorderBrush="#D0CCC4"
+                    BorderThickness="1">
+                <local:ParticipantControl x:Name="MaximizedParticipantControl"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"/>git 
+            </Border>
+
+            <!-- Sidebar with Thumbnails -->
+            <Grid Grid.Column="1" Background="#D0CCC4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Restore Grid View Button -->
+                <Button Grid.Row="0"
+                       Content="Restore Grid View"
+                       Background="#4A4A4A"
+                       Foreground="White"
+                       BorderThickness="0"
+                       Padding="10,8"
+                       Margin="5"
+                       Click="RestoreGridView_Click"
+                       FontSize="12"
+                       Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#4A4A4A"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#5A5A5A"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <!-- Thumbnail ScrollViewer -->
+                <ScrollViewer Grid.Row="1"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl x:Name="ThumbnailItemsControl">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#E8E4DD"
+                                       BorderBrush="#B0ACA4"
+                                       BorderThickness="1"
+                                       Height="100"
+                                       Margin="5"
+                                       Cursor="Hand"
+                                       MouseLeftButtonDown="Thumbnail_Click">
+                                    <Border.Tag>
+                                        <Binding Path="."/>
+                                    </Border.Tag>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#8A8674"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Viewbox Width="75" Height="75">
+                                        <local:ParticipantControl 
+                                            Initial="{Binding Initial}" 
+                                            Username="{Binding Username}"
+                                            Width="120"
+                                            Height="120"/>
+                                    </Viewbox>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
 </UserControl>

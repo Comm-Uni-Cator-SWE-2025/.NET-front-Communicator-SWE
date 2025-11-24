@@ -31,6 +31,7 @@ namespace ScreenShare.UX
             // Initialize with the main user
             Participants = new ObservableCollection<ParticipantData>();
             Participants.Add(new ParticipantData {
+                Id = "main_user",
                 Initial = "Y",
                 Username = "You",
                 DisplayName = "You",
@@ -38,6 +39,60 @@ namespace ScreenShare.UX
             });
 
             this.DataContext = this;
+
+            // Subscribe to visible participants changed event
+            this.Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("\n######## MainWindow Loaded - Subscribing to VisibleParticipantsChanged ########\n");
+            
+            // Subscribe to the ParticipantsGridControl's VisibleParticipantsChanged event
+            if (ParticipantsGridControl != null)
+            {
+                ParticipantsGridControl.VisibleParticipantsChanged += OnVisibleParticipantsChanged;
+                System.Diagnostics.Debug.WriteLine("✓ Successfully subscribed to VisibleParticipantsChanged event");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("✗ ParticipantsGridControl is NULL - cannot subscribe");
+            }
+            
+            System.Diagnostics.Debug.WriteLine("###############################################################\n");
+        }
+
+        /// <summary>
+        /// Handler for visible participants changed event
+        /// This can be used by ViewModels to update the backend about which participants are visible
+        /// </summary>
+        private void OnVisibleParticipantsChanged(object? sender, Controls.VisibleParticipantsChangedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("\n");
+            System.Diagnostics.Debug.WriteLine("████████████████████████████████████████████████████████████");
+            System.Diagnostics.Debug.WriteLine("█  EVENT RECEIVED: VisibleParticipantsChanged             █");
+            System.Diagnostics.Debug.WriteLine("████████████████████████████████████████████████████████████");
+            System.Diagnostics.Debug.WriteLine($"Timestamp: {DateTime.Now:HH:mm:ss.fff}");
+            System.Diagnostics.Debug.WriteLine($"Visible Participants Count: {e.VisibleParticipantIds.Count}");
+            System.Diagnostics.Debug.WriteLine($"Visible Participant IDs:");
+            
+            foreach (var id in e.VisibleParticipantIds)
+            {
+                var participant = Participants.FirstOrDefault(p => p.Id == id);
+                if (participant != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  ✓ {id} → {participant.Username}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"  ? {id} → [Unknown participant]");
+                }
+            }
+            
+            System.Diagnostics.Debug.WriteLine("████████████████████████████████████████████████████████████\n");
+
+            // TODO: This is where you would notify your ViewModel/Model
+            // Example: ScreenNVideoModel.UpdateVisibleParticipants(e.VisibleParticipantIds);
         }
 
         // Test button to add participants
@@ -47,8 +102,10 @@ namespace ScreenShare.UX
             string initial = GetInitialForParticipant(participantCounter);
             string username = $"username{participantCounter}";
             string displayName = $"displayname{participantCounter}";
+            string id = $"participant_{participantCounter}"; // Unique ID for each participant
 
             Participants.Add(new ParticipantData {
+                Id = id,
                 Initial = initial,
                 Username = username,
                 DisplayName = displayName,
@@ -78,69 +135,6 @@ namespace ScreenShare.UX
             char[] letters = "UVWXYZABCDEFGHIJKLMNOPQRST".ToCharArray();
             int index = (number - 1) % letters.Length;
             return letters[index].ToString();
-        }
-    }
-
-    public class ParticipantData : INotifyPropertyChanged
-    {
-        private string _initial = string.Empty;
-        private string _username = string.Empty;
-        private string _displayName = string.Empty;
-        private bool _isMainUser;
-
-        public string Initial
-        {
-            get => _initial;
-            set {
-                if (_initial != value)
-                {
-                    _initial = value;
-                    OnPropertyChanged(nameof(Initial));
-                }
-            }
-        }
-
-        public string Username
-        {
-            get => _username;
-            set {
-                if (_username != value)
-                {
-                    _username = value;
-                    OnPropertyChanged(nameof(Username));
-                }
-            }
-        }
-
-        public string DisplayName
-        {
-            get => _displayName;
-            set {
-                if (_displayName != value)
-                {
-                    _displayName = value;
-                    OnPropertyChanged(nameof(DisplayName));
-                }
-            }
-        }
-
-        public bool IsMainUser
-        {
-            get => _isMainUser;
-            set {
-                if (_isMainUser != value)
-                {
-                    _isMainUser = value;
-                    OnPropertyChanged(nameof(IsMainUser));
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
