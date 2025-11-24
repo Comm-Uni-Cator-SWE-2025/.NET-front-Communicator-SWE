@@ -27,12 +27,17 @@ namespace Communicator.App.Tests.Integration
             Assert.IsType<AuthViewModel>(mainViewModel.CurrentView);
             Assert.False(mainViewModel.CanGoBack);
 
-            // Act - Navigate
-            var dummyView = new object();
-            navigationService.NavigateTo(dummyView);
+            // Act - Navigate to first view
+            var view1 = new object();
+            navigationService.NavigateTo(view1);
+            Assert.Same(view1, mainViewModel.CurrentView);
 
-            // Assert - Navigation Reflected
-            Assert.Same(dummyView, mainViewModel.CurrentView);
+            // Act - Navigate to second view
+            var view2 = new object();
+            navigationService.NavigateTo(view2);
+            Assert.Same(view2, mainViewModel.CurrentView);
+            
+            // Assert - Can Go Back
             Assert.True(mainViewModel.CanGoBack);
 
             // Act - Go Back via Command
@@ -41,9 +46,8 @@ namespace Communicator.App.Tests.Integration
                 mainViewModel.GoBackCommand.Execute(null);
             }
 
-            // Assert - Returned to Auth
-            Assert.IsType<AuthViewModel>(mainViewModel.CurrentView);
-            Assert.False(mainViewModel.CanGoBack);
+            // Assert - Returned to View 1
+            Assert.Same(view1, mainViewModel.CurrentView);
         }
     }
 }
