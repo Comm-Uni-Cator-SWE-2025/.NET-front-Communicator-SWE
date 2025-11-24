@@ -1,4 +1,8 @@
-﻿/*
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+/*
  * -----------------------------------------------------------------------------
  *  File: MeetingSessionViewModel.cs
  *  Owner: Geetheswar V
@@ -7,12 +11,8 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using Communicator.App.Services;
 using Communicator.Controller.Meeting;
@@ -113,11 +113,11 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         bool isHost = _currentMeeting != null && _currentMeeting.CreatedBy == _currentUser.Email;
         if (isHost)
         {
-            Whiteboard = new HostViewModel(_networking, _rpc!);
+            Whiteboard = new HostViewModel(_currentUser, _rpc!);
         }
         else
         {
-            var clientVM = new ClientViewModel(_networking, _rpc!);
+            var clientVM = new ClientViewModel(_currentUser, _rpc!);
             Whiteboard = clientVM;
             // Note: clientVM.Initialize() must be called after meeting join is confirmed
         }

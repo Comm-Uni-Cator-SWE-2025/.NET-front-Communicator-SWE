@@ -18,8 +18,9 @@ using System.Windows;
 using Communicator.Canvas;
 using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
+using Communicator.Controller.Meeting;
+using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Communicator.Networking;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -28,10 +29,8 @@ namespace Communicator.UX.Canvas.ViewModels;
 /// Represents the Host (Server) side logic for the collaborative canvas.
 /// Manages action validation, broadcasting to clients, and cloud autosaving.
 /// </summary>
-public class HostViewModel : CanvasViewModel, IMessageListener
+public class HostViewModel : CanvasViewModel
 {
-    private readonly INetworking _networking;
-
     /// <summary>
     /// Timer for triggering the cloud auto-save functionality.
     /// </summary>
@@ -47,17 +46,13 @@ public class HostViewModel : CanvasViewModel, IMessageListener
     /// </summary>
     public override bool IsHost => true;
 
-    private const int CanvasModuleId = 2;
-
 
     /// <summary>
     /// Initializes the HostViewModel, registers network listeners, and starts the auto-save timer.
     /// </summary>
-    public HostViewModel(INetworking networking, IRPC rpc) : base(rpc)
+    public HostViewModel(UserProfile user, IRPC rpc) : base(rpc)
     {
-        _networking = networking;
-        CurrentUserId = "Host_Admin";
-        _networking.Subscribe(CanvasModuleId, this);
+        CurrentUserId = user.DisplayName ?? "Host";
 
         // --- Initialize and Start Auto-Save Timer ---
         _autoSaveTimer = new System.Timers.Timer(1 * 30 * 1000);
@@ -268,8 +263,8 @@ public class HostViewModel : CanvasViewModel, IMessageListener
             ApplyActionLocally(action);
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            byte[] data = Encoding.UTF8.GetBytes(json);
-            _networking.Broadcast(data, CanvasModuleId, 1);
+            byte[] data = DataSerializer.Serialize(json);
+            // Todo: Update every client using brodcast and update rpc methods
         }
         else
         {
@@ -293,8 +288,8 @@ public class HostViewModel : CanvasViewModel, IMessageListener
             CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            byte[] data = Encoding.UTF8.GetBytes(json);
-            _networking.Broadcast(data, CanvasModuleId, 1);
+            byte[] data = DataSerializer.Serialize(json);
+            // Todo: Update every client using brodcast and update rpc methods
         }
     }
 
@@ -311,8 +306,8 @@ public class HostViewModel : CanvasViewModel, IMessageListener
         {
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            byte[] data = Encoding.UTF8.GetBytes(json);
-            _networking.Broadcast(data, CanvasModuleId, 1);
+            byte[] data = DataSerializer.Serialize(json);
+            // Todo: Update every client using brodcast and update rpc methods
         }
     }
 
@@ -339,8 +334,8 @@ public class HostViewModel : CanvasViewModel, IMessageListener
                 string networkJson = CanvasSerializer.SerializeNetworkMessage(msg);
 
                 Console.WriteLine("[Host] Broadcasting RESTORE command...");
-                byte[] data = Encoding.UTF8.GetBytes(networkJson);
-                _networking.Broadcast(data, CanvasModuleId, 1);
+                byte[] data = DataSerializer.Serialize(networkJson);
+                // Todo: Update every client using brodcast and update rpc methods
             }
             catch (Exception ex)
             {
@@ -376,8 +371,8 @@ public class HostViewModel : CanvasViewModel, IMessageListener
                     }
 
                     RaiseRequestRedraw();
-                    byte[] data = Encoding.UTF8.GetBytes(json);
-                    _networking.Broadcast(data, CanvasModuleId, 1);
+                    byte[] data = DataSerializer.Serialize(json);
+                    // Todo: Update every client using brodcast and update rpc methods
                 }
                 else
                 {

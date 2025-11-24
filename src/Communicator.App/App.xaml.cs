@@ -1,4 +1,8 @@
-﻿/*
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+/*
  * -----------------------------------------------------------------------------
  *  File: App.xaml.cs
  *  Owner: Geetheswar V
@@ -7,18 +11,16 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System;
 using System.Windows;
 using System.Windows.Threading;
+using Communicator.App.Services;
+using Communicator.App.ViewModels;
+using Communicator.App.Views;
 using Communicator.Controller;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
-using Communicator.App.Services;
-using Communicator.App.ViewModels;
-using Communicator.App.Views;
-using Communicator.Networking;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -49,15 +51,8 @@ public sealed partial class MainApp : Application
         ConfigureServices(services);
         Services = services.BuildServiceProvider();
 
-        // Initialize Networking with RPC Service
-        INetworking networking = Services.GetRequiredService<INetworking>();
+        // RPC Service
         IRPC rpc = Services.GetRequiredService<IRPC>();
-        if (networking is NetworkFront networkFront)
-        {
-            networkFront.ConsumeRPC(rpc);
-            // Pre-register Canvas module (ID 2) to ensure RPC subscription happens before Connect()
-            networkFront.RegisterModule(2);
-        }
 
         // Load saved theme preference
         IThemeService themeService = Services.GetRequiredService<IThemeService>();
@@ -356,9 +351,6 @@ public sealed partial class MainApp : Application
 
         // Register RPC Service (for authentication via Controller backend)
         services.AddSingleton<IRPC, RPCService>();
-
-        // Register Networking Services
-        services.AddSingleton<INetworking, NetworkFront>();
 
         // Register ViewModels
         services.AddTransient<MainViewModel>();

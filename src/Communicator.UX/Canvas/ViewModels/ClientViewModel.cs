@@ -11,10 +11,10 @@
  *
  * -----------------------------------------------------------------------------
  */
-using System.Text;
 using Communicator.Canvas;
+using Communicator.Controller.Meeting;
+using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Communicator.Networking;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -22,16 +22,15 @@ namespace Communicator.UX.Canvas.ViewModels;
 /// Represents the Client-side logic for the collaborative canvas.
 /// Handles sending actions to the host and processing incoming network messages.
 /// </summary>
-public class ClientViewModel : CanvasViewModel, IMessageListener
+public class ClientViewModel : CanvasViewModel
 {
-    private readonly INetworking _networking;
-
+    /// Need to decide we need to put or remove according to java
     /// <summary>
     /// The IP address of the host/server machine.
     /// </summary>
-    private string _hostIp = "";
+    //private string _hostIp = "";
 
-    private int _hostPort = 0;
+    //private int _hostPort = 0;
 
     /// <summary>
     /// Flag to prevent infinite loops when committing changes triggered by network updates.
@@ -45,56 +44,54 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
     /// Initializes a new instance of the ClientViewModel.
     /// Registers the network listener and assigns a unique user ID.
     /// </summary>
-    public ClientViewModel(INetworking networking, IRPC rpc) : base(rpc)
+    public ClientViewModel(UserProfile user, IRPC rpc) : base(rpc)
     {
-        _networking = networking;
-        CurrentUserId = "Client_" + Guid.NewGuid().ToString().Substring(0, 4);
-
-        _networking.Subscribe(CanvasModuleId, this);
+        CurrentUserId = user.DisplayName ?? "Client_" + Guid.NewGuid().ToString().Substring(0, 4);
     }
 
     public async void Initialize()
     {
-        await InitializeHostIp();
+        // No more old rpc function
+        //await InitializeHostIp();
     }
 
-    private async Task InitializeHostIp()
-    {
-        try
-        {
-            System.Diagnostics.Debug.WriteLine("[Client] Requesting host IP from RPC...");
-            byte[] response = await _rpc.Call("canvas:getHostIp", Array.Empty<byte>());
+    //private async Task InitializeHostIp()
+    //{
+    //    try
+    //    {
+    //        System.Diagnostics.Debug.WriteLine("[Client] Requesting host IP from RPC...");
+    //        byte[] response = await _rpc.Call("canvas:getHostIp", Array.Empty<byte>());
 
-            if (response == null || response.Length == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("[Client] Received empty response for host IP.");
-                return;
-            }
+    //        if (response == null || response.Length == 0)
+    //        {
+    //            System.Diagnostics.Debug.WriteLine("[Client] Received empty response for host IP.");
+    //            return;
+    //        }
 
-            string hostString = Encoding.UTF8.GetString(response);
-            System.Diagnostics.Debug.WriteLine("[Client] Received host IP response: " + hostString);
+    //        string hostString = Encoding.UTF8.GetString(response);
+    //        System.Diagnostics.Debug.WriteLine("[Client] Received host IP response: " + hostString);
 
-            string[] parts = hostString.Split(':');
-            if (parts.Length == 2)
-            {
-                _hostIp = parts[0];
-                if (int.TryParse(parts[1], out int port))
-                {
-                    _hostPort = port;
-                    System.Diagnostics.Debug.WriteLine($"[Client] Parsed Host: {_hostIp}:{_hostPort}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Client] Failed to get host IP: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"[Client] Failed to get host IP: {ex}");
-        }
-    }
+    //        string[] parts = hostString.Split(':');
+    //        if (parts.Length == 2)
+    //        {
+    //            _hostIp = parts[0];
+    //            if (int.TryParse(parts[1], out int port))
+    //            {
+    //                _hostPort = port;
+    //                System.Diagnostics.Debug.WriteLine($"[Client] Parsed Host: {_hostIp}:{_hostPort}");
+    //            }
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Console.WriteLine($"[Client] Failed to get host IP: {ex.Message}");
+    //        System.Diagnostics.Debug.WriteLine($"[Client] Failed to get host IP: {ex}");
+    //    }
+    //}
 
     public void ReceiveData(byte[] data)
     {
-        string json = Encoding.UTF8.GetString(data);
+        string json = DataSerializer.Deserialize<string>(data);
         // Marshal to UI thread if necessary, but ViewModels usually handle property changes on UI thread automatically if bound correctly.
         // However, ReceiveData comes from background thread.
         System.Windows.Application.Current.Dispatcher.Invoke(() => ProcessIncomingMessage(json));
@@ -144,14 +141,8 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
 
         NetworkMessage msg = new NetworkMessage(NetworkMessageType.NORMAL, action);
         string json = CanvasSerializer.SerializeNetworkMessage(msg);
-
-        if (!string.IsNullOrEmpty(_hostIp))
-        {
-            byte[] data = Encoding.UTF8.GetBytes(json);
-            ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
-            _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
-        }
-
+        byte[] data = DataSerializer.Serialize(json);
+        // Todo: Notify host and host verfies and update using brodcast rpc methods
         ShowGhostShape(action);
     }
 
@@ -170,12 +161,8 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
 
-            if (!string.IsNullOrEmpty(_hostIp))
-            {
-                byte[] data = Encoding.UTF8.GetBytes(json);
-                ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
-                _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
-            }
+            byte[] data = DataSerializer.Serialize(json);
+            // Todo: Notify host and host verfies and update using brodcast rpc methods
         }
     }
 
@@ -191,12 +178,8 @@ public class ClientViewModel : CanvasViewModel, IMessageListener
         {
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
-            if (!string.IsNullOrEmpty(_hostIp))
-            {
-                byte[] data = Encoding.UTF8.GetBytes(json);
-                ClientNode hostNode = new ClientNode(_hostIp, _hostPort);
-                _networking.SendData(data, new[] { hostNode }, CanvasModuleId, 1);
-            }
+            byte[] data = DataSerializer.Serialize(json);
+            // Todo: Notify host and host verfies and update using brodcast rpc methods
         }
     }
 
