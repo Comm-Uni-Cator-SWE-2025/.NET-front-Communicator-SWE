@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Communicator.Canvas\Communicator.Canvas.csproj" />
+    <ProjectReference Include="..\..\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj" />
+    <ProjectReference Include="..\..\Communicator.Controller\Communicator.Controller.csproj" />
+    <ProjectReference Include="..\..\Communicator.Networking\Communicator.Networking.csproj" />
+    <ProjectReference Include="..\..\Communicator.Core\Communicator.Core.csproj" />
+    <ProjectReference Include="..\..\Communicator.Icons\Communicator.Icons.csproj" />
+  </ItemGroup>
+
+</Project>

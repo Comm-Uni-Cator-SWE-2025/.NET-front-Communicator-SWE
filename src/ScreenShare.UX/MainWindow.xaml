@@ -1,0 +1,55 @@
+﻿<Window x:Class="ScreenShare.UX.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScreenShare.UX"
+        xmlns:controls="clr-namespace:ScreenShare.UX.Controls"
+        mc:Ignorable="d"
+        Title="Meeting" Height="600" Width="1000"
+        Background="#F5F5F5">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="250"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Section - Screen Sharing Area -->
+        <Grid Grid.Column="0" Background="#E8E4DD">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Tab Control -->
+            <controls:TabControlBar Grid.Row="0"/>
+
+            <!-- Main Content Area - Dynamic Participant Display -->
+            <controls:ParticipantsGridControl Grid.Row="1" 
+                                              x:Name="ParticipantsGridControl"
+                                              Participants="{Binding Participants}"/>
+
+            <!-- Bottom Control Bar -->
+            <controls:ControlBar Grid.Row="2"/>
+        </Grid>
+
+        <!-- Right Section - Chat/Participants Panel -->
+        <Grid Grid.Column="1" Background="#F0EBE3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Chat Module -->
+            <controls:ChatModule Grid.Row="0"/>
+
+            <!-- Participants List -->
+            <controls:ParticipantsListControl Grid.Row="1"
+                                              x:Name="ParticipantsListControl"
+                                              Participants="{Binding Participants}"
+                                              AddParticipantClick="AddParticipant_Click"
+                                              RemoveParticipantClick="RemoveParticipant_Click"/>
+        </Grid>
+    </Grid>
+</Window>
