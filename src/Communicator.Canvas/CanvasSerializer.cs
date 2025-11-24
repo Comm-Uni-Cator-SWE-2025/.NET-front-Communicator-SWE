@@ -339,8 +339,7 @@ public static class CanvasSerializer
             return null;
         }
 
-        var dto = new SerializedActionStack
-        {
+        var dto = new SerializedActionStack {
             CurrentIndex = doc["CurrentIndex"]?.GetValue<int>() ?? -1
         };
 

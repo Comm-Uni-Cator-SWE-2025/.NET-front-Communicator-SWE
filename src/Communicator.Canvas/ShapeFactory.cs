@@ -32,8 +32,7 @@ public static class ShapeFactory
     public static IShape CreateShape(ShapeType type, List<Point> points, Color color, double thickness, string userId)
     {
         // C# 8.0 Switch Expression for clean factory logic
-        return type switch
-        {
+        return type switch {
             ShapeType.FREEHAND => new FreeHand(points, color, thickness, userId),
             ShapeType.LINE => new StraightLine(points, color, thickness, userId),
             ShapeType.RECTANGLE => new RectangleShape(points, color, thickness, userId),

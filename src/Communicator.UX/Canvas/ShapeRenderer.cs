@@ -85,8 +85,7 @@ public static class ShapeRenderer
                 wpfPoints.Add(new System.Windows.Point(p.X, p.Y));
             }
 
-            Polyline polyline = new Polyline
-            {
+            Polyline polyline = new Polyline {
                 Points = wpfPoints,
                 Stroke = ToWpfBrush(freeHand.Color),
                 StrokeThickness = freeHand.Thickness,
@@ -101,8 +100,7 @@ public static class ShapeRenderer
 
         public UIElement Visit(StraightLine line)
         {
-            Line uiLine = new Line
-            {
+            Line uiLine = new Line {
                 X1 = line.Points[0].X,
                 Y1 = line.Points[0].Y,
                 X2 = line.Points[1].X,
@@ -124,8 +122,7 @@ public static class ShapeRenderer
             double width = Math.Abs(p2.X - p1.X);
             double height = Math.Abs(p2.Y - p1.Y);
 
-            Rectangle uiRect = new Rectangle
-            {
+            Rectangle uiRect = new Rectangle {
                 Width = width,
                 Height = height,
                 Stroke = ToWpfBrush(rectangle.Color),
@@ -148,8 +145,7 @@ public static class ShapeRenderer
             double width = Math.Abs(p2.X - p1.X);
             double height = Math.Abs(p2.Y - p1.Y);
 
-            Ellipse uiEllipse = new Ellipse
-            {
+            Ellipse uiEllipse = new Ellipse {
                 Width = width,
                 Height = height,
                 Stroke = ToWpfBrush(ellipse.Color),
@@ -172,8 +168,7 @@ public static class ShapeRenderer
             System.Windows.Point v2 = new System.Windows.Point((p1.X + p2.X) / 2, p1.Y); // Top Center
             System.Windows.Point v3 = new System.Windows.Point(p2.X, p2.Y); // Bottom Right
 
-            Polygon uiTriangle = new Polygon
-            {
+            Polygon uiTriangle = new Polygon {
                 Points = new PointCollection { v1, v2, v3 },
                 Stroke = ToWpfBrush(triangle.Color),
                 StrokeThickness = triangle.Thickness,
@@ -188,10 +183,9 @@ public static class ShapeRenderer
     /// <summary>
     /// Helper to create a visual selection box around a shape.
     /// </summary>
-    public static Rectangle CreateSelectionBox(Drawing.Rectangle bounds)
+    public static Rectangle Createselectionbox(Drawing.Rectangle bounds)
     {
-        Rectangle selectionBox = new Rectangle
-        {
+        Rectangle selectionbox = new Rectangle {
             Width = bounds.Width + 4,
             Height = bounds.Height + 4,
             Fill = Brushes.Transparent,
@@ -200,10 +194,10 @@ public static class ShapeRenderer
             StrokeDashArray = new DoubleCollection { 4, 2 }
         };
 
-        WpfCanvas.SetLeft(selectionBox, bounds.Left - 2);
-        WpfCanvas.SetTop(selectionBox, bounds.Top - 2);
+        WpfCanvas.SetLeft(selectionbox, bounds.Left - 2);
+        WpfCanvas.SetTop(selectionbox, bounds.Top - 2);
 
-        return selectionBox;
+        return selectionbox;
     }
     /// <summary>
     /// Creates a small info box showing creation/modification details.

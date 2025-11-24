@@ -15,19 +15,19 @@ namespace Communicator.Canvas;
 public static class NetworkMock
 {
     // Registry of listeners
-    private static Dictionary<string, Action<string>> _listeners = new();
+    private static Dictionary<string, Action<string>> s_listeners = new();
 
     public static void Register(string ip, Action<string> listener)
     {
-        _listeners[ip] = listener;
+        s_listeners[ip] = listener;
     }
 
     public static void SendMessage(string targetIp, string jsonMessage)
     {
         Console.WriteLine($"[Network] Sending to {targetIp}");
-        if (_listeners.ContainsKey(targetIp))
+        if (s_listeners.ContainsKey(targetIp))
         {
-            _listeners[targetIp].Invoke(jsonMessage);
+            s_listeners[targetIp].Invoke(jsonMessage);
         }
     }
 
