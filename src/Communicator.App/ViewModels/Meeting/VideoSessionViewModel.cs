@@ -244,8 +244,6 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
 
 
             Console.WriteLine($"[App] Visible participants updated: {string.Join(", ", visibleIds)}");
-            // Notify RPC or other services about visibility change if needed
-            // _rpc?.UpdateVisibleParticipants(visibleIds);
         }
     }
 
