@@ -17,4 +17,8 @@
     <Resource Include="UX\Fonts\JetBrainsMono-VariableFont_wght.ttf" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Communicator.Cloud.CloudFunction\CloudFunctionLibrary.csproj" />
+  </ItemGroup>
+
 </Project>
