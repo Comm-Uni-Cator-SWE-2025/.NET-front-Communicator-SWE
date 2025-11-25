@@ -30,9 +30,9 @@ public class ThemeService : IThemeService
     private AppTheme _currentTheme;
     private string? _currentUsername;
     private CloudFunctionLibrary? _cloudLibrary;
-    private const string ThemeContainer = "UX";
-    private const string ThemeType = "Theme";
-    private const string ThemeKey = "color";
+    private const string ThemeContainer = "APP";
+    private const string ThemeType = "APPTHEME";
+    private const string ThemeKey = "COLOR";
 
     public event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
 
@@ -117,7 +117,7 @@ public class ThemeService : IThemeService
                 if (!string.IsNullOrEmpty(themeStr))
                 {
                     var theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
-                    Application.Current.Dispatcher.Invoke(() => SetTheme(theme));
+                    Application.Current.Dispatcher.Invoke(() => SetTheme(theme, true));
                 }
             }
             else
@@ -133,18 +133,27 @@ public class ThemeService : IThemeService
 
     private async void SaveThemeToCloud()
     {
-        if (string.IsNullOrEmpty(_currentUsername)) return;
-        if (_cloudLibrary == null) return;
+        if (string.IsNullOrEmpty(_currentUsername))
+        {
+            return;
+        }
+
+        if (_cloudLibrary == null)
+        {
+            return;
+        }
 
         try
         {
             string themeValue = _currentTheme == AppTheme.Dark ? "dark" : "light";
             System.Diagnostics.Debug.WriteLine($"[ThemeService] Saving theme to cloud: {themeValue} for user: {_currentUsername}");
             var data = new { color = themeValue };
-            var jsonData = JsonSerializer.SerializeToElement(data);
+            JsonElement jsonData = JsonSerializer.SerializeToElement(data);
 
             var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), jsonData);
+
             await _cloudLibrary.CloudPostAsync(req);
+
             System.Diagnostics.Debug.WriteLine($"[ThemeService] Theme saved to cloud successfully.");
         }
         catch (Exception ex)
@@ -157,6 +166,11 @@ public class ThemeService : IThemeService
     /// Sets the application theme by dynamically loading the appropriate ResourceDictionary.
     /// </summary>
     public void SetTheme(AppTheme theme)
+    {
+        SetTheme(theme, false);
+    }
+
+    private void SetTheme(AppTheme theme, bool fromCloud)
     {
         if (_currentTheme == theme)
         {
@@ -176,15 +190,19 @@ public class ThemeService : IThemeService
                                     (d.Source.OriginalString.Contains("LightTheme.xaml", StringComparison.OrdinalIgnoreCase) ||
                                      d.Source.OriginalString.Contains("DarkTheme.xaml", StringComparison.OrdinalIgnoreCase)));
 
+            Application.Current.Resources.MergedDictionaries.Add(newTheme);
+
             if (existingTheme != null)
             {
                 Application.Current.Resources.MergedDictionaries.Remove(existingTheme);
             }
 
-            Application.Current.Resources.MergedDictionaries.Add(newTheme);
-
             SaveThemePreference();
-            SaveThemeToCloud();
+            
+            if (!fromCloud)
+            {
+                SaveThemeToCloud();
+            }
 
             ThemeChanged?.Invoke(this, new ThemeChangedEventArgs(theme));
         }
