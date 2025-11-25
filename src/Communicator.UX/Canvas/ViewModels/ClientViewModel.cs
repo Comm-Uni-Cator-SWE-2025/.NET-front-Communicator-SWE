@@ -59,13 +59,13 @@ public class ClientViewModel : CanvasViewModel
         // Request history from the backend/host
         try
         {
-            System.Diagnostics.Debug.WriteLine("[Client] Requesting canvas shapes...");
+            System.Diagnostics.Debug.WriteLine("[CanvasClientModel] Requesting canvas shapes...");
             byte[] whoAmIResponse = await Rpc.Call("canvas:whoami", Array.Empty<byte>());
             ClientNode myClientNode = DataSerializer.Deserialize<ClientNode>(whoAmIResponse);
 
             if (myClientNode == null)
             {
-                System.Diagnostics.Debug.WriteLine("[Client] Failed to get identity from canvas:whoami");
+                System.Diagnostics.Debug.WriteLine("[CanvasClientModel] Failed to get identity from canvas:whoami");
                 return;
             }
 
@@ -81,7 +81,7 @@ public class ClientViewModel : CanvasViewModel
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[Client] Failed to get history: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[CanvasClientModel] Failed to get history: {ex.Message}");
         }
     }
 
@@ -221,7 +221,7 @@ public class ClientViewModel : CanvasViewModel
 
         if (msg.MessageType == NetworkMessageType.RESTORE)
         {
-            Console.WriteLine("[Client] Received RESTORE command.");
+            System.Diagnostics.Debug.WriteLine("[CanvasClientModel] Received RESTORE command.");
             if (!string.IsNullOrEmpty(msg.Payload))
             {
                 ApplyRestore(msg.Payload);

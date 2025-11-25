@@ -243,7 +243,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
             }
 
 
-            Console.WriteLine($"[App] Visible participants updated: {string.Join(", ", visibleIds)}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Visible participants updated: {string.Join(", ", visibleIds)}");
         }
     }
 
@@ -338,7 +338,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is IndexOutOfRangeException || ex is IOException)
         {
-            System.Diagnostics.Debug.WriteLine($"Error processing frame: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Error processing frame: {ex.Message}");
         }
     }
 
@@ -357,7 +357,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
         {
-            System.Diagnostics.Debug.WriteLine($"Error in OnStopShare: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Error in OnStopShare: {ex.Message}");
         }
     }
 
@@ -368,7 +368,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
 
         ParticipantViewModel? participant = Participants.FirstOrDefault(p => p.User.Email == email);
 
-        Console.WriteLine($"[App] UPDATE_UI 3 Updating frame for participant with IP {rImage.Ip} mapped to email {email}" + participant);
+        System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] UPDATE_UI 3 Updating frame for participant with IP {rImage.Ip} mapped to email {email}" + participant);
         if (participant != null)
         {
             WriteableBitmap? bitmapSource = CreateBitmapSourceFromIntArray(rImage.Image);
@@ -377,11 +377,11 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
             // Otherwise update video frame
             // Note: This logic depends on IsScreenSharing flag being set correctly via other means (e.g. separate RPC call)
             // OR we can infer it.
-            Console.WriteLine($"[App] UPDATE_UI 4 Created bitmap source for participant {email} {participant.IsScreenSharing} " + bitmapSource + rImage.Image.Length);
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] UPDATE_UI 4 Created bitmap source for participant {email} {participant.IsScreenSharing} " + bitmapSource + rImage.Image.Length);
 
             if (participant.IsScreenSharing)
             {
-                Console.WriteLine("[App] UPDATE_UI 5 Updating screen frame for participant " + participant);
+                System.Diagnostics.Debug.WriteLine("[MeetingVideoSession] UPDATE_UI 5 Updating screen frame for participant " + participant);
                 participant.Frame = bitmapSource;
                 // Also ensure we switch to screen focus if this is the first frame
                 if (ViewMode != VideoViewMode.ScreenFocus && FocusedParticipant == participant)
@@ -465,8 +465,8 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     /// </summary>
     private void UpdateSortedParticipants()
     {
-        System.Diagnostics.Debug.WriteLine("[App] Updating sorted participants list.");
-        Console.WriteLine($"[App] Updating sorted participants list. Count: {Participants.Count}");
+        System.Diagnostics.Debug.WriteLine("[MeetingVideoSession] Updating sorted participants list.");
+        System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Updating sorted participants list. Count: {Participants.Count}");
         var sorted = Participants.OrderByDescending(p => p.IsScreenSharing).ToList();
 
         SortedParticipants.Clear();

@@ -109,7 +109,7 @@ public sealed partial class VideoSessionView : UserControl
             }
         }
 
-        Console.WriteLine($"[View] Visible participants calculated: {string.Join(", ", visibleParticipants)}");
+        System.Diagnostics.Debug.WriteLine($"[MeetingVideoSessionView] Visible participants calculated: {string.Join(", ", visibleParticipants)}");
 
         viewModel.UpdateVisibleParticipants(visibleParticipants);
     }

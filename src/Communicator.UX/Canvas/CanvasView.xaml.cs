@@ -192,7 +192,7 @@ public partial class CanvasView : UserControl
             try
             {
                 SaveCanvasToPath(dialog.FileName);
-                Console.WriteLine($"[GUI] Snapshot saved to {dialog.FileName}");
+                System.Diagnostics.Debug.WriteLine($"[CanvasView] Snapshot saved to {dialog.FileName}");
             }
             catch (Exception ex)
             {

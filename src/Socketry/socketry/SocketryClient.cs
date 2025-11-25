@@ -19,7 +19,7 @@ namespace socketry
             Packet initPacket = new Packet.Init(socketPerTunnel);
             link.SendPacket(initPacket);
 
-            Console.WriteLine("Sent init...");
+            System.Diagnostics.Debug.WriteLine("Sent init...");
             Packet acceptPacket = link.GetPacket() as Packet.Accept;
 
             if (!(acceptPacket != null)) 
@@ -28,7 +28,7 @@ namespace socketry
             }
 
             short[] ports = ((Packet.Accept)acceptPacket).ports;
-            Console.WriteLine("Reached here...");
+            System.Diagnostics.Debug.WriteLine("Reached here...");
 
             this.SetTunnelsFromPorts(ports, socketPerTunnel);
         }
@@ -51,7 +51,7 @@ namespace socketry
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
                 }
             }
 

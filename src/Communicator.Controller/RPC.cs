@@ -48,7 +48,7 @@ public class RPCService : IRPC
         }
 
         _methods[methodName] = method;
-        Console.WriteLine($"[RPC] Subscribed method: {methodName}");
+        System.Diagnostics.Debug.WriteLine($"[RPC] Subscribed method: {methodName}");
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class RPCService : IRPC
             throw new InvalidOperationException("RPC is already connected. Cannot call Connect() multiple times.");
         }
 
-        Console.WriteLine($"[RPC] Connecting to port: {portNumber} with {_methods.Count} method(s)");
+        System.Diagnostics.Debug.WriteLine($"[RPC] Connecting to port: {portNumber} with {_methods.Count} method(s)");
 
         // Create SocketryServer with the registered methods
         _socketryServer = new SocketryServer(portNumber, _methods);
@@ -73,14 +73,14 @@ public class RPCService : IRPC
         Thread rpcThread = new(() => {
             try
             {
-                Console.WriteLine("[RPC] Starting listen loop...");
+                System.Diagnostics.Debug.WriteLine("[RPC] Starting listen loop...");
                 _socketryServer.ListenLoop();
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                Console.WriteLine($"[RPC] Error in listen loop: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[RPC] Error in listen loop: {ex.Message}");
             }
         }) {
             IsBackground = true,
@@ -105,14 +105,14 @@ public class RPCService : IRPC
             throw new InvalidOperationException("RPC is not connected. Call Connect() before making remote calls.");
         }
 
-        Console.WriteLine($"[RPC] Calling remote method: {methodName}");
+        System.Diagnostics.Debug.WriteLine($"[RPC] Calling remote method: {methodName}");
 
         try
         {
             // Get the remote procedure ID for the method name
             // This will trigger discovery if not already done
             byte methodId = _socketryServer.GetRemoteProceduresId(methodName);
-            Console.WriteLine($"[RPC] Method '{methodName}' mapped to ID: {methodId}");
+            System.Diagnostics.Debug.WriteLine($"[RPC] Method '{methodName}' mapped to ID: {methodId}");
 
             // Make the remote call (using tunnel 0 by default)
             TaskCompletionSource<byte[]> taskCompletionSource = _socketryServer.MakeRemoteCall(methodId, data, 0);
@@ -122,7 +122,7 @@ public class RPCService : IRPC
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[RPC] Error calling remote method '{methodName}': {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[RPC] Error calling remote method '{methodName}': {ex.Message}");
             throw;
         }
     }

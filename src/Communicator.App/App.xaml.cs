@@ -65,7 +65,6 @@ public sealed partial class MainApp : Application
         // Subscribe to UserLoggedIn to sync theme with cloud
         IAuthenticationService authService = Services.GetRequiredService<IAuthenticationService>();
         authService.UserLoggedIn += (s, args) => {
-            Console.WriteLine($"[App] UserLoggedIn event fired for: {args.User?.Email}");
             if (args.User != null && !string.IsNullOrEmpty(args.User.Email))
             {
                 themeService.SetUser(args.User.Email);
@@ -81,7 +80,6 @@ public sealed partial class MainApp : Application
 
         // Debug args
         string argsStr = string.Join(", ", e.Args);
-        System.Diagnostics.Debug.WriteLine($"[App] Startup Args: {argsStr}");
 
         if (e.Args.Contains("--test-mode"))
         {
@@ -101,9 +99,9 @@ public sealed partial class MainApp : Application
 
                 // Create dummy user
                 UserProfile dummyUser = new UserProfile(
-                    "test@example.com", 
-                    "Test User", 
-                    ParticipantRole.STUDENT, 
+                    "test@example.com",
+                    "Test User",
+                    ParticipantRole.STUDENT,
                     new Uri("https://via.placeholder.com/150"));
 
                 // Auto-login
@@ -132,21 +130,15 @@ public sealed partial class MainApp : Application
 
     /// <summary>
     /// Subscribes to RPC methods that the backend may call.
-    /// Must be called BEFORE Connect(), matching Java frontend pattern.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "RPC callbacks must not crash the app")]
     private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService)
     {
-        System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
-
-
 
         // Subscribe to UPDATE_UI to receive video/screen frames
         rpc.Subscribe(ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
             try
             {
-                Console.WriteLine($"[App] UPDATE_UI Received UPDATE_UI with {data.Length} bytes");
-                System.Diagnostics.Debug.WriteLine("UPDATE UI : Triggering FrameReceived event");
                 rpcEventService.TriggerFrameReceived(data);
             }
             catch (ArgumentException ex)
@@ -174,8 +166,6 @@ public sealed partial class MainApp : Application
             try
             {
                 string json = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] Participant list updated: {json}");
-
                 rpcEventService.TriggerParticipantsListUpdated(json);
 
                 return Array.Empty<byte>();
@@ -197,7 +187,6 @@ public sealed partial class MainApp : Application
             try
             {
                 string message = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] Logout received: {message}");
                 rpcEventService.TriggerLogout(message);
                 return Array.Empty<byte>();
             }
@@ -213,7 +202,6 @@ public sealed partial class MainApp : Application
             try
             {
                 string message = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] EndMeeting received: {message}");
                 rpcEventService.TriggerEndMeeting(message);
                 return Array.Empty<byte>();
             }
@@ -301,8 +289,6 @@ public sealed partial class MainApp : Application
             }
             return Array.Empty<byte>();
         });
-
-        System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ public static class NetworkMock
 
     public static void SendMessage(string targetIp, string jsonMessage)
     {
-        Console.WriteLine($"[Network] Sending to {targetIp}");
+        System.Diagnostics.Debug.WriteLine($"[Network] Sending to {targetIp}");
         if (s_listeners.ContainsKey(targetIp))
         {
             s_listeners[targetIp].Invoke(jsonMessage);
@@ -33,7 +33,7 @@ public static class NetworkMock
 
     public static void Broadcast(List<string> clientIps, string jsonMessage)
     {
-        Console.WriteLine($"[Network] Broadcasting");
+        System.Diagnostics.Debug.WriteLine($"[Network] Broadcasting");
         foreach (string ip in clientIps)
         {
             SendMessage(ip, jsonMessage);
