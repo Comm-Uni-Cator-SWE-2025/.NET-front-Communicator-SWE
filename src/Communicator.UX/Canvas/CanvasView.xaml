@@ -45,9 +45,10 @@
 
         <Style x:Key="ToolButtonWithLabel" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
-            <Setter Property="Width" Value="50"/>
-            <Setter Property="Height" Value="44"/>
-            <Setter Property="Margin" Value="2"/>
+            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Padding" Value="6,0"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
@@ -58,8 +59,8 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8"
                                 SnapsToDevicePixels="True">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <ContentPresenter Margin="0,2,0,4"/>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}">
+                                <ContentPresenter Margin="0,2,0,4" HorizontalAlignment="Center"/>
                                 <TextBlock Text="{Binding ToolTip, RelativeSource={RelativeSource TemplatedParent}}"
                                            FontSize="10" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center"/>
                             </StackPanel>
@@ -196,7 +197,7 @@
                         <Button x:Name="BtnRegularize" Style="{StaticResource ToolButtonWithLabel}" Click="BtnRegularize_Click" ToolTip="Regularize">
                             <icons:Icon IconName="wand" IconSize="18" />
                         </Button>
-                        <Button x:Name="BtnAnalyze" Style="{StaticResource ToolButtonWithLabel}" Click="BtnAnalyze_Click" ToolTip="Analyze Canvas">
+                        <Button x:Name="BtnAnalyze" Style="{StaticResource ToolButtonWithLabel}" Click="BtnAnalyze_Click" ToolTip="Analyze">
                             <icons:Icon IconName="search" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnSnapshot" Style="{StaticResource ToolButtonWithLabel}" Click="BtnSnapshot_Click" ToolTip="Snapshot">
@@ -262,7 +263,7 @@
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="2" Margin="10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="2" Margin="10" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
                 <!-- ADDED ClipToBounds="True" AND Explicit Width/Height to DrawArea -->
                 <Border x:Name="CanvasBorder" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="White" 
                         Width="1600" Height="900" VerticalAlignment="Center" HorizontalAlignment="Center"
