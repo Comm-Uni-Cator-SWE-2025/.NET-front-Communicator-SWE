@@ -49,7 +49,7 @@
                         <!-- Profile Image -->
                         <Ellipse>
                             <Ellipse.Fill>
-                                <ImageBrush ImageSource="{Binding ProfileImageUri}"
+                                <ImageBrush ImageSource="{Binding ProfileImageUri, TargetNullValue={x:Null}, FallbackValue={x:Null}}"
                                             Stretch="UniformToFill"/>
                             </Ellipse.Fill>
                             <Ellipse.Style>
