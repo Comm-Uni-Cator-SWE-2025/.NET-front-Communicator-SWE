@@ -65,7 +65,7 @@ public sealed class AuthViewModel : ObservableObject
 #if DEBUG
             true;
 #else
-            return false;
+            false;
 #endif
 
 
