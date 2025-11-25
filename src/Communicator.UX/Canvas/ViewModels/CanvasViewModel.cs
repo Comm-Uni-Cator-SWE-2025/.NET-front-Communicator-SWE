@@ -458,8 +458,11 @@ public class CanvasViewModel : INotifyPropertyChanged
                 _originalShapeForMove.ShapeId == SelectedShape.ShapeId &&
                 !_originalShapeForMove.Points.SequenceEqual(SelectedShape.Points))
             {
-                // Create Modify Action for the move
-                CanvasAction action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, SelectedShape);
+                 // NEW LOGIC: Apply the CurrentUserId here, at the moment of commitment
+                IShape finalShape = SelectedShape.WithUpdates(null, null, CurrentUserId);
+
+                // Use finalShape instead of SelectedShape
+                CanvasAction action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, finalShape);
                 ProcessAction(action);
             }
             _originalShapeForMove = null;
@@ -579,7 +582,9 @@ public class CanvasViewModel : INotifyPropertyChanged
         if (_isMovingShape && SelectedShape != null && _originalShapeForMove != null)
         {
             Point offset = new Point(clampedPoint.X - _moveStartPoint.X, clampedPoint.Y - _moveStartPoint.Y);
-            IShape movedShape = _originalShapeForMove.WithMove(offset, CanvasBounds, CurrentUserId);
+            // CHANGE THIS LINE: Use _originalShapeForMove.LastModifiedBy instead of CurrentUserId
+            // This keeps the original owner ID while dragging, preventing version conflicts.
+            IShape movedShape = _originalShapeForMove.WithMove(offset, CanvasBounds, _originalShapeForMove.LastModifiedBy);
             UpdateShapeFromNetwork(movedShape);
             RaiseRequestRedraw();
         }
