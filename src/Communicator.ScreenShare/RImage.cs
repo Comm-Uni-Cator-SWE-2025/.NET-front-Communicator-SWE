@@ -24,14 +24,10 @@ public class RImage
     }
     public static RImage Deserialize(byte[] data)
     {
-        // C#'s MemoryStream + BinaryReader is the equivalent of Java's ByteBuffer.wrap()
         using var stream = new MemoryStream(data);
         using var reader = new BinaryReader(stream);
         // --- get the IP ---
 
-        // CRITICAL: Java's buffer.getInt() reads in BIG-ENDIAN.
-        // C#'s reader.ReadInt32() reads in LITTLE-ENDIAN.
-        // We must convert from network (Big) to host (Little) order.
         int ipLen = IPAddress.NetworkToHostOrder(reader.ReadInt32());
 
         // Read the IP bytes
