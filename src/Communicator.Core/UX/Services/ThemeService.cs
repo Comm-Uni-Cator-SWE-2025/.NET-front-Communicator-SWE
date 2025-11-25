@@ -30,9 +30,9 @@ public class ThemeService : IThemeService
     private AppTheme _currentTheme;
     private string? _currentUsername;
     private CloudFunctionLibrary? _cloudLibrary;
-    private const string ThemeContainer = "APP";
-    private const string ThemeType = "APPTHEME";
-    private const string ThemeKey = "COLOR";
+    private const string ThemeContainer = "UX";
+    private const string ThemeType = "Theme";
+    private const string ThemeKey = "color";
 
     public event EventHandler<ThemeChangedEventArgs>? ThemeChanged;
 
@@ -95,9 +95,9 @@ public class ThemeService : IThemeService
         {
             System.Diagnostics.Debug.WriteLine($"[ThemeService] Loading theme from cloud for user: {_currentUsername}");
             // Use JsonDocument.Parse("{}").RootElement instead of default to ensure valid JSON object
-            var emptyData = JsonDocument.Parse("{}").RootElement;
+            JsonElement emptyData = JsonDocument.Parse("{}").RootElement;
             var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), emptyData);
-            var res = await _cloudLibrary.CloudGetAsync(req);
+            CloudResponse res = await _cloudLibrary.CloudGetAsync(req);
             System.Diagnostics.Debug.WriteLine($"[ThemeService] CloudGetAsync response: {res.StatusCode} {res.Message}");
 
             if (res.Data.ValueKind != JsonValueKind.Undefined && res.Data.ValueKind != JsonValueKind.Null)
@@ -116,7 +116,7 @@ public class ThemeService : IThemeService
 
                 if (!string.IsNullOrEmpty(themeStr))
                 {
-                    var theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
+                    AppTheme theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
                     Application.Current.Dispatcher.Invoke(() => SetTheme(theme, true));
                 }
             }
@@ -152,7 +152,15 @@ public class ThemeService : IThemeService
 
             var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), jsonData);
 
-            await _cloudLibrary.CloudPostAsync(req);
+            CloudResponse res = await _cloudLibrary.CloudPostAsync(req);
+            System.Diagnostics.Debug.WriteLine($"[ThemeService] CloudPostAsync Result: StatusCode={res.StatusCode}, Message={res.Message}");
+
+            if (res.Message != null && res.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+            {
+                System.Diagnostics.Debug.WriteLine("[ThemeService] Document exists. Attempting update...");
+                CloudResponse updateRes = await _cloudLibrary.CloudUpdateAsync(req);
+                System.Diagnostics.Debug.WriteLine($"[ThemeService] CloudUpdateAsync Result: StatusCode={updateRes.StatusCode}, Message={updateRes.Message}");
+            }
 
             System.Diagnostics.Debug.WriteLine($"[ThemeService] Theme saved to cloud successfully.");
         }
@@ -198,7 +206,7 @@ public class ThemeService : IThemeService
             }
 
             SaveThemePreference();
-            
+
             if (!fromCloud)
             {
                 SaveThemeToCloud();
