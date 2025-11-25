@@ -409,24 +409,43 @@ public partial class CanvasView : UserControl
     private void UpdateToolButtons()
     {
         if (_vm == null) { return; }
-        BtnSelect.ClearValue(Button.BackgroundProperty);
-        BtnFreehand.ClearValue(Button.BackgroundProperty);
-        BtnLine.ClearValue(Button.BackgroundProperty);
-        BtnRectangle.ClearValue(Button.BackgroundProperty);
-        BtnEllipse.ClearValue(Button.BackgroundProperty);
-        BtnTriangle.ClearValue(Button.BackgroundProperty);
 
-        Brush? selectedBrush = Brushes.LightSteelBlue;
-        // try { selectedBrush = (Brush)FindResource("GlassyPressedBrush"); } catch { }
+        void ResetButton(Button btn)
+        {
+            btn.ClearValue(Button.BackgroundProperty);
+            btn.ClearValue(Button.ForegroundProperty);
+        }
+
+        ResetButton(BtnSelect);
+        ResetButton(BtnFreehand);
+        ResetButton(BtnLine);
+        ResetButton(BtnRectangle);
+        ResetButton(BtnEllipse);
+        ResetButton(BtnTriangle);
+
+        Brush? selectedBrush = (Brush)FindResource("PrimaryBrush");
+        Brush? selectedForeground = (Brush)FindResource("TextOnPrimaryBrush");
+
+        void SetSelected(Button btn)
+        {
+            if (selectedBrush != null)
+            {
+                btn.Background = selectedBrush;
+            }
+            if (selectedForeground != null)
+            {
+                btn.Foreground = selectedForeground;
+            }
+        }
 
         switch (_vm.CurrentMode)
         {
-            case CanvasViewModel.DrawingMode.Select: BtnSelect.Background = selectedBrush; break;
-            case CanvasViewModel.DrawingMode.FreeHand: BtnFreehand.Background = selectedBrush; break;
-            case CanvasViewModel.DrawingMode.StraightLine: BtnLine.Background = selectedBrush; break;
-            case CanvasViewModel.DrawingMode.Rectangle: BtnRectangle.Background = selectedBrush; break;
-            case CanvasViewModel.DrawingMode.EllipseShape: BtnEllipse.Background = selectedBrush; break;
-            case CanvasViewModel.DrawingMode.TriangleShape: BtnTriangle.Background = selectedBrush; break;
+            case CanvasViewModel.DrawingMode.Select: SetSelected(BtnSelect); break;
+            case CanvasViewModel.DrawingMode.FreeHand: SetSelected(BtnFreehand); break;
+            case CanvasViewModel.DrawingMode.StraightLine: SetSelected(BtnLine); break;
+            case CanvasViewModel.DrawingMode.Rectangle: SetSelected(BtnRectangle); break;
+            case CanvasViewModel.DrawingMode.EllipseShape: SetSelected(BtnEllipse); break;
+            case CanvasViewModel.DrawingMode.TriangleShape: SetSelected(BtnTriangle); break;
         }
     }
 

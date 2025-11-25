@@ -152,7 +152,7 @@
 
             <Grid x:Name="TitleBar"
                   Grid.Row="0"
-                  Background="{DynamicResource AppBackgroundBrush}"
+                  Background="{DynamicResource SurfaceBrush}"
                   MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

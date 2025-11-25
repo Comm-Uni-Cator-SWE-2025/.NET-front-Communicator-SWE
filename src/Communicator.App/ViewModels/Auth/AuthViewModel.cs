@@ -61,6 +61,14 @@ public sealed class AuthViewModel : ObservableObject
     public ICommand SignInWithGoogleCommand { get; }
     public ICommand DebugLoginCommand { get; }
 
+    public static bool IsDebugMode =>
+#if DEBUG
+            true;
+#else
+            return false;
+#endif
+
+
     public AuthViewModel(IRPC rpc, IToastService toastService)
     {
         _rpc = rpc ?? throw new ArgumentNullException(nameof(rpc));

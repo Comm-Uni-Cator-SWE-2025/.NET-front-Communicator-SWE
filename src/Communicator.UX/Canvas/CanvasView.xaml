@@ -35,15 +35,16 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FFDCE0E5"/>
+                    <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#FFC9CED3"/>
+                    <Setter Property="Background" Value="{DynamicResource PrimaryLightBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="ToolButtonWithLabel" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
             <Setter Property="Width" Value="50"/>
             <Setter Property="Height" Value="44"/>
             <Setter Property="Margin" Value="2"/>
@@ -60,7 +61,7 @@
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <ContentPresenter Margin="0,2,0,4"/>
                                 <TextBlock Text="{Binding ToolTip, RelativeSource={RelativeSource TemplatedParent}}"
-                                           FontSize="10" Foreground="#555" HorizontalAlignment="Center"/>
+                                           FontSize="10" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </ControlTemplate>
@@ -68,10 +69,10 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FFDCE0E5"/>
+                    <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#FFC9CED3"/>
+                    <Setter Property="Background" Value="{DynamicResource PrimaryLightBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -81,7 +82,7 @@
             <Setter Property="Height" Value="18"/>
             <Setter Property="Margin" Value="2"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#888"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -95,7 +96,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="Black"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource TextPrimaryBrush}"/>
                                 <Setter TargetName="border" Property="BorderThickness" Value="2"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -103,29 +104,35 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style TargetType="icons:Icon">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid Background="#FFE0E0E0">
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0" 
-                Background="#F0F0F0" 
-                BorderBrush="#CCC" 
+                Background="{DynamicResource SurfaceBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" 
                 BorderThickness="0,0,1,0" 
                 Width="250"
                 Padding="10"
                 Visibility="{Binding IsAnalysisVisible, Converter={StaticResource BoolToVis}}">
             <StackPanel>
-                <TextBlock Text="Canvas Analysis" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+                <TextBlock Text="Canvas Analysis" FontWeight="Bold" FontSize="16" Margin="0,0,0,10" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 <TextBox Text="{Binding AnalysisResult, Mode=OneWay}" 
                          IsReadOnly="True" 
                          Height="300" 
                          TextWrapping="Wrap" 
                          VerticalScrollBarVisibility="Auto"
-                         Background="White"
+                         Background="{DynamicResource SurfaceBrush}"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
+                         BorderBrush="{DynamicResource BorderBrush}"
                          Padding="5"/>
                 <Button Content="Close" Margin="0,10,0,0" Click="BtnCloseAnalysis_Click" Padding="5"/>
             </StackPanel>
@@ -139,8 +146,8 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="1"
-                    Background="#FFF3F4F6" 
-                    BorderBrush="#FFDDDDDD"
+                    Background="{DynamicResource SurfaceBrush}" 
+                    BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0,0,0,1"
                     Padding="8,4">
 
@@ -156,30 +163,30 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Visibility="{Binding IsHost, Converter={StaticResource BoolToVis}}">
                             <Button x:Name="BtnSave" Style="{StaticResource ToolButtonWithLabel}" Click="BtnSave_Click" ToolTip="Save">
-                                <icons:Icon IconName="device-floppy" IconSize="18" Foreground="#333" />
+                                <icons:Icon IconName="device-floppy" IconSize="18" />
                             </Button>
                             <Button x:Name="BtnRestore" Style="{StaticResource ToolButtonWithLabel}" Click="BtnRestore_Click" ToolTip="Restore">
-                                <icons:Icon IconName="restore" IconSize="18" Foreground="#333" />
+                                <icons:Icon IconName="restore" IconSize="18" />
                             </Button>
                         </StackPanel>
 
                         <Button x:Name="BtnSelect" Style="{StaticResource ToolButtonWithLabel}" Click="BtnSelect_Click" ToolTip="Select">
-                            <icons:Icon IconName="select" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="select" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnFreehand" Style="{StaticResource ToolButtonWithLabel}" Click="BtnFreehand_Click" ToolTip="Freehand">
-                            <icons:Icon IconName="pencil" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="pencil" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnLine" Style="{StaticResource ToolButtonWithLabel}" Click="BtnLine_Click" ToolTip="Line">
-                            <icons:Icon IconName="slash" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="slash" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnRectangle" Style="{StaticResource ToolButtonWithLabel}" Click="BtnRectangle_Click" ToolTip="Rectangle">
-                            <icons:Icon IconName="rectangle" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="rectangle" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnEllipse" Style="{StaticResource ToolButtonWithLabel}" Click="BtnEllipse_Click" ToolTip="Ellipse">
-                            <icons:Icon IconName="circle" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="circle" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnTriangle" Style="{StaticResource ToolButtonWithLabel}" Click="BtnTriangle_Click" ToolTip="Triangle">
-                            <icons:Icon IconName="triangle" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="triangle" IconSize="18" />
                         </Button>
                     </StackPanel>
 
@@ -187,13 +194,13 @@
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="BtnRegularize" Style="{StaticResource ToolButtonWithLabel}" Click="BtnRegularize_Click" ToolTip="Regularize">
-                            <icons:Icon IconName="wand" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="wand" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnAnalyze" Style="{StaticResource ToolButtonWithLabel}" Click="BtnAnalyze_Click" ToolTip="Analyze Canvas">
-                            <icons:Icon IconName="search" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="search" IconSize="18" />
                         </Button>
                         <Button x:Name="BtnSnapshot" Style="{StaticResource ToolButtonWithLabel}" Click="BtnSnapshot_Click" ToolTip="Snapshot">
-                            <icons:Icon IconName="camera" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="camera" IconSize="18" />
                         </Button>
                     </StackPanel>
 
@@ -201,11 +208,11 @@
 
                     <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                         <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="4,0,8,0">
-                            <TextBlock Text="Thickness" FontSize="9" Foreground="#666" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                            <TextBlock Text="Thickness" FontSize="9" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
                             <Slider x:Name="ThicknessSlider" Width="100" Minimum="1" Maximum="20" Value="{Binding CurrentThickness, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True" AutoToolTipPlacement="TopLeft"/>
                         </StackPanel>
 
-                        <Button x:Name="CurrentColorButton" Width="28" Height="28" Margin="0,0,4,0" BorderBrush="#888" BorderThickness="1" Click="CurrentColorButton_Click" Cursor="Hand" ToolTip="Select Color">
+                        <Button x:Name="CurrentColorButton" Width="28" Height="28" Margin="0,0,4,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Click="CurrentColorButton_Click" Cursor="Hand" ToolTip="Select Color">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" SnapsToDevicePixels="True"/>
@@ -214,7 +221,7 @@
                         </Button>
 
                         <Popup x:Name="ColorPopup" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=CurrentColorButton}" AllowsTransparency="True" PopupAnimation="Fade">
-                            <Border Background="White" BorderBrush="#AAA" BorderThickness="1" CornerRadius="8" Margin="4" Padding="6">
+                            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="4" Padding="6">
                                 <Border.Effect>
                                     <DropShadowEffect ShadowDepth="2" Color="Black" Opacity="0.3" BlurRadius="5"/>
                                 </Border.Effect>
@@ -242,14 +249,14 @@
                         </Popup>
 
                         <Button x:Name="BtnDelete" Style="{StaticResource ToolbarButton}" Click="BtnDelete_Click" ToolTip="Delete (Del)">
-                            <icons:Icon IconName="trash" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="trash" IconSize="18" Foreground="{DynamicResource IconBrush}" />
                         </Button>
 
                         <Button x:Name="BtnUndo" Style="{StaticResource ToolbarButton}" Click="BtnUndo_Click" ToolTip="Undo (Ctrl+Z)">
-                            <icons:Icon IconName="arrow-back-up" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="arrow-back-up" IconSize="18" Foreground="{DynamicResource IconBrush}" />
                         </Button>
                         <Button x:Name="BtnRedo" Style="{StaticResource ToolbarButton}" Click="BtnRedo_Click" ToolTip="Redo (Ctrl+Y)">
-                            <icons:Icon IconName="arrow-forward-up" IconSize="18" Foreground="#333" />
+                            <icons:Icon IconName="arrow-forward-up" IconSize="18" Foreground="{DynamicResource IconBrush}" />
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -257,7 +264,7 @@
 
             <ScrollViewer Grid.Row="2" Margin="10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <!-- ADDED ClipToBounds="True" AND Explicit Width/Height to DrawArea -->
-                <Border x:Name="CanvasBorder" BorderBrush="#FF888888" BorderThickness="1" Background="White" 
+                <Border x:Name="CanvasBorder" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="White" 
                         Width="1600" Height="900" VerticalAlignment="Center" HorizontalAlignment="Center"
                         ClipToBounds="True">
                     <Border.RenderTransform>
