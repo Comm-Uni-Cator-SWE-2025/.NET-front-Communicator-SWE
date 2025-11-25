@@ -176,7 +176,7 @@
                            x:Name="QuickDoubtPopup">
                         <Border x:Name="BubbleBorder"
                                 Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderBrush="{DynamicResource PrimaryBrush}"
                                 BorderThickness="2"
                                 CornerRadius="12"
                                 Padding="16"
@@ -290,7 +290,7 @@
                                             </Setter>
                                             <Style.Triggers>
                                                 <Trigger Property="IsFocused" Value="True">
-                                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
                                                     <Setter Property="BorderThickness" Value="2"/>
                                                 </Trigger>
                                             </Style.Triggers>
