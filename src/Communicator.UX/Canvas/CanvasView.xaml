@@ -210,7 +210,7 @@
                     <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                         <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="4,0,8,0">
                             <TextBlock Text="Thickness" FontSize="9" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
-                            <Slider x:Name="ThicknessSlider" Width="100" Minimum="1" Maximum="20" Value="{Binding CurrentThickness, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True" AutoToolTipPlacement="TopLeft"/>
+                            <Slider x:Name="ThicknessSlider" Style="{DynamicResource SliderStyle}" Width="100" Minimum="1" Maximum="20" Value="{Binding CurrentThickness, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True" AutoToolTipPlacement="TopLeft"/>
                         </StackPanel>
 
                         <Button x:Name="CurrentColorButton" Width="28" Height="28" Margin="0,0,4,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Click="CurrentColorButton_Click" Cursor="Hand" ToolTip="Select Color">
