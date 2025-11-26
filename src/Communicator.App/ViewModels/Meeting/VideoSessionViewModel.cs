@@ -250,6 +250,29 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
+    /// Unsubscribes from all currently visible participants and clears the list.
+    /// Should be called when the view is unloaded or hidden.
+    /// </summary>
+    public void ClearVisibleParticipants()
+    {
+        // Create a copy to iterate safely
+        var currentVisible = VisibleParticipants.ToList();
+
+        foreach (string id in currentVisible)
+        {
+            string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+            if (!string.IsNullOrEmpty(ip))
+            {
+                SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
+            }
+        }
+
+        VisibleParticipants.Clear();
+        System.Diagnostics.Debug.WriteLine("[MeetingVideoSession] Cleared all visible participants (Unsubscribed).");
+    }
+
+    /// <summary>
     /// Updates grid layout based on participant count.
     /// </summary>
     private void UpdateGridLayout()
