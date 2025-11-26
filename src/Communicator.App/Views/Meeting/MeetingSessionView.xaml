@@ -151,11 +151,11 @@
                         <icons:Icon IconName="video" 
                                     IconSize="20" 
                                     Foreground="{DynamicResource IconBrush}"
-                                    Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
+                                    Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         <icons:Icon IconName="video-off" 
                                     IconSize="20" 
                                     Foreground="{DynamicResource ErrorBrush}"
-                                    Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    Visibility="{Binding IsCameraOn, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=True}"/>
                         <TextBlock Text="Video"
                                    FontSize="12"
                                    Margin="0,4,0,0"

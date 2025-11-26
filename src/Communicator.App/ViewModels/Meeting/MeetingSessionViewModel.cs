@@ -53,8 +53,8 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     private readonly IRpcEventService? _rpcEventService;
 
     // Toolbar State
-    private bool _isMuted;
-    private bool _isCameraOn = true;
+    private bool _isMuted = true;
+    private bool _isCameraOn = false;
     private bool _isHandRaised;
     private bool _isScreenSharing;
 
