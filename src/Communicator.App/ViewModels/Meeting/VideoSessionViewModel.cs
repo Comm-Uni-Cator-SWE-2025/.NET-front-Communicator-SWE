@@ -198,7 +198,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Updates the list of visible participants.
     /// </summary>
-    public void UpdateVisibleParticipants(System.Collections.Generic.List<string> visibleIds)
+    public void UpdateVisibleParticipants(IList<string> visibleIds)
     {
         if (visibleIds == null)
         {
@@ -208,40 +208,42 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         // Only update if changed to avoid unnecessary notifications
         if (!visibleIds.SequenceEqual(VisibleParticipants))
         {
+            // 1. Participants to ADD (Subscribe)
+            // Present in new list, but NOT in current list
+            List<string> toAdd = visibleIds.Except(VisibleParticipants).ToList();
+
+            // Participants to REMOVE (Unsubscribe)
+            // Present in current list, but NOT in new list
+            List<string> toRemove = VisibleParticipants.Except(visibleIds).ToList();
+
+            // Process Subscriptions (Additions)
+            foreach (string id in toAdd)
+            {
+                string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+                if (!string.IsNullOrEmpty(ip))
+                {
+                    SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                    _rpc?.Call("subscribeAsViewer", subscriberPacket.Serialize());
+                }
+            }
+
+            // Process Unsubscriptions (Removals)
+            foreach (string id in toRemove)
+            {
+                string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+                if (!string.IsNullOrEmpty(ip))
+                {
+                    SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                    _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
+                }
+            }
+
+            // Update the ObservableCollection to match the new state
             VisibleParticipants.Clear();
             foreach (string id in visibleIds)
             {
-                if (!VisibleParticipants.Contains(id))
-                {
-                    VisibleParticipants.Add(id);
-                    // Find IP for this email (id is email)
-                    string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
-
-                    if (!string.IsNullOrEmpty(ip))
-                    {
-                        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
-                        _rpc?.Call("subscribeAsViewer", subscriberPacket.Serialize());
-                    }
-                }
+                VisibleParticipants.Add(id);
             }
-
-            foreach (string existingId in VisibleParticipants.ToList())
-            {
-                if (!visibleIds.Contains(existingId))
-                {
-                    VisibleParticipants.Remove(existingId);
-
-                    // Find IP for this email (existingId is email)
-                    string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == existingId).Key;
-
-                    if (!string.IsNullOrEmpty(ip))
-                    {
-                        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
-                        _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
-                    }
-                }
-            }
-
 
             System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Visible participants updated: {string.Join(", ", visibleIds)}");
         }

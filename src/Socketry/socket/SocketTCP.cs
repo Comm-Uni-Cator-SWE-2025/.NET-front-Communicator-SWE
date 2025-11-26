@@ -46,7 +46,7 @@ namespace socket
             }
             if (r > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"[Socketry] Received message ({r} bytes):");
+                // System.Diagnostics.Debug.WriteLine($"[Socketry] Received message ({r} bytes):");
             }
             return r;
         }
@@ -59,7 +59,7 @@ namespace socket
         public int Write(MemoryStream src)
         {
             byte[] buffer = src.GetBuffer();
-            System.Diagnostics.Debug.WriteLine($"[Socketry] Sending message ({buffer.Length} bytes):");
+            // System.Diagnostics.Debug.WriteLine($"[Socketry] Sending message ({buffer.Length} bytes):");
             return _osSocket.Send(buffer);
         }
 
