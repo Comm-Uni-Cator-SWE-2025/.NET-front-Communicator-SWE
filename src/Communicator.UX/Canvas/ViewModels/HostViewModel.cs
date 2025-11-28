@@ -22,6 +22,7 @@ using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
 using Communicator.Core.UX.Services;
+using Communicator.Networking;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -271,7 +272,7 @@ public class HostViewModel : CanvasViewModel
         }
         else
         {
-            Console.WriteLine($"[Host] Local Action Rejected: {action.ActionType} on {action.NewShape?.ShapeId}");
+            System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Local Action Rejected: {action.ActionType} on {action.NewShape?.ShapeId}");
             RaiseRequestRedraw();
         }
     }
@@ -340,7 +341,7 @@ public class HostViewModel : CanvasViewModel
                 NetworkMessage msg = new NetworkMessage(NetworkMessageType.RESTORE, null, json);
                 string networkJson = CanvasSerializer.SerializeNetworkMessage(msg);
 
-                Console.WriteLine("[Host] Broadcasting RESTORE command...");
+                System.Diagnostics.Debug.WriteLine("[CanvasHostModel] Broadcasting RESTORE command...");
                 byte[] data = DataSerializer.Serialize(networkJson);
 
                 // Broadcast to all clients via Java Backend
@@ -348,7 +349,7 @@ public class HostViewModel : CanvasViewModel
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Host] Failed to restore: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Failed to restore: {ex.Message}");
             }
         }
     }
@@ -362,6 +363,53 @@ public class HostViewModel : CanvasViewModel
         NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
         if (msg == null)
         {
+            return;
+        }
+
+        if (msg.MessageType == NetworkMessageType.REQUEST_SHAPES)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(msg.Payload))
+                {
+                    byte[] payloadBytes = Encoding.UTF8.GetBytes(msg.Payload);
+                    ClientNode? replyTo = DataSerializer.Deserialize<ClientNode>(payloadBytes);
+
+                    if (replyTo != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Received shape request from {replyTo.HostName}:{replyTo.Port}");
+
+                        Application.Current.Dispatcher.InvokeAsync(() => {
+                            try
+                            {
+                                // Serialize current shapes
+                                string shapesJson = CanvasSerializer.SerializeShapesDictionary(_shapes);
+
+                                // Wrap in NetworkMessage (RESTORE type) so Client recognizes it
+                                NetworkMessage restoreMsg = new NetworkMessage(NetworkMessageType.RESTORE, null, shapesJson);
+                                string networkMsgJson = CanvasSerializer.SerializeNetworkMessage(restoreMsg);
+
+                                // Create response payload
+                                var response = new {
+                                    target = replyTo,
+                                    data = networkMsgJson
+                                };
+
+                                byte[] responseBytes = DataSerializer.Serialize(response);
+                                Rpc.Call("canvas:sendToClient", responseBytes);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Failed to send shapes to client: {ex.Message}");
+                            }
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Error processing shape request: {ex.Message}");
+            }
             return;
         }
 
@@ -387,7 +435,7 @@ public class HostViewModel : CanvasViewModel
                 }
                 else
                 {
-                    Console.WriteLine($"[Host] Validation Failed for Incoming Action: {action.ActionType}");
+                    System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Validation Failed for Incoming Action: {action.ActionType}");
                 }
             }
         }
@@ -435,7 +483,7 @@ public class HostViewModel : CanvasViewModel
 
                 if (currentHostShape.LastModifiedBy != incomingPrevShape.LastModifiedBy)
                 {
-                    Console.WriteLine($"[Host] Version Mismatch! HostVer: {currentHostShape.LastModifiedBy}, IncomingVer: {incomingPrevShape.LastModifiedBy}");
+                    System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Version Mismatch! HostVer: {currentHostShape.LastModifiedBy}, IncomingVer: {incomingPrevShape.LastModifiedBy}");
                     return false;
                 }
 

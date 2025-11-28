@@ -50,7 +50,6 @@ public sealed class RelayCommand : ICommand
     /// <summary>
     /// Notifies command sources (e.g., buttons) to re-query CanExecute.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "This method raises the CanExecuteChanged event and follows the ICommand pattern.")]
     public void RaiseCanExecuteChanged()
     {
         CanExecuteChanged?.Invoke(this, EventArgs.Empty);

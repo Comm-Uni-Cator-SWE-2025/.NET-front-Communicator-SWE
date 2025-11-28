@@ -32,5 +32,10 @@ public enum NetworkMessageType
     /// <summary>
     /// A message indicating a full state restore (reset).
     /// </summary>
-    RESTORE = 3
+    RESTORE = 3,
+
+    /// <summary>
+    /// A message requesting the current shape dictionary.
+    /// </summary>
+    REQUEST_SHAPES = 4
 }

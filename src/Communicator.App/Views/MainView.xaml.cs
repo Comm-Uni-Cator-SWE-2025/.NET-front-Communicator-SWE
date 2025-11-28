@@ -249,7 +249,7 @@ public sealed partial class MainView : Window
             if (result != 0)
             {
                 // Non-zero HRESULT indicates failure, but we can ignore it since it's cosmetic
-                System.Diagnostics.Debug.WriteLine($"DwmSetWindowAttribute returned HRESULT: 0x{result:X}");
+                System.Diagnostics.Debug.WriteLine($"[MainView] DwmSetWindowAttribute returned HRESULT: 0x{result:X}");
             }
         }
         catch (DllNotFoundException)

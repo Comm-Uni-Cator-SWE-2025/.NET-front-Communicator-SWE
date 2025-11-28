@@ -48,8 +48,6 @@ public class CanvasViewModel : INotifyPropertyChanged
 
     private void OnCanvasUpdateReceived(object? sender, RpcDataEventArgs e)
     {
-        System.Diagnostics.Debug.WriteLine("[CanvasViewModel] OnCanvasUpdateReceived called");
-        System.Diagnostics.Debug.WriteLine(DataSerializer.Deserialize<string>(e.Data.ToArray()));
         ReceiveData(e.Data.ToArray());
     }
 
@@ -458,8 +456,11 @@ public class CanvasViewModel : INotifyPropertyChanged
                 _originalShapeForMove.ShapeId == SelectedShape.ShapeId &&
                 !_originalShapeForMove.Points.SequenceEqual(SelectedShape.Points))
             {
-                // Create Modify Action for the move
-                CanvasAction action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, SelectedShape);
+                 // NEW LOGIC: Apply the CurrentUserId here, at the moment of commitment
+                IShape finalShape = SelectedShape.WithUpdates(null, null, CurrentUserId);
+
+                // Use finalShape instead of SelectedShape
+                CanvasAction action = new CanvasAction(CanvasActionType.Modify, _originalShapeForMove, finalShape);
                 ProcessAction(action);
             }
             _originalShapeForMove = null;
@@ -579,7 +580,9 @@ public class CanvasViewModel : INotifyPropertyChanged
         if (_isMovingShape && SelectedShape != null && _originalShapeForMove != null)
         {
             Point offset = new Point(clampedPoint.X - _moveStartPoint.X, clampedPoint.Y - _moveStartPoint.Y);
-            IShape movedShape = _originalShapeForMove.WithMove(offset, CanvasBounds, CurrentUserId);
+            // CHANGE THIS LINE: Use _originalShapeForMove.LastModifiedBy instead of CurrentUserId
+            // This keeps the original owner ID while dragging, preventing version conflicts.
+            IShape movedShape = _originalShapeForMove.WithMove(offset, CanvasBounds, _originalShapeForMove.LastModifiedBy);
             UpdateShapeFromNetwork(movedShape);
             RaiseRequestRedraw();
         }
@@ -676,39 +679,28 @@ public class CanvasViewModel : INotifyPropertyChanged
     /// </summary>
     public async void RegularizeSelectedShape()
     {
-        if (SelectedShape == null)
-        {
-            return;
-        }
-
+        if (SelectedShape == null) return;
         CommitModification(); // Ensure any pending edits are saved first
 
         string inputJson = CanvasSerializer.SerializeShapeManual(SelectedShape);
 
         try
         {
-            System.Diagnostics.Debug.WriteLine("[CanvasViewModel] RegularizeSelectedShape called with input: ");
             byte[] response = await Rpc.Call("canvas:regularize", DataSerializer.Serialize(inputJson));
-            System.Diagnostics.Debug.WriteLine("[CanvasViewModel] RegularizeSelectedShape received response: ");
             string outputJson = DataSerializer.Deserialize<string>(response);
 
             IShape? regularizedShape = CanvasSerializer.DeserializeShapeManual(outputJson);
-            System.Diagnostics.Debug.WriteLine("[CanvasViewModel] Regularized shape deserialized.");
 
             if (regularizedShape != null)
             {
-                regularizedShape = regularizedShape.WithUpdates(null, 5.0, CurrentUserId); // Enforce thickness
-
                 CanvasAction action = new CanvasAction(CanvasActionType.Modify, SelectedShape, regularizedShape);
-
-
                 ProcessAction(action);
                 SelectedShape = regularizedShape; // Keep selected
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Canvas] Regularize failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[CanvasViewModel] Regularize failed: {ex.Message}");
         }
     }
 
@@ -725,7 +717,6 @@ public class CanvasViewModel : INotifyPropertyChanged
         {
             byte[] response = await Rpc.Call("canvas:describe", Encoding.UTF8.GetBytes(imagePath));
             string result = Encoding.UTF8.GetString(response);
-            Console.WriteLine($"[CanvasViewModel] Analysis result received. {result}");
             AnalysisResult = result;
         }
         catch (Exception ex)
@@ -782,11 +773,11 @@ public class CanvasViewModel : INotifyPropertyChanged
             {
                 string json = CanvasSerializer.SerializeShapesDictionary(_shapes);
                 File.WriteAllText(saveDialog.FileName, json);
-                Console.WriteLine($"[Host] Shapes saved to {saveDialog.FileName}");
+                System.Diagnostics.Debug.WriteLine($"[CanvasViewModel] Shapes saved to {saveDialog.FileName}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Host] Save failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[CanvasViewModel] Save failed: {ex.Message}");
             }
         }
     }
@@ -806,12 +797,12 @@ public class CanvasViewModel : INotifyPropertyChanged
                 SelectedShape = null;
                 StateManager.ImportState(new SerializedActionStack());
                 RaiseRequestRedraw();
-                Console.WriteLine("[Canvas] State Restored.");
+                System.Diagnostics.Debug.WriteLine("[CanvasViewModel] State Restored.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Canvas] Restore failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[CanvasViewModel] Restore failed: {ex.Message}");
         }
     }
 }

@@ -145,23 +145,24 @@
             CornerRadius="12"
             SnapsToDevicePixels="True">
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="48" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <Grid x:Name="TitleBar"
+                <Grid x:Name="TitleBar"
                   Grid.Row="0"
-                  Background="{DynamicResource AppBackgroundBrush}"
+                  Background="{DynamicResource SurfaceBrush}"
                   MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="16,6,0,6" VerticalAlignment="Center">
-                    <!-- Navigation Buttons -->
-                    <Button Style="{StaticResource CaptionButtonStyle}"
+                    <StackPanel Orientation="Horizontal" Margin="16,6,0,6" VerticalAlignment="Center">
+                        <!-- Navigation Buttons -->
+                        <Button Style="{StaticResource CaptionButtonStyle}"
                             Command="{Binding GoBackCommand}"
                             ToolTip="Go Back"
                             Width="32"
@@ -169,104 +170,108 @@
                             Margin="0,0,16,0"
                             Visibility="{Binding ShowBackButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                        <icons:Icon IconName="arrow-left" IconSize="16" Foreground="{DynamicResource IconBrush}" />
-                    </Button>
-                    
-                    <Grid VerticalAlignment="Center">
-                        <ContentControl Content="{Binding MeetingToolbar}"
+                            <icons:Icon IconName="arrow-left" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                        </Button>
+
+                        <Grid VerticalAlignment="Center">
+                            <ContentControl Content="{Binding MeetingToolbar}"
                                          VerticalAlignment="Center"
                                          Focusable="False"
                                          IsTabStop="False"
                                          shell:WindowChrome.IsHitTestVisibleInChrome="True"
                                          Visibility="{Binding IsMeetingActive, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                        <TextBlock Text="Comm-Uni-Cate"
+                            <TextBlock Text="Comm-Uni-Cate"
                                    FontSize="16"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextPrimaryBrush}">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsMeetingActive}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </StackPanel>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMeetingActive}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" Height="48">
-            <Button x:Name="AvatarButton"
+                    <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" Height="48">
+                        <Button x:Name="AvatarButton"
                 Style="{StaticResource CircleButtonStyle}"
                 ToolTip="Profile"
                 Margin="0,0,12,0"
                 Click="OnAvatarButtonClick"
                 shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                        <icons:Icon IconName="user-circle" IconSize="20" Foreground="{DynamicResource IconBrush}" />
-                        <Button.ContextMenu>
-                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                                <MenuItem Header="{Binding CurrentUserName}" IsEnabled="False"/>
-                                <MenuItem Header="{Binding CurrentUserEmail}" IsEnabled="False"/>
-                                <Separator />
-                                <MenuItem Header="Settings"
+                            <icons:Icon IconName="user-circle" IconSize="20" Foreground="{DynamicResource IconBrush}" />
+                            <Button.ContextMenu>
+                                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                    <MenuItem Header="{Binding CurrentUserName}" IsEnabled="False"/>
+                                    <MenuItem Header="{Binding CurrentUserEmail}" IsEnabled="False"/>
+                                    <Separator />
+                                    <MenuItem Header="Settings"
                                           Command="{Binding NavigateToSettingsCommand}"
                                           IsEnabled="{Binding IsLoggedIn}"/>
-                                <MenuItem Header="Logout"
+                                    <MenuItem Header="Logout"
                                           Command="{Binding LogoutCommand}"
                                           IsEnabled="{Binding IsLoggedIn}"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                    </Button>
-                    <Button x:Name="MinimizeButton"
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
+                        <Button x:Name="MinimizeButton"
                             Style="{StaticResource CaptionButtonStyle}"
                             ToolTip="Minimize"
                             Click="OnMinimizeClick"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
-                        <icons:Icon IconName="minus" IconSize="16" Foreground="{DynamicResource IconBrush}" />
-                    </Button>
-                    <Button x:Name="MaximizeButton"
+                            <icons:Icon IconName="minus" IconSize="16" Foreground="{DynamicResource IconBrush}" />
+                        </Button>
+                        <Button x:Name="MaximizeButton"
                             Style="{StaticResource CaptionButtonStyle}"
                             ToolTip="Maximize"
                             Click="OnMaximizeClick"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
-                        <icons:Icon IconName="square" IconSize="14" Foreground="{DynamicResource IconBrush}" />
-                    </Button>
-                    <Button x:Name="CloseButton"
+                            <icons:Icon IconName="square" IconSize="14" Foreground="{DynamicResource IconBrush}" />
+                        </Button>
+                        <Button x:Name="CloseButton"
                             Style="{StaticResource CloseButtonStyle}"
                             ToolTip="Close"
                             Click="OnCloseClick"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True" Height="48">
-                        <icons:Icon IconName="x" IconSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                    </Button>
-                </StackPanel>
-            </Grid>
+                            <icons:Icon IconName="x" IconSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
 
-            <Grid x:Name="ContentHost" Grid.Row="1">
-                <ContentControl Content="{Binding CurrentView}"/>
-                
-                <!-- Toast Container -->
-                <ItemsControl x:Name="ToastContainer"
+                <Grid x:Name="ContentHost" Grid.Row="1">
+                    <ContentControl Content="{Binding CurrentView}"/>
+
+                    <!-- Toast Container -->
+                    <ItemsControl x:Name="ToastContainer"
                               VerticalAlignment="Top"
                               HorizontalAlignment="Right"
                               Margin="24,16,24,0"
                               Panel.ZIndex="999"
                               IsHitTestVisible="True">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel VerticalAlignment="Top"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel VerticalAlignment="Top"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
 
-                <!-- Loading Overlay -->
-                <commonViews:LoadingControl DataContext="{Binding LoadingViewModel}"
-                                            Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Panel.ZIndex="1000"
-                                            d:Visibility="Visible"/>
+
+                </Grid>
+
+
             </Grid>
+
+            <commonViews:LoadingControl DataContext="{Binding LoadingViewModel}"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Panel.ZIndex="999"
+                            d:Visibility="Visible"/>
         </Grid>
     </Border>
 </Window>

@@ -41,12 +41,12 @@ namespace socket
             {
                 if (e.SocketErrorCode != SocketError.WouldBlock)
                 {
-                    Console.WriteLine($"Socket Exception: {e.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[Socketry] Socket Exception: {e.Message}");
                 }
             }
             if (r > 0)
             {
-                Console.WriteLine($"Received message ({r} bytes):");
+                // System.Diagnostics.Debug.WriteLine($"[Socketry] Received message ({r} bytes):");
             }
             return r;
         }
@@ -59,7 +59,7 @@ namespace socket
         public int Write(MemoryStream src)
         {
             byte[] buffer = src.GetBuffer();
-            Console.WriteLine($"Sending message ({buffer.Length} bytes):");
+            // System.Diagnostics.Debug.WriteLine($"[Socketry] Sending message ({buffer.Length} bytes):");
             return _osSocket.Send(buffer);
         }
 

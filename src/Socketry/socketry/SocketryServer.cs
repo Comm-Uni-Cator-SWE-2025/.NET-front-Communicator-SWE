@@ -32,7 +32,7 @@ namespace socketry
 
             if(!(initPacket is not Packet.Init))
             {
-                Console.WriteLine("Expected init packet...");
+                System.Diagnostics.Debug.WriteLine("Expected init packet...");
                 //throw exception
             }
 
@@ -56,7 +56,7 @@ namespace socketry
 
                         serverSockets.Add(serverSocket);
                         ports.Add(currentPort);
-                        Console.WriteLine($"[SocketryServer] Opened port: {currentPort}");
+                        System.Diagnostics.Debug.WriteLine($"[SocketryServer] Opened port: {currentPort}");
                         break;
                     }
                 }
@@ -100,7 +100,7 @@ namespace socketry
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
                 }
             }
             this._tunnels = tunnels.ToArray();
@@ -116,7 +116,7 @@ namespace socketry
                 return serverSocketChannel;
             }
             catch (Exception e) { 
-                Console.WriteLine(e.ToString());
+                System.Diagnostics.Debug.WriteLine(e.ToString());
             }
             return null;
         }

@@ -53,8 +53,8 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     private readonly IRpcEventService? _rpcEventService;
 
     // Toolbar State
-    private bool _isMuted;
-    private bool _isCameraOn = true;
+    private bool _isMuted = true;
+    private bool _isCameraOn = false;
     private bool _isHandRaised;
     private bool _isScreenSharing;
 
@@ -870,14 +870,12 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "Logging for debug")]
     private async Task InitializeServicesAsync()
     {
-        Console.WriteLine("[MeetingSession] InitializeServicesAsync: Started");
         System.Diagnostics.Debug.WriteLine("[MeetingSession] InitializeServicesAsync: Started");
         try
         {
             string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
             string username = _currentUser.DisplayName ?? "Unknown User";
 
-            Console.WriteLine($"[MeetingSession] Connecting to cloud with MeetingId={meetingId}, Username={username}");
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] Connecting to cloud with MeetingId={meetingId}, Username={username}");
 
             // Connect to cloud messaging service
@@ -885,13 +883,11 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 
             if (_cloudMessageService.IsConnected)
             {
-                Console.WriteLine("[MeetingSession] CloudMessageService connected successfully");
                 System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService connected successfully");
                 _toastService.ShowSuccess("Connected to cloud messaging service");
             }
             else
             {
-                Console.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
                 System.Diagnostics.Debug.WriteLine("[MeetingSession] CloudMessageService.ConnectAsync returned but IsConnected is FALSE");
                 _toastService.ShowError("Cloud service failed to connect (IsConnected=false)");
             }
@@ -901,7 +897,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[MeetingSession] InitializeServicesAsync FAILED: {ex}");
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] InitializeServicesAsync FAILED: {ex}");
             _toastService.ShowError($"Failed to initialize services: {ex.Message}");
         }
@@ -978,7 +973,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is InvalidOperationException || ex is TimeoutException)
         {
-            System.Diagnostics.Debug.WriteLine($"Error during cleanup: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Error during cleanup: {ex.Message}");
         }
     }
 
