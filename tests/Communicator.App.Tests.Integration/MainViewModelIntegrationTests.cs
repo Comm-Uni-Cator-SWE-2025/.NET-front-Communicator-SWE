@@ -3,7 +3,7 @@ using System.Threading;
 using Communicator.App.Services;
 using Communicator.App.ViewModels;
 using Communicator.App.ViewModels.Auth;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

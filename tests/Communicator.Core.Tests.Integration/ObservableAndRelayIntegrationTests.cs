@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Threading;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 using Xunit;
 
 namespace Communicator.Core.Tests.Integration;

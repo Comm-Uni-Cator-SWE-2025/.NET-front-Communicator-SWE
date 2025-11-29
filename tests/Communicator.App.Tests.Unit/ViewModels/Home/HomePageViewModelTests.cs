@@ -7,7 +7,7 @@ using Communicator.App.ViewModels.Common;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Moq;
 using Xunit;
 
@@ -80,9 +80,9 @@ namespace Communicator.App.Tests.Unit.ViewModels.Home
                 new Mock<Communicator.App.Services.ICloudMessageService>().Object,
                 new Mock<Communicator.App.Services.ICloudConfigService>().Object,
                 _mockNavigationService.Object,
-                new Mock<Communicator.Core.UX.Services.IThemeService>().Object,
+                new Mock<Communicator.UX.Core.Services.IThemeService>().Object,
                 _mockRpc.Object,
-                new Mock<Communicator.Core.UX.Services.IRpcEventService>().Object
+                new Mock<Communicator.UX.Core.Services.IRpcEventService>().Object
             );
             
             _mockFactory.Setup(f => f(It.IsAny<UserProfile>(), It.IsAny<MeetingSession?>()))

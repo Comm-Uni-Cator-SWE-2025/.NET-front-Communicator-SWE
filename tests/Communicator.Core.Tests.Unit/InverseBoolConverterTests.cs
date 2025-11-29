@@ -1,5 +1,5 @@
 using System.Globalization;
-using Communicator.Core.UX.Converters;
+using Communicator.UX.Core.Converters;
 using Xunit;
 
 namespace Communicator.Core.Tests.Unit;

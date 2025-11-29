@@ -2,7 +2,7 @@
 using Communicator.Canvas;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Communicator.UX.Canvas.ViewModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;

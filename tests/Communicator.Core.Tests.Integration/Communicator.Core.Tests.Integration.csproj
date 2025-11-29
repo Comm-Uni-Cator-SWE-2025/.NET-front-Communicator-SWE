@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Communicator.Core\Communicator.Core.csproj" />
+    <ProjectReference Include="..\..\src\Communicator.UX\Core\Communicator.UX.Core.csproj" />
   </ItemGroup>
 
 </Project>

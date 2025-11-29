@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Communicator.App.ViewModels.Auth;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Moq;
 using Xunit;
 using Communicator.Controller.Meeting;

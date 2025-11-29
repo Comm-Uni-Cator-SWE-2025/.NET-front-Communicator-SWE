@@ -8,7 +8,7 @@ using Communicator.App.ViewModels.Meeting;
 using Communicator.App.ViewModels.Settings;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

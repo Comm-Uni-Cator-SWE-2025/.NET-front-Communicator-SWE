@@ -1,4 +1,4 @@
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 using Xunit;
 
 namespace Communicator.Core.Tests.Unit;
