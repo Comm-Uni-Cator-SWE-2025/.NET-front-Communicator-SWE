@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection.</returns>
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
-        services.AddSingleton<ILogger, Logger>();
+        services.AddSingleton<ILoggerFactory, LoggerFactory>();
         return services;
     }
 }

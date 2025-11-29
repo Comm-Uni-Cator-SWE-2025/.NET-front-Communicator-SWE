@@ -13,9 +13,9 @@ public class Logger : ILogger
     /// <summary>
     /// Initializes a new instance of the Logger class.
     /// </summary>
-    public Logger()
+    public Logger(string moduleName)
     {
-        _cloudLogger = CloudLogger.GetLogger("Communicator");
+        _cloudLogger = CloudLogger.GetLogger(moduleName);
     }
 
     /// <inheritdoc />

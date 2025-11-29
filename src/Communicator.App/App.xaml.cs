@@ -73,9 +73,13 @@ public sealed partial class MainApp : Application
             }
         };
 
+        // Get Logger
+        ILoggerFactory loggerFactory = Services.GetRequiredService<ILoggerFactory>();
+        ILogger logger = loggerFactory.GetLogger("UX");
+
         // Subscribe to RPC methods BEFORE starting connection (like Java)
         IRpcEventService rpcEventService = Services.GetRequiredService<IRpcEventService>();
-        SubscribeRpcMethods(rpc, rpcEventService);
+        SubscribeRpcMethods(rpc, rpcEventService, logger);
 
         // Start RPC connection in background thread (like Java does)
         // This allows UI to appear while waiting for backend to connect
@@ -87,7 +91,7 @@ public sealed partial class MainApp : Application
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("[App] Test mode detected. Skipping RPC connection.");
+                logger.LogInfo("[App] Test mode detected. Skipping RPC connection.");
 
                 // Resolve services
                 MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
@@ -120,13 +124,14 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
+                logger.LogError($"Test Mode Error: {ex.Message}", ex);
                 MessageBox.Show($"Test Mode Error: {ex.Message}\n{ex.StackTrace}", "Test Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             }
         }
         else
         {
-            StartRpcConnectionInBackground(rpc, e.Args);
+            StartRpcConnectionInBackground(rpc, e.Args, logger);
         }
     }
 
@@ -134,7 +139,7 @@ public sealed partial class MainApp : Application
     /// Subscribes to RPC methods that the backend may call.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "RPC callbacks must not crash the app")]
-    private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService)
+    private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService, ILogger logger)
     {
 
         // Subscribe to UPDATE_UI to receive video/screen frames
@@ -145,7 +150,7 @@ public sealed partial class MainApp : Application
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in UPDATE_UI: {ex.Message}");
+                logger.LogError($"[App] Error in UPDATE_UI: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -158,7 +163,7 @@ public sealed partial class MainApp : Application
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in STOP_SHARE: {ex.Message}");
+                logger.LogError($"[App] Error in STOP_SHARE: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -174,12 +179,12 @@ public sealed partial class MainApp : Application
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/updateParticipants: {ex.Message}");
+                logger.LogError($"[App] Error in core/updateParticipants: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
             catch (System.Text.Json.JsonException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/updateParticipants: {ex.Message}");
+                logger.LogError($"[App] Error parsing JSON in core/updateParticipants: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
         });
@@ -194,7 +199,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/logout: {ex.Message}");
+                logger.LogError($"[App] Error in core/logout: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
         });
@@ -209,7 +214,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/endMeeting: {ex.Message}");
+                logger.LogError($"[App] Error in core/endMeeting: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
         });
@@ -225,7 +230,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:new-message: {ex.Message}");
+                logger.LogError($"[App] Error in chat:new-message: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -237,7 +242,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-metadata-received: {ex.Message}");
+                logger.LogError($"[App] Error in chat:file-metadata-received: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -249,7 +254,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-saved-success: {ex.Message}");
+                logger.LogError($"[App] Error in chat:file-saved-success: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -261,7 +266,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-saved-error: {ex.Message}");
+                logger.LogError($"[App] Error in chat:file-saved-error: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -273,7 +278,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:message-deleted: {ex.Message}");
+                logger.LogError($"[App] Error in chat:message-deleted: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -287,7 +292,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in canvas:update: {ex.Message}");
+                logger.LogError($"[App] Error in canvas:update: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -298,9 +303,9 @@ public sealed partial class MainApp : Application
     /// This matches Java frontend pattern where connect() is called and returns a Thread.
     /// The UI can appear while we wait for backend to connect.
     /// </summary>
-    private static void StartRpcConnectionInBackground(IRPC rpc, string[] args)
+    private static void StartRpcConnectionInBackground(IRPC rpc, string[] args, ILogger logger)
     {
-        System.Diagnostics.Debug.WriteLine("[App] Starting RPC connection in background thread...");
+        logger.LogInfo("[App] Starting RPC connection in background thread...");
 
         // Show loading screen
         var loadingViewModel = new ViewModels.Common.LoadingViewModel { Message = "Connecting to backend..." };
@@ -317,13 +322,13 @@ public sealed partial class MainApp : Application
                     portNumber = parsedPort;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[App] RPC thread: Connecting to port {portNumber}...");
+                logger.LogInfo($"[App] RPC thread: Connecting to port {portNumber}...");
 
                 // This will BLOCK until backend connects and completes handshake
                 // Just like Java: new SocketryServer(portNumber, methods)
                 Thread rpcThread = rpc.Connect(portNumber);
 
-                System.Diagnostics.Debug.WriteLine("[App] RPC thread: Backend connected, server running");
+                logger.LogInfo("[App] RPC thread: Backend connected, server running");
 
                 // Connection successful, switch to MainView on UI thread
                 Application.Current?.Dispatcher.Invoke(() => {
@@ -343,19 +348,19 @@ public sealed partial class MainApp : Application
             }
             catch (System.Net.Sockets.SocketException ex)
             {
-                HandleRpcConnectionError(ex, loadingViewModel, loadingView);
+                HandleRpcConnectionError(ex, loadingViewModel, loadingView, logger);
             }
             catch (System.IO.IOException ex)
             {
-                HandleRpcConnectionError(ex, loadingViewModel, loadingView);
+                HandleRpcConnectionError(ex, loadingViewModel, loadingView, logger);
             }
         });
     }
 
-    private static void HandleRpcConnectionError(Exception ex, ViewModels.Common.LoadingViewModel loadingViewModel, Views.Common.LoadingView loadingView)
+    private static void HandleRpcConnectionError(Exception ex, ViewModels.Common.LoadingViewModel loadingViewModel, Views.Common.LoadingView loadingView, ILogger logger)
     {
-        System.Diagnostics.Debug.WriteLine($"[App] RPC thread error: {ex.Message}");
-        Console.Error.WriteLine($"[App] RPC connection failed: {ex}");
+        logger.LogError($"[App] RPC thread error: {ex.Message}", ex);
+        logger.LogError($"[App] RPC connection failed: {ex}");
 
         // Show error on UI thread
         Application.Current?.Dispatcher.Invoke(() => {
@@ -466,10 +471,13 @@ public sealed partial class MainApp : Application
     {
         try
         {
-            var logger = Services?.GetService<ILogger>();
+            ILoggerFactory? factory = Services?.GetService<ILoggerFactory>();
+            ILogger? logger = factory?.GetLogger("App");
             logger?.LogError("Unhandled exception", exception);
         }
-        catch
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch (Exception)
+#pragma warning restore CA1031 // Do not catch general exception types
         {
             // Ignore logging errors during crash reporting
         }
