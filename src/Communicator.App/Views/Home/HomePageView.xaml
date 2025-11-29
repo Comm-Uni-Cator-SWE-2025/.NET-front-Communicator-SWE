@@ -30,7 +30,7 @@
                        FontWeight="Bold"
                        Foreground="{DynamicResource TextPrimaryBrush}"
                        Margin="0,0,0,8">
-                <Run Text="Welcome, "/>
+                <Run Text="Welcome,"/>
                 <Run Text="{Binding WelcomeMessage, Mode=OneWay}"/>
             </TextBlock>
             
@@ -116,12 +116,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Analytics Dashboard (Left) -->
-            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="0">
-                <Border.Effect>
-                    <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
-                </Border.Effect>
-                <analytics:MeetAnalyticsView/>
-            </Border>
+            <analytics:MeetAnalyticsView/>
 
             <!-- Clock and Calendar (Right) -->
             <StackPanel Grid.Column="2" Width="340">
@@ -173,7 +168,221 @@
                     <Border.Effect>
                         <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
                     </Border.Effect>
-                    <Calendar HorizontalAlignment="Center" BorderThickness="0" Background="Transparent"/>
+                    <Calendar HorizontalAlignment="Center" 
+                              BorderThickness="0" 
+                              Background="Transparent"
+                              Foreground="{DynamicResource TextPrimaryBrush}">
+                        <Calendar.CalendarButtonStyle>
+                            <Style TargetType="CalendarButton">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="FontSize" Value="13"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,2"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="CalendarButton">
+                                            <Border x:Name="ButtonBorder" 
+                                                    Background="{TemplateBinding Background}" 
+                                                    CornerRadius="15"
+                                                    Width="50" Height="50">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="HasSelectedDays" Value="True">
+                                                    <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                    <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="1"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Calendar.CalendarButtonStyle>
+                        <Calendar.CalendarDayButtonStyle>
+                            <Style TargetType="CalendarDayButton">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="FontSize" Value="13"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="0,2"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="CalendarDayButton">
+                                            <Border x:Name="DayBorder" 
+                                                    Background="{TemplateBinding Background}" 
+                                                    CornerRadius="15"
+                                                    Width="30" Height="30">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="DayBorder" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="DayBorder" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsToday" Value="True">
+                                                    <Setter TargetName="DayBorder" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                    <Setter TargetName="DayBorder" Property="BorderThickness" Value="1"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                                </Trigger>
+                                                <MultiTrigger>
+                                                    <MultiTrigger.Conditions>
+                                                        <Condition Property="IsSelected" Value="True"/>
+                                                        <Condition Property="IsToday" Value="True"/>
+                                                    </MultiTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
+                                                    <Setter TargetName="DayBorder" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                                </MultiTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Calendar.CalendarDayButtonStyle>
+                        <Calendar.CalendarItemStyle>
+                            <Style TargetType="CalendarItem">
+                                <Setter Property="Margin" Value="0,10,0,0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="CalendarItem">
+                                            <ControlTemplate.Resources>
+                                                <DataTemplate x:Key="{x:Static CalendarItem.DayTitleTemplateResourceKey}">
+                                                    <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" 
+                                                               FontWeight="SemiBold" 
+                                                               FontSize="12" 
+                                                               HorizontalAlignment="Center" 
+                                                               VerticalAlignment="Center" 
+                                                               Margin="0,6,0,6" 
+                                                               Text="{Binding}"/>
+                                                </DataTemplate>
+                                            </ControlTemplate.Resources>
+                                            <Grid x:Name="PART_Root">
+                                                <Grid.Resources>
+                                                    <SolidColorBrush x:Key="DisabledBrush" Color="#A5FFFFFF"/>
+                                                </Grid.Resources>
+                                                <Border BorderBrush="{TemplateBinding BorderBrush}" 
+                                                        BorderThickness="{TemplateBinding BorderThickness}" 
+                                                        Background="{TemplateBinding Background}" 
+                                                        CornerRadius="1"/>
+                                                
+                                                <Grid Margin="4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="*"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <!-- Previous Button -->
+                                                    <Button x:Name="PART_PreviousButton" 
+                                                            Grid.Column="0" 
+                                                            Focusable="False" 
+                                                            HorizontalAlignment="Left" 
+                                                            Height="28" Width="28"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Visibility="Collapsed">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Grid Background="Transparent" Cursor="Hand">
+                                                                    <Path Data="M 6,0 L 0,6 L 6,12" 
+                                                                          Stroke="{DynamicResource TextPrimaryBrush}" 
+                                                                          StrokeThickness="2"
+                                                                          HorizontalAlignment="Center" 
+                                                                          VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+
+                                                    <!-- Header -->
+                                                    <Button x:Name="PART_HeaderButton" 
+                                                            Grid.Column="1" 
+                                                            Focusable="False" 
+                                                            FontWeight="Bold" 
+                                                            FontSize="14" 
+                                                            HorizontalAlignment="Center" 
+                                                            VerticalAlignment="Center" 
+                                                            Foreground="{DynamicResource TextPrimaryBrush}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"/>
+
+                                                    <!-- Next Button -->
+                                                    <Button x:Name="PART_NextButton" 
+                                                            Grid.Column="2" 
+                                                            Focusable="False" 
+                                                            HorizontalAlignment="Right" 
+                                                            Height="28" Width="28"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Visibility="Collapsed">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Grid Background="Transparent" Cursor="Hand">
+                                                                    <Path Data="M 0,0 L 6,6 L 0,12" 
+                                                                          Stroke="{DynamicResource TextPrimaryBrush}" 
+                                                                          StrokeThickness="2"
+                                                                          HorizontalAlignment="Center" 
+                                                                          VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+
+                                                    <!-- Month View -->
+                                                    <Grid x:Name="PART_MonthView" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,10,0,0" Visibility="Visible">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                    </Grid>
+
+                                                    <!-- Year View -->
+                                                    <Grid x:Name="PART_YearView" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,10,0,0" Visibility="Hidden">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Calendar.CalendarItemStyle>
+                    </Calendar>
                 </Border>
             </StackPanel>
         </Grid>
