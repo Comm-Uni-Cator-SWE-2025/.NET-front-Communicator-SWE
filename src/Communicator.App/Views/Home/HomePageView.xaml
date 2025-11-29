@@ -4,14 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
+             xmlns:analytics="clr-namespace:Communicator.UX.Analytics.Views;assembly=Communicator.UX.Analytics"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
+             d:DesignHeight="800" d:DesignWidth="1200"
              Background="{DynamicResource AppBackgroundBrush}">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,0,20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
         <!-- Header Section -->
         <StackPanel Grid.Row="0" Margin="48,32,48,24">
@@ -31,92 +34,150 @@
                 <Run Text="{Binding WelcomeMessage, Mode=OneWay}"/>
             </TextBlock>
             
-            <!-- Subheading -->
+            <!-- Subheading / Quote -->
             <TextBlock Text="{Binding SubHeading}" 
-                       FontSize="16" 
+                       FontSize="18" 
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"
-                       MaxWidth="600"
+                       MaxWidth="800"
                        HorizontalAlignment="Left"
-                       LineHeight="24"/>
+                       LineHeight="28"
+                       FontStyle="Italic"/>
         </StackPanel>
 
-        <!-- Main Content Area with responsive width constraints -->
-        <Grid Grid.Row="1" Margin="48,0,48,48">
-            <!-- Use StackPanel with MaxWidth for responsive layout -->
-            <StackPanel VerticalAlignment="Top" MaxWidth="700" HorizontalAlignment="Stretch">
-                
-                <!-- Meeting Link Section -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" 
-                        CornerRadius="12" 
-                        Padding="32"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        Effect="{DynamicResource CardShadow}">
-                    
-                    <StackPanel>
-                        <!-- Section Title -->
-                        <TextBlock Text="Enter Meeting Link" 
-                                   FontSize="14" 
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   Margin="0,0,0,12"/>
-                        
-                        <!-- TextBox for Meeting Link -->
-                        <TextBox x:Name="MeetingLinkTextBox"
-                                 AutomationProperties.AutomationId="MeetingLinkInput"
-                                 Text="{Binding MeetingLink, UpdateSourceTrigger=PropertyChanged}"
-                                 Height="48"
-                                 FontSize="15"
-                                 Margin="0,0,0,20" />
-                        
-                        <!-- Buttons Grid -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+        <!-- Meeting Controls -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="48,0,48,32">
+            <!-- TextBox for Meeting Link -->
+            <Grid VerticalAlignment="Center" Margin="0,0,16,0">
+                <TextBlock Margin="12,0" 
+                           VerticalAlignment="Center"
+                           Text="Enter Meeting Link" 
+                           FontSize="16"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Visibility="{Binding ElementName=MeetingLinkTextBox, Path=Text.IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                           IsHitTestVisible="False"/>
+                <TextBox x:Name="MeetingLinkTextBox"
+                         AutomationProperties.AutomationId="MeetingLinkInput"
+                         Text="{Binding MeetingLink, UpdateSourceTrigger=PropertyChanged}" 
+                         Width="300" 
+                         Height="48"
+                         Padding="10,0"
+                         VerticalContentAlignment="Center"
+                         Background="{DynamicResource SurfaceBrush}"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
+                         BorderBrush="{DynamicResource BorderBrush}"
+                         BorderThickness="1">
+                    <TextBox.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="8"/>
+                        </Style>
+                    </TextBox.Resources>
+                </TextBox>
+            </Grid>
+
+            <!-- Join Meeting Button -->
+            <Button Command="{Binding JoinMeetingCommand}"
+                    AutomationProperties.AutomationId="JoinMeetingButton"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Height="48"
+                    Margin="0,0,16,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <icons:Icon IconName="arrow-autofit-right-filled" 
+                                IconSize="16" 
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"/>
+                    <TextBlock Text="Join Meeting" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Create Meeting Button -->
+            <Button Command="{Binding CreateMeetingCommand}"
+                    AutomationProperties.AutomationId="CreateMeetingButton"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Height="48">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <icons:Icon IconName="plus" 
+                                IconSize="16" 
+                                Foreground="{DynamicResource TextOnPrimaryBrush}"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"/>
+                    <TextBlock Text="Create Meeting" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="2" Margin="48,0,48,48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Analytics Dashboard (Left) -->
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="0">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
+                </Border.Effect>
+                <analytics:MeetAnalyticsView/>
+            </Border>
+
+            <!-- Clock and Calendar (Right) -->
+            <StackPanel Grid.Column="2" Width="340">
+                <!-- Analog Clock -->
+                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="20" Margin="0,0,0,24">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
+                    </Border.Effect>
+                    <Viewbox Height="200">
+                        <Canvas Width="200" Height="200">
+                            <!-- Clock Face -->
+                            <Ellipse Width="200" Height="200" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="4" Fill="{DynamicResource SurfaceBrush}"/>
                             
-                            <!-- Join Meeting Button -->
-                            <Button Grid.Column="0"
-                                    Command="{Binding JoinMeetingCommand}"
-                                    AutomationProperties.AutomationId="JoinMeetingButton"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Height="48">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <icons:Icon IconName="arrow-autofit-right-filled" 
-                                                IconSize="16" 
-                                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                                Margin="0,0,8,0"
-                                                VerticalAlignment="Center"/>
-                                    <TextBlock Text="Join Meeting" 
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            
-                            <!-- Create Meeting Button -->
-                            <Button Grid.Column="2"
-                                    Command="{Binding CreateMeetingCommand}"
-                                    AutomationProperties.AutomationId="CreateMeetingButton"
-                                    Style="{StaticResource PrimaryButtonStyle}"
-                                    Height="48">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <icons:Icon IconName="plus" 
-                                                IconSize="16" 
-                                                Foreground="{DynamicResource TextOnPrimaryBrush}"
-                                                Margin="0,0,8,0"
-                                                VerticalAlignment="Center"/>
-                                    <TextBlock Text="Create Meeting" 
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </StackPanel>
+                            <!-- Hour Marks -->
+                            <Rectangle Canvas.Left="99" Canvas.Top="5" Width="2" Height="10" Fill="{DynamicResource TextSecondaryBrush}"/>
+                            <Rectangle Canvas.Left="99" Canvas.Top="185" Width="2" Height="10" Fill="{DynamicResource TextSecondaryBrush}"/>
+                            <Rectangle Canvas.Left="5" Canvas.Top="99" Width="10" Height="2" Fill="{DynamicResource TextSecondaryBrush}"/>
+                            <Rectangle Canvas.Left="185" Canvas.Top="99" Width="10" Height="2" Fill="{DynamicResource TextSecondaryBrush}"/>
+
+                            <!-- Hour Hand -->
+                            <Rectangle Width="6" Height="50" Fill="{DynamicResource TextPrimaryBrush}" RadiusX="3" RadiusY="3" Canvas.Left="97" Canvas.Top="50" RenderTransformOrigin="0.5,1">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform x:Name="HourHandTransform"/>
+                                </Rectangle.RenderTransform>
+                            </Rectangle>
+
+                            <!-- Minute Hand -->
+                            <Rectangle Width="4" Height="70" Fill="{DynamicResource TextSecondaryBrush}" RadiusX="2" RadiusY="2" Canvas.Left="98" Canvas.Top="30" RenderTransformOrigin="0.5,1">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform x:Name="MinuteHandTransform"/>
+                                </Rectangle.RenderTransform>
+                            </Rectangle>
+
+                            <!-- Second Hand -->
+                            <Rectangle Width="2" Height="80" Fill="{DynamicResource ErrorBrush}" Canvas.Left="99" Canvas.Top="20" RenderTransformOrigin="0.5,1">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform x:Name="SecondHandTransform"/>
+                                </Rectangle.RenderTransform>
+                            </Rectangle>
+
+                            <!-- Center Dot -->
+                            <Ellipse Width="10" Height="10" Fill="{DynamicResource PrimaryBrush}" Canvas.Left="95" Canvas.Top="95"/>
+                        </Canvas>
+                    </Viewbox>
                 </Border>
-                
+
+                <!-- Calendar -->
+                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="10">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
+                    </Border.Effect>
+                    <Calendar HorizontalAlignment="Center" BorderThickness="0" Background="Transparent"/>
+                </Border>
             </StackPanel>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </UserControl>
 
