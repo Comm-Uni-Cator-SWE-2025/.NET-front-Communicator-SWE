@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Communicator.Cloud.CloudFunction\CloudFunctionLIbrary.csproj" />
+    <ProjectReference Include="..\Communicator.Cloud.Logger\Communicator.Cloud.Logger.csproj" />
   </ItemGroup>
 
   <ItemGroup>

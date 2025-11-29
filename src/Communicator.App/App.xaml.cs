@@ -19,6 +19,8 @@ using Communicator.App.ViewModels;
 using Communicator.App.Views;
 using Communicator.Controller;
 using Communicator.Controller.Meeting;
+using Communicator.Core;
+using Communicator.Core.Logging;
 using Communicator.Core.RPC;
 using Communicator.Core.UX;
 using Communicator.Core.UX.Services;
@@ -388,6 +390,9 @@ public sealed partial class MainApp : Application
             .Build();
         services.AddSingleton<IConfiguration>(configuration);
 
+        // Register Communicator.Core services (Logger)
+        services.AddCoreServices();
+
         // Register Communicator.Core.UX services (Toast, Theme)
         services.AddUXCoreServices();
 
@@ -459,6 +464,16 @@ public sealed partial class MainApp : Application
 
     private static void ReportException(Exception exception)
     {
+        try
+        {
+            var logger = Services?.GetService<ILogger>();
+            logger?.LogError("Unhandled exception", exception);
+        }
+        catch
+        {
+            // Ignore logging errors during crash reporting
+        }
+
         Console.Error.WriteLine(exception);
         MessageBox.Show(exception.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
     }
