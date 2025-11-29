@@ -15,9 +15,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
-using Communicator.Core.UX.Models;
+using Communicator.UX.Core.Models;
+using Communicator.Core.Logging;
 
-namespace Communicator.Core.UX.Services;
+namespace Communicator.UX.Core.Services;
 
 /// <summary>
 /// Implementation of IThemeService managing dynamic theme switching at runtime using WPF ResourceDictionaries.
@@ -30,6 +31,7 @@ public class ThemeService : IThemeService
     private AppTheme _currentTheme;
     private string? _currentUsername;
     private CloudFunctionLibrary? _cloudLibrary;
+    private readonly ILogger _logger;
     private const string ThemeContainer = "UX";
     private const string ThemeType = "Theme";
     private const string ThemeKey = "color";
@@ -38,8 +40,9 @@ public class ThemeService : IThemeService
 
     public AppTheme CurrentTheme => _currentTheme;
 
-    public ThemeService()
+    public ThemeService(ILoggerFactory? loggerFactory = null)
     {
+        _logger = loggerFactory?.GetLogger("UX") ?? new Logger("UX");
         _currentTheme = AppTheme.Light;
         InitializeCloudLibrary();
     }

@@ -10,7 +10,7 @@
 using System;
 using System.Windows.Input;
 
-namespace Communicator.Core.UX;
+namespace Communicator.UX.Core;
 
 /// <summary>
 /// ICommand implementation for delegating Execute and CanExecute logic.

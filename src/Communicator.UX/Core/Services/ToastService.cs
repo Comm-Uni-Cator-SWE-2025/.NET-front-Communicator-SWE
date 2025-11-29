@@ -8,9 +8,9 @@
  * -----------------------------------------------------------------------------
  */
 using System;
-using Communicator.Core.UX.Models;
+using Communicator.UX.Core.Models;
 
-namespace Communicator.Core.UX.Services;
+namespace Communicator.UX.Core.Services;
 
 /// <summary>
 /// Emits toast notifications by invoking ToastRequested with preconfigured message types.

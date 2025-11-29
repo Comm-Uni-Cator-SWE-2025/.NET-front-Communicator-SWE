@@ -19,7 +19,7 @@ using System.Text;
 using Communicator.Canvas;
 using Communicator.Controller.Serialization;
 using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;

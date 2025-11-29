@@ -18,8 +18,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Communicator.ScreenShare;
 using Communicator.App.Services;
 

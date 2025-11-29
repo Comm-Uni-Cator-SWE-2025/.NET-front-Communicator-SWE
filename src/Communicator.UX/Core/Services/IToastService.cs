@@ -8,9 +8,9 @@
  * -----------------------------------------------------------------------------
  */
 using System;
-using Communicator.Core.UX.Models;
+using Communicator.UX.Core.Models;
 
-namespace Communicator.Core.UX.Services;
+namespace Communicator.UX.Core.Services;
 
 /// <summary>
 /// Publishes toast notification requests so the UI layer can surface transient feedback to the user.

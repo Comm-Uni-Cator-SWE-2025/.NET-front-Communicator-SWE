@@ -8,9 +8,9 @@
  * -----------------------------------------------------------------------------
  */
 using Microsoft.Extensions.DependencyInjection;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 
-namespace Communicator.Core.UX;
+namespace Communicator.UX.Core;
 
 /// <summary>
 /// Extension methods for registering Communicator.Core.UX services in the dependency injection container.

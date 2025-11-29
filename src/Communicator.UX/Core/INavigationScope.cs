@@ -9,7 +9,7 @@
  */
 using System;
 
-namespace Communicator.Core.UX;
+namespace Communicator.UX.Core;
 
 /// <summary>
 /// Abstraction for view models that manage their own navigation history (e.g., meeting tabs) so the shell can delegate back/forward behavior.

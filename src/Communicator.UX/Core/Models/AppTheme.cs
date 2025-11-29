@@ -7,7 +7,7 @@
  *
  * -----------------------------------------------------------------------------
  */
-namespace Communicator.Core.UX.Models;
+namespace Communicator.UX.Core.Models;
 
 /// <summary>
 /// Represents the available application themes.

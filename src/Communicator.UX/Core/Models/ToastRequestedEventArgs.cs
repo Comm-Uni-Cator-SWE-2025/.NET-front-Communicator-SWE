@@ -9,7 +9,7 @@
  */
 using System;
 
-namespace Communicator.Core.UX.Models;
+namespace Communicator.UX.Core.Models;
 
 /// <summary>
 /// Event args for toast notification requests.

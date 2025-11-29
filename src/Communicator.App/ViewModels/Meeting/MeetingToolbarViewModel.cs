@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.App.ViewModels.Meeting;
 

@@ -4,7 +4,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 using System.Windows;
 
 namespace Communicator.UX.Analytics.ViewModels;

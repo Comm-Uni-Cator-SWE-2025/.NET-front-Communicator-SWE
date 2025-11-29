@@ -9,14 +9,15 @@
  */
 using System;
 using System.Collections.Generic;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 
 namespace Communicator.App.Services;
 
 /// <summary>
 /// Stack-based navigation service that tracks back and forward history for shell-wide view model transitions.
 /// </summary>
-public sealed class NavigationService : Communicator.Core.UX.Services.INavigationService
+public sealed class NavigationService : INavigationService
 {
     private readonly Stack<object> _backStack = new();
     private object? _currentView;

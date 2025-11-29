@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Communicator.Core.RPC;
+using Communicator.Core.Logging;
 using socketry;
 
 namespace Communicator.Controller;
@@ -20,14 +21,17 @@ public class RPCService : IRPC
     private Dictionary<string, Func<byte[], byte[]>> _methods;
     private SocketryServer? _socketryServer;
     private bool _isConnected;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new instance of the RPCService class.
     /// </summary>
-    public RPCService()
+    public RPCService(ILoggerFactory loggerFactory)
     {
+        ArgumentNullException.ThrowIfNull(loggerFactory);
         _methods = new Dictionary<string, Func<byte[], byte[]>>();
         _isConnected = false;
+        _logger = loggerFactory.GetLogger("Controller");
     }
 
     /// <summary>
@@ -48,7 +52,7 @@ public class RPCService : IRPC
         }
 
         _methods[methodName] = method;
-        System.Diagnostics.Debug.WriteLine($"[RPC] Subscribed method: {methodName}");
+        _logger.LogDebug($"[RPC] Subscribed method: {methodName}");
     }
 
     /// <summary>
@@ -63,7 +67,7 @@ public class RPCService : IRPC
             throw new InvalidOperationException("RPC is already connected. Cannot call Connect() multiple times.");
         }
 
-        System.Diagnostics.Debug.WriteLine($"[RPC] Connecting to port: {portNumber} with {_methods.Count} method(s)");
+        _logger.LogInfo($"[RPC] Connecting to port: {portNumber} with {_methods.Count} method(s)");
 
         // Create SocketryServer with the registered methods
         _socketryServer = new SocketryServer(portNumber, _methods);
@@ -73,14 +77,14 @@ public class RPCService : IRPC
         Thread rpcThread = new(() => {
             try
             {
-                System.Diagnostics.Debug.WriteLine("[RPC] Starting listen loop...");
+                _logger.LogInfo("[RPC] Starting listen loop...");
                 _socketryServer.ListenLoop();
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                System.Diagnostics.Debug.WriteLine($"[RPC] Error in listen loop: {ex.Message}");
+                _logger.LogError($"[RPC] Error in listen loop: {ex.Message}", ex);
             }
         }) {
             IsBackground = true,
@@ -105,14 +109,14 @@ public class RPCService : IRPC
             throw new InvalidOperationException("RPC is not connected. Call Connect() before making remote calls.");
         }
 
-        System.Diagnostics.Debug.WriteLine($"[RPC] Calling remote method: {methodName}");
+        _logger.LogDebug($"[RPC] Calling remote method: {methodName}");
 
         try
         {
             // Get the remote procedure ID for the method name
             // This will trigger discovery if not already done
             byte methodId = _socketryServer.GetRemoteProceduresId(methodName);
-            System.Diagnostics.Debug.WriteLine($"[RPC] Method '{methodName}' mapped to ID: {methodId}");
+            _logger.LogDebug($"[RPC] Method '{methodName}' mapped to ID: {methodId}");
 
             // Make the remote call (using tunnel 0 by default)
             TaskCompletionSource<byte[]> taskCompletionSource = _socketryServer.MakeRemoteCall(methodId, data, 0);
@@ -122,7 +126,7 @@ public class RPCService : IRPC
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[RPC] Error calling remote method '{methodName}': {ex.Message}");
+            _logger.LogError($"[RPC] Error calling remote method '{methodName}': {ex.Message}", ex);
             throw;
         }
     }

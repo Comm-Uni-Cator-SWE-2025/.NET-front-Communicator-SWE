@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Communicator.Core.UX;
+namespace Communicator.UX.Core;
 
 /// <summary>
 /// Provides INotifyPropertyChanged support for derived view models.

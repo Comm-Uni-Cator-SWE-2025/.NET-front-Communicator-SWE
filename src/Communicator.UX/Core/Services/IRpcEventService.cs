@@ -9,7 +9,7 @@
  */
 using System;
 
-namespace Communicator.Core.UX.Services;
+namespace Communicator.UX.Core.Services;
 
 public class RpcDataEventArgs : EventArgs
 {

@@ -11,7 +11,7 @@ using System;
 using System.Threading.Tasks;
 using Communicator.Controller.Meeting;
 using Communicator.Core.RPC;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.App.Services;
 

@@ -1,6 +1,6 @@
 ﻿/*
  * -----------------------------------------------------------------------------
- *  File: StringToVisibilityConverter.cs
+ *  File: BooleanToVisibilityConverter.cs
  *  Owner: Dhruvadeep
  *  Roll Number : 142201026
  *  Module : UX
@@ -12,31 +12,29 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace Communicator.Core.UX.Converters;
+namespace Communicator.UX.Core.Converters;
 
 /// <summary>
-/// Converts a string to Visibility. Returns Visible if string is not null or empty, otherwise Collapsed.
+/// Converts boolean values to Visibility for binding scenarios, with optional inversion via converter parameter.
 /// </summary>
-public class StringToVisibilityConverter : IValueConverter
+public class BooleanToVisibilityConverter : IValueConverter
 {
     /// <summary>
-    /// Returns Visibility.Visible when the string is not null or empty; otherwise Visibility.Collapsed.
-    /// A non-null parameter inverts the result.
+    /// Returns Visibility.Visible when the input evaluates to true; otherwise Visibility.Collapsed.
+    /// A non-null parameter toggles the boolean before conversion so consumers can invert the result without additional converters.
     /// </summary>
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        bool hasValue = !string.IsNullOrEmpty(value as string);
-
+        bool boolValue = (bool)value;
         if (parameter != null)
         {
-            hasValue = !hasValue;
+            boolValue = !boolValue;
         }
-
-        return hasValue ? Visibility.Visible : Visibility.Collapsed;
+        return boolValue ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>
-    /// Conversion back is not supported.
+    /// Conversion back is not supported because collapsing state does not map to a single boolean value.
     /// </summary>
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {

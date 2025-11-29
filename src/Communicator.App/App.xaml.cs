@@ -22,8 +22,8 @@ using Communicator.Controller.Meeting;
 using Communicator.Core;
 using Communicator.Core.Logging;
 using Communicator.Core.RPC;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

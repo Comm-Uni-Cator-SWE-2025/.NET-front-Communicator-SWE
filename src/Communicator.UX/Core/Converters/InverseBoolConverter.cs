@@ -11,7 +11,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace Communicator.Core.UX.Converters;
+namespace Communicator.UX.Core.Converters;
 
 /// <summary>
 /// Inverts a boolean value for binding scenarios.

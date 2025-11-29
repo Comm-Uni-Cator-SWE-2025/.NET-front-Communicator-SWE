@@ -9,9 +9,9 @@
  */
 using System.Collections.ObjectModel;
 using System.Windows;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Models;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Models;
+using Communicator.UX.Core.Services;
 
 namespace Communicator.App.ViewModels.Common;
 

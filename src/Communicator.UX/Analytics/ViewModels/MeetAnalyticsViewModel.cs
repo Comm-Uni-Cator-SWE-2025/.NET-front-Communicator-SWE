@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using Communicator.UX.Analytics.Models;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.UX.Analytics.ViewModels;
 
