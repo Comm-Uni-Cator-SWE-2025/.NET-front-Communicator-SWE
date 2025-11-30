@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- FONTS -->
-    <FontFamily x:Key="AppFont">/Communicator.Core;component/UX/Fonts/#JetBrains Mono</FontFamily>
+    <FontFamily x:Key="AppFont">/Communicator.UX.Core;component/Fonts/#JetBrains Mono</FontFamily>
 
     <!-- GLOBAL TEXT ELEMENT STYLE -->
     <Style TargetType="{x:Type TextElement}">

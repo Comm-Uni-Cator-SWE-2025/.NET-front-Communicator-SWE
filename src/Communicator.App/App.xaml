@@ -18,10 +18,10 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Theme Resources - LightTheme loaded by default, dynamically switched by ThemeService -->
-                <ResourceDictionary Source="/Communicator.Core;component/UX/Themes/LightTheme.xaml"/>
+                <ResourceDictionary Source="/Communicator.UX.Core;component/Themes/LightTheme.xaml"/>
                 
                 <!-- Control Styles -->
-                <ResourceDictionary Source="/Communicator.Core;component/UX/Styles/ControlStyles.xaml"/>
+                <ResourceDictionary Source="/Communicator.UX.Core;component/Styles/ControlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Converters -->
