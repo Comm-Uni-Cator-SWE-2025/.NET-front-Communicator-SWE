@@ -13,7 +13,7 @@
     <ProjectReference Include="..\..\Communicator.Controller\Communicator.Controller.csproj" />
     <ProjectReference Include="..\..\Communicator.Networking\Communicator.Networking.csproj" />
     <ProjectReference Include="..\Core\Communicator.UX.Core.csproj" />
-    <ProjectReference Include="..\..\Communicator.Icons\Communicator.Icons.csproj" />
+    <ProjectReference Include="..\Icons\Communicator.Icons.csproj" />
   </ItemGroup>
 
 </Project>
