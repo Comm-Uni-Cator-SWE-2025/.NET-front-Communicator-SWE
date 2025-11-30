@@ -6,11 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Communicator.Core.RPC;
-using Communicator.Core.Logging;
+using Communicator.Controller.RPC;
+using Communicator.Controller.Logging;
 using socketry;
 
-namespace Communicator.Controller;
+namespace Communicator.Controller.RPC;
 
 /// <summary>
 /// RPC implementation for Communicator.Controller using Socketry networking layer.

@@ -38,7 +38,7 @@ public class MainViewModelTests
 
         // Setup default factory behavior
         // AuthViewModel is sealed, so we use a real instance with mocked dependencies
-        var realAuthVM = new AuthViewModel(Mock.Of<Communicator.Core.RPC.IRPC>(), _mockToastService.Object);
+        var realAuthVM = new AuthViewModel(Mock.Of<Communicator.Controller.RPC.IRPC>(), _mockToastService.Object);
         _mockAuthFactory.Setup(f => f()).Returns(realAuthVM);
     }
 

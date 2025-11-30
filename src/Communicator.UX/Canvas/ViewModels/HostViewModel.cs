@@ -20,7 +20,7 @@ using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core.Services;
 using Communicator.Networking;
 using Microsoft.Win32;

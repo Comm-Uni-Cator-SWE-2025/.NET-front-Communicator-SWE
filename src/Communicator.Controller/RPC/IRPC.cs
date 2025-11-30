@@ -12,7 +12,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Communicator.Core.RPC
+namespace Communicator.Controller.RPC
 {
     /**
      * This is the .NET interface contract for your RPC system.

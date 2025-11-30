@@ -16,7 +16,6 @@
     <ProjectReference Include="..\Communicator.Chat\Communicator.Chat.csproj" />
     <ProjectReference Include="..\Communicator.ScreenShare\Communicator.ScreenShare.csproj" />
     <ProjectReference Include="..\Communicator.Controller\Communicator.Controller.csproj" />
-    <ProjectReference Include="..\Communicator.Core\Communicator.Core.csproj" />
     <ProjectReference Include="..\Communicator.UX\Core\Communicator.UX.Core.csproj" />
     <ProjectReference Include="..\Communicator.Icons\Communicator.Icons.csproj" />
     <ProjectReference Include="..\Communicator.UX\Analytics\Communicator.UX.Analytics.csproj" />

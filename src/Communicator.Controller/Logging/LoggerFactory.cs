@@ -1,6 +1,6 @@
 using System;
 
-namespace Communicator.Core.Logging;
+namespace Communicator.Controller.Logging;
 
 /// <summary>
 /// Implementation of ILoggerFactory.

@@ -1,7 +1,7 @@
 using System;
 using Communicator.Cloud.Logger;
 
-namespace Communicator.Core.Logging;
+namespace Communicator.Controller.Logging;
 
 /// <summary>
 /// Implementation of ILogger using Communicator.Cloud.Logger.

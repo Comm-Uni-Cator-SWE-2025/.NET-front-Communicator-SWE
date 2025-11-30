@@ -1,6 +1,6 @@
 using System;
 
-namespace Communicator.Core.Logging;
+namespace Communicator.Controller.Logging;
 
 /// <summary>
 /// Defines a contract for logging messages within the application.

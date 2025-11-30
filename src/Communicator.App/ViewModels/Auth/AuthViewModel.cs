@@ -13,7 +13,7 @@ using System.Windows.Input;
 using Communicator.Controller;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core;
 using Communicator.UX.Core.Services;
 using Communicator.App.Services;

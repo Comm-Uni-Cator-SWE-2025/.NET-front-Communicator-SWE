@@ -18,7 +18,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Communicator.Canvas;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core.Services;
 using Microsoft.Win32;
 

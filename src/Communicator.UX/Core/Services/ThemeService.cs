@@ -16,7 +16,7 @@ using System.Windows;
 using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Communicator.UX.Core.Models;
-using Communicator.Core.Logging;
+using Communicator.Controller.Logging;
 
 namespace Communicator.UX.Core.Services;
 
@@ -190,7 +190,7 @@ public class ThemeService : IThemeService
 
         _currentTheme = theme;
 
-        var themeUri = new Uri($"/Communicator.Core;component/UX/Themes/{theme}Theme.xaml", UriKind.Relative);
+        var themeUri = new Uri($"/Communicator.UX.Core;component/Themes/{theme}Theme.xaml", UriKind.Relative);
 
         try
         {

@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Communicator.App.ViewModels.Auth;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core.Services;
 using Moq;
 using Xunit;

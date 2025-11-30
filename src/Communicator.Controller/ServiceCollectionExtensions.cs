@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
-using Communicator.Core.Logging;
+using Communicator.Controller.Logging;
 
-namespace Communicator.Core;
+namespace Communicator.Controller;
 
 /// <summary>
-/// Extension methods for registering Communicator.Core services.
+/// Extension methods for registering Communicator.Controller services.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
@@ -13,7 +13,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The service collection.</returns>
-    public static IServiceCollection AddCoreServices(this IServiceCollection services)
+    public static IServiceCollection AddControllerServices(this IServiceCollection services)
     {
         services.AddSingleton<ILoggerFactory, LoggerFactory>();
         return services;

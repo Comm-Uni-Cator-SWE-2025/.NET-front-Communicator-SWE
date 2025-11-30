@@ -5,7 +5,7 @@ using Communicator.App.Services;
 using Communicator.ScreenShare;
 using Communicator.App.ViewModels.Meeting;
 using Communicator.Controller.Meeting;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core.Services;
 using Communicator.Networking;
 using Moq;

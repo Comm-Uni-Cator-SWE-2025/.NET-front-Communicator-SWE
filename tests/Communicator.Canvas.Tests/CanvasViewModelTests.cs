@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Communicator.Canvas;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core.Services;
 using Communicator.UX.Canvas.ViewModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

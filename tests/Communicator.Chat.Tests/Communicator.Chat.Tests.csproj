@@ -25,7 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Communicator.App\Communicator.App.csproj" />
     <ProjectReference Include="..\..\src\Communicator.Chat\Communicator.Chat.csproj" />
-    <ProjectReference Include="..\..\src\Communicator.Core\Communicator.Core.csproj" />
     <ProjectReference Include="..\..\src\Communicator.Controller\Communicator.Controller.csproj" />
   </ItemGroup>
 

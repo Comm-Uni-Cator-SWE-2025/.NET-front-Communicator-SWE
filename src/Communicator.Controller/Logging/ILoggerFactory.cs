@@ -1,6 +1,6 @@
 using System;
 
-namespace Communicator.Core.Logging;
+namespace Communicator.Controller.Logging;
 
 /// <summary>
 /// Defines a factory for creating named ILogger instances.

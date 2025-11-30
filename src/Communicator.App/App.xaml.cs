@@ -19,9 +19,8 @@ using Communicator.App.ViewModels;
 using Communicator.App.Views;
 using Communicator.Controller;
 using Communicator.Controller.Meeting;
-using Communicator.Core;
-using Communicator.Core.Logging;
-using Communicator.Core.RPC;
+using Communicator.Controller.Logging;
+using Communicator.Controller.RPC;
 using Communicator.UX.Core;
 using Communicator.UX.Core.Services;
 using Microsoft.Extensions.Configuration;
@@ -395,8 +394,8 @@ public sealed partial class MainApp : Application
             .Build();
         services.AddSingleton<IConfiguration>(configuration);
 
-        // Register Communicator.Core services (Logger)
-        services.AddCoreServices();
+        // Register Communicator.Controller services (Logger)
+        services.AddControllerServices();
 
         // Register Communicator.Core.UX services (Toast, Theme)
         services.AddUXCoreServices();
