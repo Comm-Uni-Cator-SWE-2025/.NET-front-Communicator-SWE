@@ -1,5 +1,5 @@
-﻿using UX.Core.Models;
-using UX.Core.Services;
+﻿using Communicator.UX.Core.Models;
+using Communicator.UX.Core.Services;
 
 namespace UX.Core.Tests;
 

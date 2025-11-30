@@ -11,4 +11,8 @@ using System.Runtime.CompilerServices;
 )]
 [assembly: InternalsVisibleTo("Communicator.App.Tests.Unit")]
 [assembly: InternalsVisibleTo("Communicator.App.Tests.Integration")]
+[assembly: InternalsVisibleTo("Communicator.UX.Tests")]
+[assembly: InternalsVisibleTo("Communicator.Chat.Tests")]
+[assembly: InternalsVisibleTo("Communicator.Canvas.Tests")]
+[assembly: InternalsVisibleTo("Communicator.Controller.Tests")]
 
