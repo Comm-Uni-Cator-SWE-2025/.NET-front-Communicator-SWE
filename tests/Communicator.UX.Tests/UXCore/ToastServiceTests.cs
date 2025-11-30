@@ -1,5 +1,5 @@
-﻿using UX.Core.Models;
-using UX.Core.Services;
+﻿using Communicator.UX.Core.Models;
+using Communicator.UX.Core.Services;
 
 namespace UX.Core.Tests;
 
@@ -11,7 +11,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, args) => receivedToast = args.Message;
 
         service.ShowSuccess("Success message");
 
@@ -27,9 +27,9 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, args) => receivedToast = args.Message;
 
-        service.ShowError("Error message", 5000);
+        service.ShowError("Error message");
 
         Assert.NotNull(receivedToast);
         Assert.Equal("Error message", receivedToast.Message);
@@ -43,7 +43,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, args) => receivedToast = args.Message;
 
         service.ShowWarning("Warning message");
 
@@ -58,7 +58,7 @@ public class ToastServiceTests
         var service = new ToastService();
         ToastMessage? receivedToast = null;
 
-        service.ToastRequested += toast => receivedToast = toast;
+        service.ToastRequested += (sender, args) => receivedToast = args.Message;
 
         service.ShowInfo("Info message");
 
