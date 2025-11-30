@@ -8,6 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analytics\Communicator.UX.Analytics.csproj" />
-    <ProjectReference Include="..\..\Communicator.Core\Communicator.Core.csproj" />
+    <ProjectReference Include="..\..\Communicator.Controller\Communicator.Controller.csproj" />
   </ItemGroup>
 </Project>

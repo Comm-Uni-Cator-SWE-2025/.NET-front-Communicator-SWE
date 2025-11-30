@@ -1,6 +1,6 @@
-﻿using Communicator.Canvas;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Collections.Generic;
+using Communicator.Canvas;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Communicator.Canvas.Tests;
@@ -39,8 +39,10 @@ public class ShapeVisitorTests
     [TestMethod]
     public void Accept_DispatchesToCorrectVisitorMethod()
     {
-        var visitor = new TestVisitor();
-        var shapes = new IShape[]
+        TestVisitor visitor = new TestVisitor();
+
+        // Ensure every shape type is present to cover all Accept/Visit paths
+        IShape[] shapes = new IShape[]
         {
             new FreeHand(new List<Point>{ new(0,0) }, Color.Black, 1, "u"),
             new RectangleShape(new List<Point>{ new(0,0), new(1,1) }, Color.Black, 1, "u"),
@@ -59,9 +61,11 @@ public class ShapeVisitorTests
     [TestMethod]
     public void Visit_AllShapes_ReturnsCorrectPrefix()
     {
-        var visitor = new TestVisitor();
-        var fh = new FreeHand(new List<Point> { new(0, 0) }, Color.Black, 1, "u1");
+        TestVisitor visitor = new TestVisitor();
+        FreeHand fh = new FreeHand(new List<Point> { new(0, 0) }, Color.Black, 1, "u1");
+
         string result = fh.Accept(visitor);
+
         StringAssert.StartsWith(result, "FreeHand:");
     }
 }

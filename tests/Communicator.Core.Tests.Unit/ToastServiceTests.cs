@@ -1,6 +1,6 @@
 using System;
-using Communicator.Core.UX.Models;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Models;
+using Communicator.UX.Core.Services;
 using Xunit;
 
 namespace Communicator.Core.Tests.Unit;

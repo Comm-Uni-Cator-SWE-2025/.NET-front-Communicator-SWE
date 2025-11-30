@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Communicator.App.Services;
 using Communicator.App.ViewModels.Settings;
 using Communicator.Controller.Meeting;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
-using Communicator.Core.UX.Models;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
+using Communicator.UX.Core.Models;
 using Moq;
 using Xunit;
 
@@ -82,7 +82,7 @@ namespace Communicator.App.Tests.Unit.ViewModels.Settings
         {
             var vm = CreateViewModel();
             
-            if (vm.LogoutCommand is Communicator.Core.UX.RelayCommand command)
+            if (vm.LogoutCommand is Communicator.UX.Core.RelayCommand command)
             {
                 command.Execute(null);
                 _mockAuthService.Verify(x => x.LogoutAsync(), Times.Once);

@@ -2,8 +2,8 @@
 using Moq;
 using Communicator.UX.Canvas.ViewModels;
 using Communicator.Controller.Meeting;
-using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core.Services;
 using Communicator.Canvas;
 using Communicator.Controller.Serialization;
 using System.Collections.Generic;

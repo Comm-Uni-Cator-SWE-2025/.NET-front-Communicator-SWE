@@ -10,8 +10,8 @@
 using System;
 using System.Windows.Input;
 using Communicator.Controller.Meeting;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Communicator.App.Services;
 using Communicator.App.ViewModels.Common;
 using Communicator.App.ViewModels.Home;

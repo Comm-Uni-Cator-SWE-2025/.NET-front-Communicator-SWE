@@ -10,7 +10,7 @@
 using System;
 using System.Windows.Media.Imaging;
 using Communicator.Controller.Meeting;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.App.ViewModels.Meeting;
 

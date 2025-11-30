@@ -1,0 +1,31 @@
+﻿/*
+ * -----------------------------------------------------------------------------
+ *  File: InverseBoolConverter.cs
+ *  Owner: Dhruvadeep
+ *  Roll Number : 142201026
+ *  Module : UX
+ *
+ * -----------------------------------------------------------------------------
+ */
+using System;
+using System.Globalization;
+using System.Windows.Data;
+
+namespace Communicator.UX.Core.Converters;
+
+/// <summary>
+/// Inverts a boolean value for binding scenarios.
+/// </summary>
+public class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value is bool boolValue && !boolValue;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value is bool boolValue && !boolValue;
+    }
+}
+

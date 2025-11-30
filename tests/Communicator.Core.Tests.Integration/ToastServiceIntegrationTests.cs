@@ -1,6 +1,6 @@
 using System;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
