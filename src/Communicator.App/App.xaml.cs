@@ -289,6 +289,17 @@ public sealed partial class MainApp : Application
             }
             return Array.Empty<byte>();
         });
+        rpc.Subscribe("controller:canvasAnalytics", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerCanvasAnalyticsUpdateReceived(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App] Error in canvas:update: {ex.Message}");
+            }
+            return Array.Empty<byte>();
+        });
     }
 
     /// <summary>
