@@ -9,44 +9,34 @@ namespace Communicator.UX.Analytics.Services;
 /// </summary>
 public class CanvasDataService
 {
+    /// <summary>
+    /// Event triggered when new canvas data is broadcasted.
+    /// </summary>
+    public static event Action<CanvasData>? CanvasDataChanged;
 
     /// <summary>
-    /// Pre-set JSON snapshots, same as your Java example.
+    /// Broadcasts the JSON data to all subscribers.
     /// </summary>
-    private readonly List<string> _shapeJsonList = new();
-    //_shapeJsonList must be empty
-
-    /// <summary>
-    /// Fetch next snapshot, cycling through the list endlessly.
-    /// </summary>
-    public CanvasData FetchNext()
+    public static void BroadcastData(string json)
     {
-        string json = _shapeJsonList[_shapeJsonList.Count - 1];
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
 
-        return ParseJson(json); //return the right most entry.
-    }
+            var data = new CanvasData {
+                FreeHand = root.GetProperty("freeHand").GetInt32(),
+                StraightLine = root.GetProperty("straightLine").GetInt32(),
+                Rectangle = root.GetProperty("rectangle").GetInt32(),
+                Ellipse = root.GetProperty("ellipse").GetInt32(),
+                Triangle = root.GetProperty("triangle").GetInt32()
+            };
 
-    public void AddShapeJson(string json)
-    {
-        _shapeJsonList.Add(json);
-    }
-
-    //Fetch next snapshot not required
-    /// <summary>
-    /// Parses JSON -> CanvasData object.
-    /// Manual parsing replaced with safe JSON parsing.
-    /// </summary>
-    private CanvasData ParseJson(string json)
-    {
-        using var doc = JsonDocument.Parse(json);
-        JsonElement root = doc.RootElement;
-
-        return new CanvasData {
-            FreeHand = root.GetProperty("freeHand").GetInt32(),
-            StraightLine = root.GetProperty("straightLine").GetInt32(),
-            Rectangle = root.GetProperty("rectangle").GetInt32(),
-            Ellipse = root.GetProperty("ellipse").GetInt32(),
-            Triangle = root.GetProperty("triangle").GetInt32()
-        };
+            CanvasDataChanged?.Invoke(data);
+        }
+        catch
+        {
+            // Ignore parsing errors
+        }
     }
 }

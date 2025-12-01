@@ -20,6 +20,7 @@ using Communicator.Canvas;
 using Communicator.Controller.Serialization;
 using Communicator.Controller.RPC;
 using Communicator.UX.Core.Services;
+using Communicator.UX.Analytics.Services;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -845,6 +846,6 @@ public class CanvasViewModel : INotifyPropertyChanged
             }
         }
         string analyticsJson = $"{{\"freeHand\":{freeHandCount},\"straightLine\":{straightLineCount},\"rectangle\":{rectangleCount},\"ellipse\":{ellipseCount},\"triangle\":{triangleCount}}}";
-        await Rpc.Call("controller:canvasAnalytics", Encoding.UTF8.GetBytes(analyticsJson));
+        CanvasDataService.BroadcastData(analyticsJson);
     }
 }

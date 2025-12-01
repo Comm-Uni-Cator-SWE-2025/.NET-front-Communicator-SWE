@@ -33,7 +33,6 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     // 
     private readonly Timer _aiTimer;
     private readonly Timer _msgTimer;
-    private readonly Timer _canvasTimer;
     private readonly Timer _screenTimer;   //s
 
     // 
@@ -63,14 +62,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
 
         if (rpcEventService != null)
         {
-            rpcEventService.CanvasAnalyticsUpdateReceived += (_, e) => {
-                // Handle incoming canvas analytics data
-                byte[] data = e.Data.ToArray();
-                string json = System.Text.Encoding.UTF8.GetString(data);
-
-                _canvasService.AddShapeJson(json);
-                UpdateCanvas();
-            };
+            System.Diagnostics.Debug.WriteLine("RPC event service registeration happens");
         }
 
         // AI Graph Timer (4s)
@@ -89,7 +81,10 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         _screenTimer.Elapsed += async (_, _) => await UpdateScreenShare();
         _screenTimer.Start();
         _ = UpdateScreenShare();
-        
+
+        // Subscribe to Canvas Data Updates
+        CanvasDataService.CanvasDataChanged += OnCanvasDataReceived;
+
         // Apply initial theme
         ApplyTheme();
     }
@@ -113,15 +108,15 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         {
             _themeService.ThemeChanged -= OnThemeChanged;
         }
-        
+
+        CanvasDataService.CanvasDataChanged -= OnCanvasDataReceived;
+
         _aiTimer.Stop();
         _msgTimer.Stop();
-        _canvasTimer.Stop();
         _screenTimer.Stop();
-        
+
         _aiTimer.Dispose();
         _msgTimer.Dispose();
-        _canvasTimer.Dispose();
         _screenTimer.Dispose();
     }
 
@@ -136,8 +131,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
 
             foreach (AIData d in initialData)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
+                Application.Current.Dispatcher.Invoke(() => {
                     Graph1_AI.AddPoint(_aiTimeCounter, d.Value);
                     _aiTimeCounter += 5;
                 });
@@ -151,8 +145,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         var rand = new Random();
         double newValue = rand.Next(-5, 10);
 
-        Application.Current.Dispatcher.Invoke(() =>
-        {
+        Application.Current.Dispatcher.Invoke(() => {
             Graph1_AI.Add(_aiTimeCounter, newValue);
         });
 
@@ -162,12 +155,9 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     //
     // GRAPH 2 — Canvas Snapshot
     //
-    private void UpdateCanvas()
+    private void OnCanvasDataReceived(CanvasData data)
     {
-        CanvasData data = _canvasService.FetchNext();
-
-        Application.Current.Dispatcher.Invoke(() =>
-        {
+        Application.Current.Dispatcher.Invoke(() => {
             Graph2_Canvas.AddSnapshot(data, $"T{_canvasIndex}");
             _canvasIndex++;
         });
@@ -180,8 +170,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     {
         List<AIMessageData> messages = _msgService.GetNext();
 
-        Application.Current.Dispatcher.Invoke(() =>
-        {
+        Application.Current.Dispatcher.Invoke(() => {
             foreach (AIMessageData m in messages)
             {
                 MessageList.Add(m.Message);
@@ -201,8 +190,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
 
             foreach (ScreenShareData d in initial)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
+                Application.Current.Dispatcher.Invoke(() => {
                     Graph4_Screen.AddPoint(_screenTimeCounter, d.Sentiment);
                     _screenTimeCounter += 10;
                 });
@@ -216,8 +204,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         var rand = new Random();
         double newSentiment = rand.Next(-5, 10);
 
-        Application.Current.Dispatcher.Invoke(() =>
-        {
+        Application.Current.Dispatcher.Invoke(() => {
             Graph4_Screen.Add(_screenTimeCounter, newSentiment);
         });
 

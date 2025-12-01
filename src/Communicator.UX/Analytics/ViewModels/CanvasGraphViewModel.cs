@@ -112,9 +112,9 @@ public class CanvasGraphViewModel : ObservableObject
 
     public void ApplyTheme()
     {
-        var textPrimary = GetThemeColor("TextPrimaryColor");
-        var textSecondary = GetThemeColor("TextSecondaryColor");
-        var borderColor = GetThemeColor("BorderColor");
+        SKColor textPrimary = GetThemeColor("TextPrimaryColor");
+        SKColor textSecondary = GetThemeColor("TextSecondaryColor");
+        SKColor borderColor = GetThemeColor("BorderColor");
 
         if (XAxes != null && XAxes.Length > 0)
         {
@@ -141,7 +141,7 @@ public class CanvasGraphViewModel : ObservableObject
 
     /// <summary>
     /// Adds a new snapshot of canvas data and updates the bar chart.
-    /// Automatically keeps only the latest 3 snapshots.
+    /// Automatically keeps only the latest 10 snapshots.
     /// </summary>
     /// <param name="data">Canvas shape count data.</param>
     /// <param name="label">Label for the snapshot (e.g., T1, T2, T3).</param>
@@ -154,8 +154,8 @@ public class CanvasGraphViewModel : ObservableObject
         Ellipse.Add(data.Ellipse);
         Triangle.Add(data.Triangle);
 
-        // Restrict to last 3 snapshots for clarity
-        if (Labels.Count > 3)
+        // Restrict to last 5 snapshots for clarity
+        if (Labels.Count > 5)
         {
             Labels.RemoveAt(0);
             FreeHand.RemoveAt(0);

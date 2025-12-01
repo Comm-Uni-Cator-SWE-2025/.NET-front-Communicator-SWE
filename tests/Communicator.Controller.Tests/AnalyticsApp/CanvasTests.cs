@@ -7,44 +7,44 @@ namespace AnalyticsApp.Tests
 {
     public class CanvasDataServiceTests
     {
-        [Fact]
-        public void FetchNext_ShouldReturnValidSnapshot()
-        {
-            // Arrange
-            var service = new CanvasDataService();
+        // [Fact]
+        // public void FetchNext_ShouldReturnValidSnapshot()
+        // {
+        //     // Arrange
+        //     var service = new CanvasDataService();
 
-            // Act
-            CanvasData data = service.FetchNext();
+        //     // Act
+        //     CanvasData data = service.FetchNext();
 
-            // Assert
-            Assert.NotNull(data);
-            Assert.True(data.FreeHand >= 0);
-            Assert.True(data.StraightLine >= 0);
-            Assert.True(data.Rectangle >= 0);
-            Assert.True(data.Ellipse >= 0);
-            Assert.True(data.Triangle >= 0);
-        }
+        //     // Assert
+        //     Assert.NotNull(data);
+        //     Assert.True(data.FreeHand >= 0);
+        //     Assert.True(data.StraightLine >= 0);
+        //     Assert.True(data.Rectangle >= 0);
+        //     Assert.True(data.Ellipse >= 0);
+        //     Assert.True(data.Triangle >= 0);
+        // }
 
-        [Fact]
-        public void FetchNext_ShouldCycleThroughSnapshots()
-        {
-            // Arrange
-            var service = new CanvasDataService();
+        // [Fact]
+        // public void FetchNext_ShouldCycleThroughSnapshots()
+        // {
+        //     // Arrange
+        //     var service = new CanvasDataService();
 
-            // Act
-            var first = service.FetchNext();
-            for (int i = 0; i < 5; i++)
-                service.FetchNext();   // move through remaining snapshots
+        //     // Act
+        //     var first = service.FetchNext();
+        //     for (int i = 0; i < 5; i++)
+        //         service.FetchNext();   // move through remaining snapshots
 
-            var seventh = service.FetchNext(); // should loop back to snapshot 1
+        //     var seventh = service.FetchNext(); // should loop back to snapshot 1
 
-            // Assert: loop back behaves like first snapshot
-            Assert.Equal(first.FreeHand, seventh.FreeHand);
-            Assert.Equal(first.StraightLine, seventh.StraightLine);
-            Assert.Equal(first.Rectangle, seventh.Rectangle);
-            Assert.Equal(first.Ellipse, seventh.Ellipse);
-            Assert.Equal(first.Triangle, seventh.Triangle);
-        }
+        //     // Assert: loop back behaves like first snapshot
+        //     Assert.Equal(first.FreeHand, seventh.FreeHand);
+        //     Assert.Equal(first.StraightLine, seventh.StraightLine);
+        //     Assert.Equal(first.Rectangle, seventh.Rectangle);
+        //     Assert.Equal(first.Ellipse, seventh.Ellipse);
+        //     Assert.Equal(first.Triangle, seventh.Triangle);
+        // }
     }
 
     public class CanvasGraphViewModelTests
@@ -54,8 +54,7 @@ namespace AnalyticsApp.Tests
         {
             // Arrange
             var vm = new CanvasGraphViewModel();
-            var data = new CanvasData
-            {
+            var data = new CanvasData {
                 FreeHand = 10,
                 StraightLine = 5,
                 Rectangle = 3,
@@ -111,8 +110,7 @@ namespace AnalyticsApp.Tests
             // Act: add several snapshots
             for (int i = 1; i <= 4; i++)
             {
-                vm.AddSnapshot(new CanvasData
-                {
+                vm.AddSnapshot(new CanvasData {
                     FreeHand = i,
                     StraightLine = i + 1,
                     Rectangle = i + 2,
