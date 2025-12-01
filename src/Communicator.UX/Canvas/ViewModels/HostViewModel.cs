@@ -59,7 +59,6 @@ public class HostViewModel : CanvasViewModel
         // --- Initialize and Start Auto-Save Timer ---
         _autoSaveTimer = new System.Timers.Timer(1 * 30 * 1000);
         _autoSaveTimer.Elapsed += async (sender, e) => {
-            await SendAnalyticsData();
             await CloudSave();
         };
         _autoSaveTimer.AutoReset = true;
@@ -527,37 +526,5 @@ public class HostViewModel : CanvasViewModel
             default:
                 return false;
         }
-    }
-    private async Task SendAnalyticsData()
-    {
-        //from _shapes, generate json string representing shape counts
-        int freeHandCount = 0;
-        int straightLineCount = 0;
-        int rectangleCount = 0;
-        int ellipseCount = 0;
-        int triangleCount = 0;
-        foreach (IShape shape in _shapes.Values)
-        {
-            switch (shape.Type)
-            {
-                case ShapeType.FREEHAND:
-                    freeHandCount++;
-                    break;
-                case ShapeType.LINE:
-                    straightLineCount++;
-                    break;
-                case ShapeType.RECTANGLE:
-                    rectangleCount++;
-                    break;
-                case ShapeType.ELLIPSE:
-                    ellipseCount++;
-                    break;
-                case ShapeType.TRIANGLE:
-                    triangleCount++;
-                    break;
-            }
-        }
-        string analyticsJson = $"{{\"freeHand\":{freeHandCount},\"straightLine\":{straightLineCount},\"rectangle\":{rectangleCount},\"ellipse\":{ellipseCount},\"triangle\":{triangleCount}}}";
-        await Rpc.Call("canvas:sendAnalytics", Encoding.UTF8.GetBytes(analyticsJson));
     }
 }

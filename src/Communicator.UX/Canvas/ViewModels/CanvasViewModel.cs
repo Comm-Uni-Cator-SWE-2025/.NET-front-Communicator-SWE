@@ -35,6 +35,8 @@ public class CanvasViewModel : INotifyPropertyChanged
     protected readonly IRPC? Rpc;
     protected readonly IRpcEventService? RpcEventService;
 
+    private readonly System.Timers.Timer _autoAnalyticsTimer;
+
     public CanvasViewModel(IRPC rpc, IRpcEventService rpcEventService)
     {
         Rpc = rpc;
@@ -44,6 +46,13 @@ public class CanvasViewModel : INotifyPropertyChanged
         {
             RpcEventService.CanvasUpdateReceived += OnCanvasUpdateReceived;
         }
+
+        _autoAnalyticsTimer = new System.Timers.Timer(5 * 1000); // Every 5 seconds
+        _autoAnalyticsTimer.Elapsed += async (sender, e) => {
+            await SendAnalyticsData();
+        };
+        _autoAnalyticsTimer.AutoReset = true;
+        _autoAnalyticsTimer.Start();
     }
 
     private void OnCanvasUpdateReceived(object? sender, RpcDataEventArgs e)
@@ -804,5 +813,38 @@ public class CanvasViewModel : INotifyPropertyChanged
         {
             System.Diagnostics.Debug.WriteLine($"[CanvasViewModel] Restore failed: {ex.Message}");
         }
+    }
+
+    private async Task SendAnalyticsData()
+    {
+        //from _shapes, generate json string representing shape counts
+        int freeHandCount = 0;
+        int straightLineCount = 0;
+        int rectangleCount = 0;
+        int ellipseCount = 0;
+        int triangleCount = 0;
+        foreach (IShape shape in _shapes.Values)
+        {
+            switch (shape.Type)
+            {
+                case ShapeType.FREEHAND:
+                    freeHandCount++;
+                    break;
+                case ShapeType.LINE:
+                    straightLineCount++;
+                    break;
+                case ShapeType.RECTANGLE:
+                    rectangleCount++;
+                    break;
+                case ShapeType.ELLIPSE:
+                    ellipseCount++;
+                    break;
+                case ShapeType.TRIANGLE:
+                    triangleCount++;
+                    break;
+            }
+        }
+        string analyticsJson = $"{{\"freeHand\":{freeHandCount},\"straightLine\":{straightLineCount},\"rectangle\":{rectangleCount},\"ellipse\":{ellipseCount},\"triangle\":{triangleCount}}}";
+        await Rpc.Call("controller:canvasAnalytics", Encoding.UTF8.GetBytes(analyticsJson));
     }
 }
