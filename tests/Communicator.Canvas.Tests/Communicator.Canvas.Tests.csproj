@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Communicator.UX\Canvas\Communicator.UX.Canvas.csproj" />
+        <ProjectReference Include="..\..\src\Communicator.UX\Core\Communicator.UX.Core.csproj" />
     </ItemGroup>
 
 </Project>

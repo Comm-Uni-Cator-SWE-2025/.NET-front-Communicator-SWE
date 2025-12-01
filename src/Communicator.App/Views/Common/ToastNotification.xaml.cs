@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using Communicator.Core.UX.Models;
+using Communicator.UX.Core.Models;
 
 namespace Communicator.App.Views;
 

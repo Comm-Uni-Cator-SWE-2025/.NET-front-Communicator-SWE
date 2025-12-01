@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Communicator.App\Communicator.App.csproj" />
+    <ProjectReference Include="..\..\src\Communicator.UX\Core\Communicator.UX.Core.csproj" />
   </ItemGroup>
 
 </Project>

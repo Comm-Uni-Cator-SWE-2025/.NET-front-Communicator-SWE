@@ -8,7 +8,7 @@
  * -----------------------------------------------------------------------------
  */
 using System;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 
 namespace Communicator.App.Services;
 

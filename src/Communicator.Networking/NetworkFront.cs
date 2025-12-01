@@ -4,7 +4,7 @@
 
 using System.Text;
 using System.Net;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 
 namespace Communicator.Networking;
 public class NetworkFront : IController, INetworking

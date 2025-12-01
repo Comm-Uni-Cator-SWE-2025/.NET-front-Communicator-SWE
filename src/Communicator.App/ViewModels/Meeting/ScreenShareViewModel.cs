@@ -11,7 +11,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Communicator.Controller.Meeting;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.App.ViewModels.Meeting;
 

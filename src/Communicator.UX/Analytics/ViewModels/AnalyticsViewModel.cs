@@ -2,9 +2,9 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using Communicator.UX.Analytics.Models;
 using Communicator.UX.Analytics.Services;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
-using Communicator.Core.UX.Models;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
+using Communicator.UX.Core.Models;
 using Timer = System.Timers.Timer;
 
 namespace Communicator.UX.Analytics.ViewModels;

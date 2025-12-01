@@ -9,7 +9,7 @@
  */
 
 using System.Collections.ObjectModel;
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.App.ViewModels.Meeting;
 

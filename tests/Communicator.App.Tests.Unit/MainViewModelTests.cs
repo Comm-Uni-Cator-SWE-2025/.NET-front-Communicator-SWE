@@ -6,7 +6,7 @@ using Communicator.App.ViewModels.Auth;
 using Communicator.App.ViewModels.Common;
 using Communicator.App.ViewModels.Home;
 using Communicator.App.ViewModels.Settings;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Services;
 using Moq;
 using Xunit;
 using Communicator.Controller.Meeting;
@@ -38,7 +38,7 @@ public class MainViewModelTests
 
         // Setup default factory behavior
         // AuthViewModel is sealed, so we use a real instance with mocked dependencies
-        var realAuthVM = new AuthViewModel(Mock.Of<Communicator.Core.RPC.IRPC>(), _mockToastService.Object);
+        var realAuthVM = new AuthViewModel(Mock.Of<Communicator.Controller.RPC.IRPC>(), _mockToastService.Object);
         _mockAuthFactory.Setup(f => f()).Returns(realAuthVM);
     }
 

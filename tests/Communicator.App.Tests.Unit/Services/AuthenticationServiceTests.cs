@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Communicator.App.Services;
 using Communicator.Controller.Meeting;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 using Moq;
 using Xunit;
 

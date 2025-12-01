@@ -13,9 +13,9 @@ using System.Windows.Input;
 using Communicator.Controller;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Communicator.App.Services;
 
 namespace Communicator.App.ViewModels.Auth;

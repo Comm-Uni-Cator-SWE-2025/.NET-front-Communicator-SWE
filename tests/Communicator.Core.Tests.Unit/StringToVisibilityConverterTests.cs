@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using System.Windows;
-using Communicator.Core.UX.Converters;
+using Communicator.UX.Core.Converters;
 using Xunit;
 
 namespace Communicator.Core.Tests.Unit;
