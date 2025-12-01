@@ -122,7 +122,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
             // Note: clientVM.Initialize() must be called after meeting join is confirmed
         }
 
-        AIInsights = new AnalyticsViewModel(_themeService);
+        AIInsights = new AnalyticsViewModel(_themeService, _rpcEventService!);
 
         // Create toolbar with tabs
         _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(), this);

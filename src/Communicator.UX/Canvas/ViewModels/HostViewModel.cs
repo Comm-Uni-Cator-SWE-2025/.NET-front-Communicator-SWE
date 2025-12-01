@@ -58,7 +58,10 @@ public class HostViewModel : CanvasViewModel
 
         // --- Initialize and Start Auto-Save Timer ---
         _autoSaveTimer = new System.Timers.Timer(1 * 30 * 1000);
-        _autoSaveTimer.Elapsed += async (sender, e) => await CloudSave();
+        _autoSaveTimer.Elapsed += async (sender, e) => {
+            await SendAnalyticsData();
+            await CloudSave();
+        };
         _autoSaveTimer.AutoReset = true;
         _autoSaveTimer.Start();
 
@@ -280,22 +283,43 @@ public class HostViewModel : CanvasViewModel
     /// <summary>
     /// Undo an action locally and broadcast the inverse action to clients.
     /// </summary>
+    /// <summary>
+    /// Undo an action locally and broadcast the inverse action to clients.
+    /// Includes validation to prevent undoing stale states.
+    /// </summary>
     public override void Undo()
     {
+        // 1. Ensure any pending edits are committed so they don't get lost or interfere
         CommitModification();
         SelectedShape = null;
-        CanvasAction? actionToUndo = StateManager.PeekUndo();
-        base.Undo();
 
-        if (actionToUndo != null)
+        // 2. Peek at the action we want to undo (don't remove it yet)
+        CanvasAction? actionToUndo = StateManager.PeekUndo();
+        if (actionToUndo == null) { return; }
+
+        // 3. Calculate the inverse operation (the actual change to be applied)
+        //    e.g., If undoing a 'Create', the inverse is 'Delete'.
+        CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
+
+        // 4. Validate this inverse action against the current state
+        //    This prevents the Host from undoing a shape that has been modified by a client recently.
+        if (ValidateAction(reverseAction))
         {
-            CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
+            // 5. If valid, perform the local undo and broadcast
+            base.Undo(); // Updates local _shapes and StateManager
+
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
 
             // Broadcast to all clients via Java Backend
             Rpc.Call("canvas:broadcast", data);
+        }
+        else
+        {
+            // 6. Handle conflict (Log it so we know why nothing happened)
+            LogToDesktop($"[HostViewModel] Undo Blocked: Validation failed for shape {reverseAction.NewShape?.ShapeId ?? "N/A"}. Shape may have been modified by another user.");
+            System.Diagnostics.Debug.WriteLine($"[HostViewModel] Undo Blocked: Validation failed.");
         }
     }
 
@@ -305,11 +329,18 @@ public class HostViewModel : CanvasViewModel
     public override void Redo()
     {
         SelectedShape = null;
-        CanvasAction? actionToRedo = StateManager.PeekRedo();
-        base.Redo();
 
-        if (actionToRedo != null)
+        // 1. Peek at the action we want to redo
+        CanvasAction? actionToRedo = StateManager.PeekRedo();
+        if (actionToRedo == null) { return; }
+
+        // 2. Validate the action against the current state
+        //    Ensure the shape is in the expected state (PrevShape) before re-applying changes.
+        if (ValidateAction(actionToRedo))
         {
+            // 3. If valid, perform local redo and broadcast
+            base.Redo(); // Updates local _shapes and StateManager
+
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
@@ -317,8 +348,12 @@ public class HostViewModel : CanvasViewModel
             // Broadcast to all clients via Java Backend
             Rpc.Call("canvas:broadcast", data);
         }
+        else
+        {
+            LogToDesktop($"[HostViewModel] Redo Blocked: Validation failed for shape {actionToRedo.NewShape?.ShapeId ?? "N/A"}");
+            System.Diagnostics.Debug.WriteLine($"[HostViewModel] Redo Blocked: Validation failed.");
+        }
     }
-
     /// <summary>
     /// Restores the canvas from a local file and broadcasts the state to clients.
     /// </summary>
@@ -492,5 +527,37 @@ public class HostViewModel : CanvasViewModel
             default:
                 return false;
         }
+    }
+    private async Task SendAnalyticsData()
+    {
+        //from _shapes, generate json string representing shape counts
+        int freeHandCount = 0;
+        int straightLineCount = 0;
+        int rectangleCount = 0;
+        int ellipseCount = 0;
+        int triangleCount = 0;
+        foreach (IShape shape in _shapes.Values)
+        {
+            switch (shape.Type)
+            {
+                case ShapeType.FREEHAND:
+                    freeHandCount++;
+                    break;
+                case ShapeType.LINE:
+                    straightLineCount++;
+                    break;
+                case ShapeType.RECTANGLE:
+                    rectangleCount++;
+                    break;
+                case ShapeType.ELLIPSE:
+                    ellipseCount++;
+                    break;
+                case ShapeType.TRIANGLE:
+                    triangleCount++;
+                    break;
+            }
+        }
+        string analyticsJson = $"{{\"freeHand\":{freeHandCount},\"straightLine\":{straightLineCount},\"rectangle\":{rectangleCount},\"ellipse\":{ellipseCount},\"triangle\":{triangleCount}}}";
+        await Rpc.Call("canvas:sendAnalytics", Encoding.UTF8.GetBytes(analyticsJson));
     }
 }
