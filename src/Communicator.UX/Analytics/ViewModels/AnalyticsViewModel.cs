@@ -52,13 +52,25 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     // 
     // CONSTRUCTOR
     // 
-    public AnalyticsViewModel(IThemeService? themeService = null)
+    public AnalyticsViewModel(IThemeService? themeService = null, IRpcEventService rpcEventService = null!)
     {
         _themeService = themeService;
 
         if (_themeService != null)
         {
             _themeService.ThemeChanged += OnThemeChanged;
+        }
+
+        if (rpcEventService != null)
+        {
+            rpcEventService.CanvasAnalyticsUpdateReceived += (_, e) => {
+                // Handle incoming canvas analytics data
+                byte[] data = e.Data.ToArray();
+                string json = System.Text.Encoding.UTF8.GetString(data);
+
+                _canvasService.AddShapeJson(json);
+                UpdateCanvas();
+            };
         }
 
         // AI Graph Timer (4s)
@@ -71,11 +83,6 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         _msgTimer = new Timer(5000);
         _msgTimer.Elapsed += (_, _) => AddMessages();
         _msgTimer.Start();
-
-        // Canvas Timer (6s)
-        _canvasTimer = new Timer(6000);
-        _canvasTimer.Elapsed += (_, _) => UpdateCanvas();
-        _canvasTimer.Start();
 
         // ScreenShare Timer (7s)
         _screenTimer = new Timer(7000);

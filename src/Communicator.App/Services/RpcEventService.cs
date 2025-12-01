@@ -30,6 +30,8 @@ public sealed class RpcEventService : IRpcEventService
     // Canvas Events
     public event EventHandler<RpcDataEventArgs>? CanvasUpdateReceived;
 
+    public event EventHandler<RpcDataEventArgs>? CanvasAnalyticsUpdateReceived;
+
     public void TriggerFrameReceived(byte[] data)
     {
         FrameReceived?.Invoke(this, new RpcDataEventArgs(data));
@@ -84,6 +86,12 @@ public sealed class RpcEventService : IRpcEventService
     public void TriggerCanvasUpdateReceived(byte[] data)
     {
         CanvasUpdateReceived?.Invoke(this, new RpcDataEventArgs(data));
+    }
+
+    //canvas analytics trigger
+    public void TriggerCanvasAnalyticsUpdateReceived(byte[] data)
+    {
+        CanvasAnalyticsUpdateReceived?.Invoke(this, new RpcDataEventArgs(data));
     }
 }
 

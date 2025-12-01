@@ -47,6 +47,8 @@ public interface IRpcEventService
     // Canvas Events
     event EventHandler<RpcDataEventArgs>? CanvasUpdateReceived;
 
+    event EventHandler<RpcDataEventArgs>? CanvasAnalyticsUpdateReceived;
+
     void TriggerFrameReceived(byte[] data);
     void TriggerStopShareReceived(byte[] data);
     void TriggerParticipantsListUpdated(string participantsJson);
@@ -62,4 +64,6 @@ public interface IRpcEventService
 
     // Canvas Triggers
     void TriggerCanvasUpdateReceived(byte[] data);
+
+    void TriggerCanvasAnalyticsUpdateReceived(byte[] data);
 }
