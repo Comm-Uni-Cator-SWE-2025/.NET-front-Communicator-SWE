@@ -7,6 +7,7 @@
 /*****************************************************************************/
 
 using System;
+using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
@@ -27,8 +28,38 @@ public sealed class CloudFunctionLibraryBasicTests : IDisposable
 
     public CloudFunctionLibraryBasicTests()
     {
-        
+        _originalBaseUrl = Environment.GetEnvironmentVariable("CLOUD_BASE_URL");
+        LoadEnv();
         _cloudFunctionLibrary = new Communicator.Cloud.CloudFunction.FunctionLibrary.CloudFunctionLibrary();
+    }
+
+    private void LoadEnv()
+    {
+        var root = Directory.GetCurrentDirectory();
+        var dotenv = Path.Combine(root, ".env");
+        while (!File.Exists(dotenv))
+        {
+            var parent = Directory.GetParent(root);
+            if (parent == null) break;
+            root = parent.FullName;
+            dotenv = Path.Combine(root, ".env");
+        }
+
+        if (File.Exists(dotenv))
+        {
+            foreach (var line in File.ReadAllLines(dotenv))
+            {
+                var parts = line.Split('=', 2);
+                if (parts.Length == 2)
+                {
+                    Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+                }
+            }
+        }
+        else
+        {
+            Environment.SetEnvironmentVariable("CLOUD_BASE_URL", "http://localhost:7071/api/");
+        }
     }
 
     private static Entity CreateTestEntity(string operation)
