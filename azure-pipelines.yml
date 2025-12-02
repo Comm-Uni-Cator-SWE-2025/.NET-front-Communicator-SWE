@@ -100,20 +100,11 @@ jobs:
         continueOnError: true
 
       # -----------------------------
-      # 6. Run Unit Tests
+      # 6. Run Unit Tests (All Modules)
       # -----------------------------
-      - task: DotNetCoreCLI@2
-        displayName: "Run Unit Tests"
-        inputs:
-          command: "test"
-          arguments: >
-            --configuration $(buildConfiguration)
-            --no-build
-            --collect:"XPlat Code Coverage"
-            --logger trx
-            --results-directory $(Agent.TempDirectory)/TestResults
-          projects: "**/*Tests.csproj"
-          publishTestResults: false
+      - script: |
+          dotnet test --collect:"XPlat Code Coverage" --logger trx --results-directory $(Agent.TempDirectory)/TestResults
+        displayName: "Run All Unit Tests"
         continueOnError: true
 
       # -----------------------------
@@ -173,7 +164,7 @@ jobs:
           echo "##[section]✅ Pipeline Execution Summary"
           echo "✅ Build completed (Release)"
           echo "✅ Code style checks executed"
-          echo "✅ Unit tests executed"
+          echo "✅ Unit tests executed (all modules)"
           echo "✅ Code coverage reports generated"
           echo ""
           echo "📊 Check Azure DevOps tabs for:"
