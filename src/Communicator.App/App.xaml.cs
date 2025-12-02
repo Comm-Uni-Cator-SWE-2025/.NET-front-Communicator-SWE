@@ -25,6 +25,7 @@ using Communicator.UX.Core;
 using Communicator.UX.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 
 namespace Communicator.App;
 
@@ -35,6 +36,22 @@ public sealed partial class MainApp : Application
 
     public MainApp()
     {
+        // Load .env file if it exists
+        string envPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
+        if (File.Exists(envPath))
+        {
+            // You can use a library like DotNetEnv.Env.Load(envPath)
+            // Or manually parse it:
+            foreach (string line in File.ReadAllLines(envPath))
+            {
+                string[] parts = line.Split('=', 2);
+                if (parts.Length == 2)
+                {
+                    Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+                }
+            }
+        }
+
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
     }
@@ -42,9 +59,6 @@ public sealed partial class MainApp : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         ArgumentNullException.ThrowIfNull(e);
-
-        // Load environment variables from .env file
-        DotNetEnv.Env.TraversePath().Load();
 
         base.OnStartup(e);
 
