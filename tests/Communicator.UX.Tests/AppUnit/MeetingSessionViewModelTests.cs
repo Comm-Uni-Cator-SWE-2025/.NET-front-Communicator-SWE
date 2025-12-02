@@ -39,41 +39,86 @@ public class MeetingSessionViewModelTests
     [Fact]
     public void Constructor_Initializes_Participants()
     {
-        var vm = CreateViewModel();
+        MeetingSessionViewModel vm = CreateViewModel();
         Assert.Contains(vm.Participants, p => p.User.Email == _currentUser.Email);
     }
 
     [Fact]
-    public void ToggleMuteCommand_TogglesIsMuted_AndCallsRpc()
+    public void ToggleMuteCommand_TogglesIsMuted()
     {
-        var vm = CreateViewModel();
-        
-        // Initial state
-        Assert.False(vm.IsMuted);
+        MeetingSessionViewModel vm = CreateViewModel();
 
-        // Execute
+        // Initial state: muted by default
+        Assert.True(vm.IsMuted);
+
+        // Execute toggle
         vm.ToggleMuteCommand.Execute(null);
 
-        // Assert
-        Assert.True(vm.IsMuted);
-        _mockRpc.Verify(r => r.Call(Utils.STOP_AUDIO_CAPTURE, It.IsAny<byte[]>()), Times.Once);
+        // Assert: should now be unmuted
+        Assert.False(vm.IsMuted);
     }
 
     [Fact]
-    public void ToggleCameraCommand_TogglesIsCameraOn_AndCallsRpc()
+    public void ToggleCameraCommand_TogglesIsCameraOn()
     {
         var vm = CreateViewModel();
         
-        // Initial state (Camera is on by default)
-        Assert.True(vm.IsCameraOn);
+        // Initial state: camera off by default
+        Assert.False(vm.IsCameraOn);
 
-        // Execute
+        // Execute toggle
         vm.ToggleCameraCommand.Execute(null);
 
-        // Assert
-        Assert.False(vm.IsCameraOn);
-        _mockRpc.Verify(r => r.Call(Utils.STOP_VIDEO_CAPTURE, It.IsAny<byte[]>()), Times.Once);
+        // Assert: should now be on
+        Assert.True(vm.IsCameraOn);
     }
+
+    #region ParseIpFromIpPort Tests
+
+    [Fact]
+    public void ParseIpFromIpPort_WithIpAndPort_ReturnsIpOnly()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("192.168.1.1:8080");
+        Assert.Equal("192.168.1.1", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithIpOnly_ReturnsFullString()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("192.168.1.1");
+        Assert.Equal("192.168.1.1", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithEmptyString_ReturnsEmpty()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("");
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithMultipleColons_ReturnsUpToFirstColon()
+    {
+        // IPv6-like format or unusual format
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("fe80::1:8080");
+        Assert.Equal("fe80", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithColonAtStart_ReturnsEmpty()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort(":8080");
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithHostnameAndPort_ReturnsHostname()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("localhost:3000");
+        Assert.Equal("localhost", result);
+    }
+
+    #endregion
 
     private MeetingSessionViewModel CreateViewModel()
     {

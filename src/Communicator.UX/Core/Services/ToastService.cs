@@ -25,7 +25,7 @@ public class ToastService : IToastService
         InvokeToastRequested(new ToastMessage(message, ToastType.Success, duration));
     }
 
-    public void ShowError(string message, int duration = 3000)
+    public void ShowError(string message, int duration = 5000)
     {
         InvokeToastRequested(new ToastMessage(message, ToastType.Error, duration));
     }

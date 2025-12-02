@@ -23,9 +23,7 @@ using Communicator.Controller.Logging;
 using Communicator.Controller.RPC;
 using Communicator.UX.Core;
 using Communicator.UX.Core.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
 
 namespace Communicator.App;
 
@@ -36,21 +34,8 @@ public sealed partial class MainApp : Application
 
     public MainApp()
     {
-        // Load .env file if it exists
-        string envPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
-        if (File.Exists(envPath))
-        {
-            // You can use a library like DotNetEnv.Env.Load(envPath)
-            // Or manually parse it:
-            foreach (string line in File.ReadAllLines(envPath))
-            {
-                string[] parts = line.Split('=', 2);
-                if (parts.Length == 2)
-                {
-                    Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
-                }
-            }
-        }
+        // Load environment variables from .env file at solution root (or any parent)
+        EnvLoader.Load();
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
@@ -412,12 +397,7 @@ public sealed partial class MainApp : Application
     /// </summary>
     internal static void ConfigureServices(IServiceCollection services, bool isTestMode = false)
     {
-        // Register Configuration (loads appsettings.json)
-        IConfiguration configuration = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-        services.AddSingleton<IConfiguration>(configuration);
+        // Environment variables are already loaded by EnvLoader in MainApp constructor.
 
         // Register Communicator.Controller services (Logger)
         services.AddControllerServices();
