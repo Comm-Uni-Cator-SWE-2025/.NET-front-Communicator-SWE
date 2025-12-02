@@ -205,9 +205,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         string participantsJson = e.Value;
         try
         {
-            // Deserialize the list of participants
-            // Expected format: {"host:port": {"email": "...", "displayName": "...", "role": "..."}}
-            // Map<String, UserProfile> from Java (Key is "IP:Port")
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] ParticipantsListUpdated JSON: {participantsJson}");
             Dictionary<string, UserProfile>? nodeToProfileMap = DataSerializer.Deserialize<Dictionary<string, UserProfile>>(Encoding.UTF8.GetBytes(participantsJson));
 
@@ -217,67 +214,92 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
             }
 
             System.Windows.Application.Current.Dispatcher.Invoke(() => {
-                // Sync our list with the backend list
-
-                // 1. Add new participants or update existing ones
-                foreach (KeyValuePair<string, UserProfile> kvp in nodeToProfileMap)
-                {
-                    UserProfile profile = kvp.Value;
-                    string ipPort = kvp.Key;
-                    string ip = ipPort;
-                    int colonIndex = ipPort.IndexOf(':', StringComparison.Ordinal);
-                    if (colonIndex >= 0)
-                    {
-                        ip = ipPort.Substring(0, colonIndex);
-                    }
-
-                    _ipToMailMap[ip] = profile.Email ?? "";
-                    // Check if we already have this participant by Email
-                    ParticipantViewModel? existingParticipant = Participants.FirstOrDefault(p => p.User.Email == profile.Email);
-                    if (existingParticipant == null)
-                    {
-                        // Ensure role is set if missing (default to STUDENT)
-                        if (profile.Role == 0) // Assuming 0 is default/unknown
-                        {
-                            profile.Role = ParticipantRole.STUDENT;
-                        }
-                        AddParticipant(profile);
-                    }
-                    else
-                    {
-                        // Update display name if changed
-                        if (existingParticipant.User.DisplayName != profile.DisplayName)
-                        {
-                            existingParticipant.User.DisplayName = profile.DisplayName;
-                        }
-                    }
-                }
-
-                // 2. Remove participants not in the list (except self)
-                var emailsInBackend = new HashSet<string>(nodeToProfileMap.Values.Select(p => p.Email).Where(e => e != null)!);
-
-                // Don't remove ourselves
-                if (_currentUser.Email != null)
-                {
-                    emailsInBackend.Add(_currentUser.Email);
-                }
-
-                var toRemove = Participants
-                    .Where(p => p.User.Email != null && !emailsInBackend.Contains(p.User.Email))
-                    .ToList();
-
-                foreach (ParticipantViewModel p in toRemove)
-                {
-                    if (p.User.Email != null)
-                    {
-                        RemoveParticipant(p.User.Email);
-                    }
-                }
+                SyncParticipantsWithBackend(nodeToProfileMap);
             });
         }
         catch (Exception ex) when (ex is InvalidOperationException || ex is System.Text.Json.JsonException)
         {
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] Error parsing participant list: {ex.Message}");
+        }
+    }
+
+    private void SyncParticipantsWithBackend(Dictionary<string, UserProfile> nodeToProfileMap)
+    {
+        // 1. Add new participants or update existing ones
+        foreach (KeyValuePair<string, UserProfile> kvp in nodeToProfileMap)
+        {
+            AddOrUpdateParticipant(kvp.Key, kvp.Value);
+        }
+
+        // 2. Remove participants not in the list (except self)
+        HashSet<string> emailsInBackend = BuildValidEmailSet(nodeToProfileMap);
+        RemoveStaleParticipants(emailsInBackend);
+    }
+
+    internal static string ParseIpFromIpPort(string ipPort)
+    {
+        int colonIndex = ipPort.IndexOf(':', StringComparison.Ordinal);
+        return colonIndex >= 0 ? ipPort.Substring(0, colonIndex) : ipPort;
+    }
+
+    private void AddOrUpdateParticipant(string ipPort, UserProfile profile)
+    {
+        string ip = ParseIpFromIpPort(ipPort);
+        _ipToMailMap[ip] = profile.Email ?? "";
+
+        ParticipantViewModel? existingParticipant = Participants.FirstOrDefault(p => p.User.Email == profile.Email);
+        if (existingParticipant == null)
+        {
+            EnsureRoleIsSet(profile);
+            AddParticipant(profile);
+        }
+        else
+        {
+            UpdateParticipantDisplayName(existingParticipant, profile);
+        }
+    }
+
+    private static void EnsureRoleIsSet(UserProfile profile)
+    {
+        if (profile.Role == 0) // 0 is default/unknown
+        {
+            profile.Role = ParticipantRole.STUDENT;
+        }
+    }
+
+    private static void UpdateParticipantDisplayName(ParticipantViewModel existing, UserProfile profile)
+    {
+        if (existing.User.DisplayName != profile.DisplayName)
+        {
+            existing.User.DisplayName = profile.DisplayName;
+        }
+    }
+
+    private HashSet<string> BuildValidEmailSet(Dictionary<string, UserProfile> nodeToProfileMap)
+    {
+        var emailsInBackend = new HashSet<string>(nodeToProfileMap.Values.Select(p => p.Email).Where(e => e != null)!);
+
+        // Don't remove ourselves
+        if (_currentUser.Email != null)
+        {
+            emailsInBackend.Add(_currentUser.Email);
+        }
+
+        return emailsInBackend;
+    }
+
+    private void RemoveStaleParticipants(HashSet<string> validEmails)
+    {
+        var toRemove = Participants
+            .Where(p => p.User.Email != null && !validEmails.Contains(p.User.Email))
+            .ToList();
+
+        foreach (ParticipantViewModel p in toRemove)
+        {
+            if (p.User.Email != null)
+            {
+                RemoveParticipant(p.User.Email);
+            }
         }
     }
 
@@ -697,38 +719,59 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     {
         System.Diagnostics.Debug.WriteLine($"[MeetingSession] SendQuickDoubtAsync called. Message='{QuickDoubtMessage}'");
 
-        if (string.IsNullOrWhiteSpace(QuickDoubtMessage))
+        if (!ValidateQuickDoubtMessage())
         {
-            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Message is empty, aborting.");
             return;
         }
 
-        if (!_cloudMessageService.IsConnected)
+        if (!await EnsureCloudConnectionAsync().ConfigureAwait(true))
         {
-            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Not connected to cloud service.");
-            _toastService.ShowError("Not connected to chat server. Trying to reconnect...");
-
-            // Try to reconnect
-            try
-            {
-                string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
-                string username = _currentUser.DisplayName ?? "Unknown User";
-                await _cloudMessageService.ConnectAsync(meetingId, username).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[MeetingSession] Auto-reconnect failed: {ex.Message}");
-            }
-
-            if (!_cloudMessageService.IsConnected)
-            {
-                return;
-            }
+            return;
         }
+
+        await SendQuickDoubtMessageAsync().ConfigureAwait(true);
+    }
+
+    private bool ValidateQuickDoubtMessage()
+    {
+        if (string.IsNullOrWhiteSpace(QuickDoubtMessage))
+        {
+            System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Message is empty, aborting.");
+            return false;
+        }
+        return true;
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Reconnection should not crash")]
+    private async Task<bool> EnsureCloudConnectionAsync()
+    {
+        if (_cloudMessageService.IsConnected)
+        {
+            return true;
+        }
+
+        System.Diagnostics.Debug.WriteLine("[MeetingSession] SendQuickDoubtAsync: Not connected to cloud service.");
+        _toastService.ShowError("Not connected to chat server. Trying to reconnect...");
 
         try
         {
-            // Capture the sent message and timestamp
+            string meetingId = _currentMeeting?.MeetingId ?? "default-meeting";
+            string username = _currentUser.DisplayName ?? "Unknown User";
+            await _cloudMessageService.ConnectAsync(meetingId, username).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MeetingSession] Auto-reconnect failed: {ex.Message}");
+        }
+
+        return _cloudMessageService.IsConnected;
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We need to log all send errors")]
+    private async Task SendQuickDoubtMessageAsync()
+    {
+        try
+        {
             QuickDoubtSentMessage = QuickDoubtMessage.Trim();
             QuickDoubtTimestamp = DateTime.Now;
 
@@ -737,24 +780,18 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] Sending QuickDoubt: '{QuickDoubtSentMessage}' to meeting '{meetingId}'");
 
-            // Send via cloud message service
             await _cloudMessageService.SendMessageAsync(
                 CloudMessageType.QuickDoubt,
                 meetingId,
                 username,
                 QuickDoubtSentMessage).ConfigureAwait(true);
 
-            // Clear the input field and hide it
             QuickDoubtMessage = string.Empty;
-
-            // Note: We don't show the popup for the sender - only others will see it via SignalR
-            // Keep the bubble open to show the sent message (no textbox)
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[MeetingSession] SendQuickDoubtAsync FAILED: {ex}");
             _toastService.ShowError($"Failed to send quick doubt: {ex.Message}");
-            // Restore the message if sending failed
             QuickDoubtMessage = QuickDoubtSentMessage;
             QuickDoubtSentMessage = string.Empty;
             QuickDoubtTimestamp = null;
