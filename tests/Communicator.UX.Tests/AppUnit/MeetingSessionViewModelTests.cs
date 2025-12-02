@@ -73,6 +73,53 @@ public class MeetingSessionViewModelTests
         Assert.True(vm.IsCameraOn);
     }
 
+    #region ParseIpFromIpPort Tests
+
+    [Fact]
+    public void ParseIpFromIpPort_WithIpAndPort_ReturnsIpOnly()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("192.168.1.1:8080");
+        Assert.Equal("192.168.1.1", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithIpOnly_ReturnsFullString()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("192.168.1.1");
+        Assert.Equal("192.168.1.1", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithEmptyString_ReturnsEmpty()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("");
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithMultipleColons_ReturnsUpToFirstColon()
+    {
+        // IPv6-like format or unusual format
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("fe80::1:8080");
+        Assert.Equal("fe80", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithColonAtStart_ReturnsEmpty()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort(":8080");
+        Assert.Equal("", result);
+    }
+
+    [Fact]
+    public void ParseIpFromIpPort_WithHostnameAndPort_ReturnsHostname()
+    {
+        string result = MeetingSessionViewModel.ParseIpFromIpPort("localhost:3000");
+        Assert.Equal("localhost", result);
+    }
+
+    #endregion
+
     private MeetingSessionViewModel CreateViewModel()
     {
         return new MeetingSessionViewModel(

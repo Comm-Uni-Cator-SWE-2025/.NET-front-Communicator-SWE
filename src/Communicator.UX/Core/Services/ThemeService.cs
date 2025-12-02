@@ -97,41 +97,56 @@ public class ThemeService : IThemeService
         try
         {
             System.Diagnostics.Debug.WriteLine($"[ThemeService] Loading theme from cloud for user: {_currentUsername}");
-            // Use JsonDocument.Parse("{}").RootElement instead of default to ensure valid JSON object
-            JsonElement emptyData = JsonDocument.Parse("{}").RootElement;
-            var req = new Entity(ThemeContainer, ThemeType, _currentUsername, ThemeKey, -1, new TimeRange(0, 0), emptyData);
-            CloudResponse res = await _cloudLibrary.CloudGetAsync(req);
+            CloudResponse res = await FetchThemeFromCloudAsync();
             System.Diagnostics.Debug.WriteLine($"[ThemeService] CloudGetAsync response: {res.StatusCode} {res.Message}");
 
-            if (res.Data.ValueKind != JsonValueKind.Undefined && res.Data.ValueKind != JsonValueKind.Null)
-            {
-                string themeStr = "";
-                if (res.Data.ValueKind == JsonValueKind.Object && res.Data.TryGetProperty(ThemeKey, out var val))
-                {
-                    themeStr = val.GetString() ?? "";
-                }
-                else if (res.Data.ValueKind == JsonValueKind.String)
-                {
-                    themeStr = res.Data.GetString() ?? "";
-                }
-
-                System.Diagnostics.Debug.WriteLine($"[ThemeService] Theme from cloud: {themeStr}");
-
-                if (!string.IsNullOrEmpty(themeStr))
-                {
-                    AppTheme theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
-                    Application.Current.Dispatcher.Invoke(() => SetTheme(theme, true));
-                }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("[ThemeService] No data in cloud response.");
-            }
+            string themeStr = TryParseThemeFromResponse(res.Data);
+            ApplyThemeFromCloud(themeStr);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[ThemeService] Failed to load theme from cloud: {ex.Message}");
         }
+    }
+
+    private async Task<CloudResponse> FetchThemeFromCloudAsync()
+    {
+        JsonElement emptyData = JsonDocument.Parse("{}").RootElement;
+        var req = new Entity(ThemeContainer, ThemeType, _currentUsername!, ThemeKey, -1, new TimeRange(0, 0), emptyData);
+        return await _cloudLibrary!.CloudGetAsync(req);
+    }
+
+    internal static string TryParseThemeFromResponse(JsonElement data)
+    {
+        if (data.ValueKind == JsonValueKind.Undefined || data.ValueKind == JsonValueKind.Null)
+        {
+            System.Diagnostics.Debug.WriteLine("[ThemeService] No data in cloud response.");
+            return string.Empty;
+        }
+
+        string themeStr = string.Empty;
+        if (data.ValueKind == JsonValueKind.Object && data.TryGetProperty(ThemeKey, out var val))
+        {
+            themeStr = val.GetString() ?? string.Empty;
+        }
+        else if (data.ValueKind == JsonValueKind.String)
+        {
+            themeStr = data.GetString() ?? string.Empty;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[ThemeService] Theme from cloud: {themeStr}");
+        return themeStr;
+    }
+
+    private void ApplyThemeFromCloud(string themeStr)
+    {
+        if (string.IsNullOrEmpty(themeStr))
+        {
+            return;
+        }
+
+        AppTheme theme = themeStr.Equals("dark", StringComparison.OrdinalIgnoreCase) ? AppTheme.Dark : AppTheme.Light;
+        Application.Current.Dispatcher.Invoke(() => SetTheme(theme, true));
     }
 
     private async void SaveThemeToCloud()

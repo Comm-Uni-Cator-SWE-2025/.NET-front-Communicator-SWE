@@ -13,6 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Communicator.UX.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Communicator.Chat\Communicator.Chat.csproj" />
     <ProjectReference Include="..\Communicator.ScreenShare\Communicator.ScreenShare.csproj" />
     <ProjectReference Include="..\Communicator.Controller\Communicator.Controller.csproj" />
