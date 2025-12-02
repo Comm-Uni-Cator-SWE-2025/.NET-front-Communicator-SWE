@@ -826,23 +826,26 @@ public class CanvasViewModel : INotifyPropertyChanged
         int triangleCount = 0;
         foreach (IShape shape in _shapes.Values)
         {
-            switch (shape.Type)
+            if (!shape.IsDeleted)
             {
-                case ShapeType.FREEHAND:
-                    freeHandCount++;
-                    break;
-                case ShapeType.LINE:
-                    straightLineCount++;
-                    break;
-                case ShapeType.RECTANGLE:
-                    rectangleCount++;
-                    break;
-                case ShapeType.ELLIPSE:
-                    ellipseCount++;
-                    break;
-                case ShapeType.TRIANGLE:
-                    triangleCount++;
-                    break;
+                switch (shape.Type)
+                {
+                    case ShapeType.FREEHAND:
+                        freeHandCount++;
+                        break;
+                    case ShapeType.LINE:
+                        straightLineCount++;
+                        break;
+                    case ShapeType.RECTANGLE:
+                        rectangleCount++;
+                        break;
+                    case ShapeType.ELLIPSE:
+                        ellipseCount++;
+                        break;
+                    case ShapeType.TRIANGLE:
+                        triangleCount++;
+                        break;
+                }
             }
         }
         string analyticsJson = $"{{\"freeHand\":{freeHandCount},\"straightLine\":{straightLineCount},\"rectangle\":{rectangleCount},\"ellipse\":{ellipseCount},\"triangle\":{triangleCount}}}";
