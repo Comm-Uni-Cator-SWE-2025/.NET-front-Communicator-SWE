@@ -29,21 +29,7 @@
     <PackageReference Include="DotNetEnv" Version="3.0.0" />
   </ItemGroup>
 
-  <!-- <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup> -->
-
   <ItemGroup>
-    <!-- Ensure appsettings.json is copied to output -->
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
-
-    <!-- Include the .env file from the root of the workspace -->
-    <!-- The path ..\..\.env assumes the csproj is in src/Communicator.App/ -->
     <Content Include="..\..\.env">
       <Link>.env</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

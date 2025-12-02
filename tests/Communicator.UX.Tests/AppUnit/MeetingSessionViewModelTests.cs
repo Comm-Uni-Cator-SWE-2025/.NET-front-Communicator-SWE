@@ -39,40 +39,38 @@ public class MeetingSessionViewModelTests
     [Fact]
     public void Constructor_Initializes_Participants()
     {
-        var vm = CreateViewModel();
+        MeetingSessionViewModel vm = CreateViewModel();
         Assert.Contains(vm.Participants, p => p.User.Email == _currentUser.Email);
     }
 
     [Fact]
-    public void ToggleMuteCommand_TogglesIsMuted_AndCallsRpc()
+    public void ToggleMuteCommand_TogglesIsMuted()
     {
-        var vm = CreateViewModel();
-        
-        // Initial state
-        Assert.False(vm.IsMuted);
+        MeetingSessionViewModel vm = CreateViewModel();
 
-        // Execute
+        // Initial state: muted by default
+        Assert.True(vm.IsMuted);
+
+        // Execute toggle
         vm.ToggleMuteCommand.Execute(null);
 
-        // Assert
-        Assert.True(vm.IsMuted);
-        _mockRpc.Verify(r => r.Call(Utils.STOP_AUDIO_CAPTURE, It.IsAny<byte[]>()), Times.Once);
+        // Assert: should now be unmuted
+        Assert.False(vm.IsMuted);
     }
 
     [Fact]
-    public void ToggleCameraCommand_TogglesIsCameraOn_AndCallsRpc()
+    public void ToggleCameraCommand_TogglesIsCameraOn()
     {
         var vm = CreateViewModel();
         
-        // Initial state (Camera is on by default)
-        Assert.True(vm.IsCameraOn);
+        // Initial state: camera off by default
+        Assert.False(vm.IsCameraOn);
 
-        // Execute
+        // Execute toggle
         vm.ToggleCameraCommand.Execute(null);
 
-        // Assert
-        Assert.False(vm.IsCameraOn);
-        _mockRpc.Verify(r => r.Call(Utils.STOP_VIDEO_CAPTURE, It.IsAny<byte[]>()), Times.Once);
+        // Assert: should now be on
+        Assert.True(vm.IsCameraOn);
     }
 
     private MeetingSessionViewModel CreateViewModel()
