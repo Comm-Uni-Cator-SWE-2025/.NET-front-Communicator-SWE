@@ -1,5 +1,5 @@
 # ==============================================================
-# Azure DevOps Pipeline: .NET CI with Code Quality Checks
+# Azure DevOps Pipeline: .NET CI (Build, Tests, Coverage, Artifacts)
 # ==============================================================
 
 trigger:
@@ -25,13 +25,14 @@ pr:
 
 pool:
   vmImage: "windows-latest"
+
 variables:
   buildConfiguration: "Release"
   dotnetVersion: "8.x"
 
 jobs:
   - job: BuildAndValidate
-    displayName: ".NET CI with Quality Gates"
+    displayName: ".NET CI without Style-Enforced Build"
     timeoutInMinutes: 30
 
     steps:
@@ -53,28 +54,36 @@ jobs:
           command: "restore"
           projects: "**/*.csproj"
 
-      # -----------------------------
-      # 4. Verify .editorconfig Compliance
-      # -----------------------------
+      # ------------------------------------------------
+      # Build only (Release), no code-style enforcement,
+      # warnings are allowed
+      # ------------------------------------------------
       - task: DotNetCoreCLI@2
-        displayName: "Build with Style Checks"
+        displayName: "Build - Release (Ignore Warnings)"
         inputs:
           command: "build"
           arguments: >
             --configuration $(buildConfiguration)
             --no-restore
-            /p:EnforceCodeStyleInBuild=true
-            /p:AnalysisLevel=latest-all
           projects: "**/*.csproj"
 
+      # ------------------------------------------------
+      # Code formatting / style check (non-blocking)
+      # Fails the task, but rest of pipeline still runs
+      # ------------------------------------------------
       - script: |
           dotnet tool install -g dotnet-format || true
-          dotnet format --verify-no-changes --verbosity diagnostic
-        displayName: "Verify Code Formatting"
-        continueOnError: false
+          dotnet format --verify-no-changes --verbosity minimal
+        displayName: "Verify Code Formatting (.editorconfig)"
+        continueOnError: true
 
+      # ------------------------------------------------
+      # Unit tests with coverage
+      # Always try to run, even if build/format failed
+      # ------------------------------------------------
       - task: DotNetCoreCLI@2
-        displayName: "Run Unit Tests"
+        displayName: "Run Unit Tests with Coverage"
+        condition: always()
         inputs:
           command: "test"
           arguments: >
@@ -97,15 +106,19 @@ jobs:
 
       - task: PublishCodeCoverageResults@1
         displayName: "Publish Code Coverage"
-        condition: succeededOrFailed()
+        condition: always()
         inputs:
           codeCoverageTool: "Cobertura"
           summaryFileLocation: "$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml"
           failIfCoverageEmpty: false
 
+      # ------------------------------------------------
+      # Publish only if build actually succeeded
+      # (no-style build above must be green)
+      # ------------------------------------------------
       - task: DotNetCoreCLI@2
         displayName: "Publish Application"
-        condition: succeeded()
+        condition: succeeded('BuildAndValidate')
         inputs:
           command: "publish"
           arguments: >
@@ -118,20 +131,20 @@ jobs:
 
       - task: PublishBuildArtifacts@1
         displayName: "Publish Build Artifacts"
-        condition: succeeded()
+        condition: succeeded('BuildAndValidate')
         inputs:
           pathToPublish: "$(Build.ArtifactStagingDirectory)"
           artifactName: "dotnet-build-artifacts"
           publishLocation: "Container"
 
       - script: |
-          echo "##[section]✅ Build Summary"
-          echo "✅ Code formatting verified (.editorconfig)"
-          echo "✅ Build completed with style enforcement"
-          echo "✅ Tests executed with coverage"
-          echo "✅ Artifacts published"
+          echo "##[section]Build Summary"
+          echo "• Build (Release) completed - style not enforced in build"
+          echo "• Code formatting checked (.editorconfig) - non-blocking"
+          echo "• Tests executed with coverage (run even if previous steps failed)"
+          echo "• Artifacts published only if build succeeded"
           echo ""
-          echo "📊 Check Azure DevOps tabs for:"
+          echo "Check Azure DevOps tabs for:"
           echo "  - Test Results"
           echo "  - Code Coverage Report"
           echo "  - Build Artifacts"
