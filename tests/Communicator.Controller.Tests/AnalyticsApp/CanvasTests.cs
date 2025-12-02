@@ -91,9 +91,11 @@ namespace AnalyticsApp.Tests
             vm.AddSnapshot(new CanvasData(), "T2");
             vm.AddSnapshot(new CanvasData(), "T3");
             vm.AddSnapshot(new CanvasData(), "T4");
+            vm.AddSnapshot(new CanvasData(), "T5");
+            vm.AddSnapshot(new CanvasData(), "T6");
 
             // Assert
-            Assert.Equal(3, vm.Labels.Count);
+            Assert.Equal(5, vm.Labels.Count);
             Assert.DoesNotContain("T1", vm.Labels);
 
             Assert.Equal("T2", vm.Labels[0]);
@@ -120,12 +122,12 @@ namespace AnalyticsApp.Tests
             }
 
             // Assert ALL collections = 3 items
-            Assert.Equal(3, vm.FreeHand.Count);
-            Assert.Equal(3, vm.Line.Count);
-            Assert.Equal(3, vm.Rectangle.Count);
-            Assert.Equal(3, vm.Ellipse.Count);
-            Assert.Equal(3, vm.Triangle.Count);
-            Assert.Equal(3, vm.Labels.Count);
+            Assert.Equal(4, vm.FreeHand.Count);
+            Assert.Equal(4, vm.Line.Count);
+            Assert.Equal(4, vm.Rectangle.Count);
+            Assert.Equal(4, vm.Ellipse.Count);
+            Assert.Equal(4, vm.Triangle.Count);
+            Assert.Equal(4, vm.Labels.Count);
 
             // Check last values match snapshot 4
             Assert.Equal(4, vm.FreeHand.Last());
