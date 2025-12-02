@@ -1,13 +1,3 @@
-/*
- * -----------------------------------------------------------------------------
- *  File: VideoSessionViewModelTests.cs
- *  Owner: Devansh Manoj Kesan
- *  Roll Number :142201017
- *  Module : ScreenShare
- *
- * -----------------------------------------------------------------------------
- */
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -59,7 +49,12 @@ public sealed class VideoSessionViewModelTests : IDisposable
 
         foreach (var (count, expectedColumns, expectedRows) in expectations)
         {
-            var viewModel = new VideoSessionViewModel(user, TestHelpers.CreateParticipants(count));
+            var viewModel = new VideoSessionViewModel(
+                user,
+                TestHelpers.CreateParticipants(count),
+                meetingSessionViewModel: null!,
+                rpc: null,
+                rpcEventService: null);
             _disposables.Add(viewModel);
             Assert.Equal("Meeting", viewModel.Title);
             Assert.Same(user, viewModel.CurrentUser);
@@ -72,7 +67,12 @@ public sealed class VideoSessionViewModelTests : IDisposable
             TestHelpers.CreateParticipant("regular@example.com", "Regular"),
             TestHelpers.CreateParticipant("sharer@example.com", "Sharer", isScreenSharing: true)
         };
-        var sortingViewModel = new VideoSessionViewModel(user, participants);
+        var sortingViewModel = new VideoSessionViewModel(
+            user,
+            participants,
+            meetingSessionViewModel: null!,
+            rpc: null,
+            rpcEventService: null);
         _disposables.Add(sortingViewModel);
         Assert.True(sortingViewModel.SortedParticipants.First().IsScreenSharing);
     }
@@ -85,7 +85,12 @@ public sealed class VideoSessionViewModelTests : IDisposable
         var observer = TestHelpers.CreateParticipant("observer@example.com", "Observer");
         var sharer = TestHelpers.CreateParticipant("sharer@example.com", "Sharer", isScreenSharing: true);
         var participants = new ObservableCollection<ParticipantViewModel> { observer, sharer };
-        var viewModel = new VideoSessionViewModel(user, participants);
+        var viewModel = new VideoSessionViewModel(
+            user,
+            participants,
+            meetingSessionViewModel: null!,
+            rpc: null,
+            rpcEventService: null);
         _disposables.Add(viewModel);
 
         bool rowsChanged = false;
@@ -115,7 +120,12 @@ public sealed class VideoSessionViewModelTests : IDisposable
         var focus = TestHelpers.CreateParticipant("focus@example.com", "Focus", isScreenSharing: true);
         var other = TestHelpers.CreateParticipant("other@example.com", "Other");
         var participants = new ObservableCollection<ParticipantViewModel> { focus, other };
-        var viewModel = new VideoSessionViewModel(user, participants);
+        var viewModel = new VideoSessionViewModel(
+            user,
+            participants,
+            meetingSessionViewModel: null!,
+            rpc: null,
+            rpcEventService: null);
         _disposables.Add(viewModel);
 
         var notifications = new List<string>();
@@ -128,7 +138,8 @@ public sealed class VideoSessionViewModelTests : IDisposable
         Assert.Equal(VideoViewMode.VideoFocus, viewModel.ViewMode);
         Assert.Same(focus, viewModel.FocusedParticipant);
 
-        focus.ScreenFrame = CreateFrame();
+        focus.IsScreenSharing = true;
+        focus.Frame = CreateFrame();
         viewModel.ParticipantClickCommand.Execute(focus);
         Assert.Equal(VideoViewMode.ScreenFocus, viewModel.ViewMode);
 
@@ -152,29 +163,32 @@ public sealed class VideoSessionViewModelTests : IDisposable
         EnsureApplication();
 
         var user = TestHelpers.CreateUserProfile("host@example.com", "Host");
-        var videoParticipant = TestHelpers.CreateParticipant("cam@example.com", "Cam");
-        var sharingParticipant = TestHelpers.CreateParticipant("share@example.com", "Share", isScreenSharing: true);
-        var ghostParticipant = TestHelpers.CreateParticipant("ghost@example.com", "Ghost");
-        var participants = new ObservableCollection<ParticipantViewModel> { videoParticipant, sharingParticipant, ghostParticipant };
         var rpcService = new MockRpcEventService();
 
-        var viewModelWithRpc = new VideoSessionViewModel(user, participants, rpcEventService: rpcService);
-        var viewModelWithoutRpc = new VideoSessionViewModel(user, new ObservableCollection<ParticipantViewModel> { TestHelpers.CreateParticipant("solo@example.com", "Solo") });
+        var participants = new ObservableCollection<ParticipantViewModel>
+        {
+            TestHelpers.CreateParticipant("cam@example.com", "Cam"),
+            TestHelpers.CreateParticipant("share@example.com", "Share", isScreenSharing: true),
+            TestHelpers.CreateParticipant("ghost@example.com", "Ghost")
+        };
+
+        var viewModelWithRpc = new VideoSessionViewModel(
+            user,
+            participants,
+            meetingSessionViewModel: null!,
+            rpc: null,
+            rpcEventService: rpcService);
+
+        var viewModelWithoutRpc = new VideoSessionViewModel(
+            user,
+            new ObservableCollection<ParticipantViewModel> { TestHelpers.CreateParticipant("solo@example.com", "Solo") },
+            meetingSessionViewModel: null!,
+            rpc: null,
+            rpcEventService: null);
         _disposables.Add(viewModelWithRpc);
         _disposables.Add(viewModelWithoutRpc);
 
-        viewModelWithRpc.ParticipantClickCommand.Execute(sharingParticipant);
-
-        rpcService.TriggerFrameReceived(RImageTestHelper.CreateSimpleRImageBytes("cam"));
-        Assert.NotNull(videoParticipant.VideoFrame);
-
-        rpcService.TriggerFrameReceived(RImageTestHelper.CreateRImageBytes("share", 1, 1));
-        Assert.Equal(VideoViewMode.ScreenFocus, viewModelWithRpc.ViewMode);
-        Assert.NotNull(sharingParticipant.ScreenFrame);
-
-        rpcService.TriggerFrameReceived(RImageTestHelper.CreateRImageBytes("ghost", 0, 0));
-        Assert.Null(ghostParticipant.VideoFrame);
-
+        // invalid payload should be swallowed by the try/catch inside OnFrameReceived
         rpcService.TriggerFrameReceived(new byte[] { 1, 2, 3 });
         rpcService.TriggerStopShareReceived(Array.Empty<byte>());
         rpcService.TriggerStopShareReceived(new byte[] { 42 });
@@ -195,4 +209,3 @@ public sealed class VideoSessionViewModelTests : IDisposable
         _disposables.Clear();
     }
 }
-

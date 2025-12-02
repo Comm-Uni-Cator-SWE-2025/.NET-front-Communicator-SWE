@@ -34,8 +34,7 @@ public class ParticipantViewModelTests
         Assert.Same(user, viewModel.User);
         Assert.Equal("User Name", viewModel.DisplayName);
         Assert.Equal("U", viewModel.Initial);
-        Assert.False(viewModel.HasVideoFrame);
-        Assert.False(viewModel.HasScreenFrame);
+        Assert.False(viewModel.HasFrame);
         Assert.False(viewModel.IsMuted);
         Assert.False(viewModel.IsCameraOn);
         Assert.False(viewModel.IsScreenSharing);
@@ -46,39 +45,28 @@ public class ParticipantViewModelTests
     }
 
     [Fact]
-    public void FramePropertiesRaiseNotificationsAndUpdateFlags()
+    public void FramePropertyRaisesNotificationsAndUpdatesFlag()
     {
-        // this test checks that both video and screen frames raise property change events properly
+        // this test checks that frame changes raise property change events properly
         var participant = TestHelpers.CreateParticipant("frames@example.com", "Frames");
         var changes = new List<string>();
         participant.PropertyChanged += (_, args) => changes.Add(args.PropertyName!);
         var frame = CreateFrame();
 
-        participant.VideoFrame = frame;
-        Assert.Same(frame, participant.VideoFrame);
-        Assert.True(participant.HasVideoFrame);
-        Assert.Contains(nameof(ParticipantViewModel.VideoFrame), changes);
-        Assert.Contains(nameof(ParticipantViewModel.HasVideoFrame), changes);
+        participant.Frame = frame;
+        Assert.Same(frame, participant.Frame);
+        Assert.True(participant.HasFrame);
+        Assert.Contains(nameof(ParticipantViewModel.Frame), changes);
+        Assert.Contains(nameof(ParticipantViewModel.HasFrame), changes);
 
         var changeCount = changes.Count;
-        participant.VideoFrame = frame;
+        participant.Frame = frame;
         Assert.Equal(changeCount, changes.Count);
 
         changes.Clear();
-        participant.VideoFrame = null;
-        Assert.False(participant.HasVideoFrame);
-        Assert.Contains(nameof(ParticipantViewModel.HasVideoFrame), changes);
-
-        changes.Clear();
-        participant.ScreenFrame = frame;
-        Assert.True(participant.HasScreenFrame);
-        Assert.Contains(nameof(ParticipantViewModel.ScreenFrame), changes);
-        Assert.Contains(nameof(ParticipantViewModel.HasScreenFrame), changes);
-
-        changes.Clear();
-        participant.ScreenFrame = null;
-        Assert.False(participant.HasScreenFrame);
-        Assert.Contains(nameof(ParticipantViewModel.HasScreenFrame), changes);
+        participant.Frame = null;
+        Assert.False(participant.HasFrame);
+        Assert.Contains(nameof(ParticipantViewModel.HasFrame), changes);
     }
 
     [Fact]
@@ -132,4 +120,3 @@ public class ParticipantViewModelTests
         Assert.Equal("?", emptyName.Initial);
     }
 }
-
