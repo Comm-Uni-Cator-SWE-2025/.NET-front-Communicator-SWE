@@ -7,7 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc2" />
-    <ProjectReference Include="..\..\Communicator.Core\Communicator.Core.csproj" />
-    <ProjectReference Include="..\..\Communicator.Icons\Communicator.Icons.csproj" />
+    <ProjectReference Include="..\..\Communicator.Controller\Communicator.Controller.csproj" />
+    <ProjectReference Include="..\Core\Communicator.UX.Core.csproj" />
+    <ProjectReference Include="..\Icons\Communicator.Icons.csproj" />
   </ItemGroup>
 </Project>

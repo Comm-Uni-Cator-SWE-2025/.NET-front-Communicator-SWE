@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: VideoSessionViewModel.cs
- *  Owner: UpdateNamesForEachModule
- *  Roll Number :
- *  Module : 
+ *  Owner: Devansh Manoj Kesan
+ *  Roll Number : 142201017
+ *  Module : ScreenShare
  *
  * -----------------------------------------------------------------------------
  */
@@ -16,12 +16,12 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Communicator.Controller.Meeting;
-using Communicator.Core.RPC;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
-using Communicator.ScreenShare;
 using Communicator.App.Services;
+using Communicator.Controller.Meeting;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
+using Communicator.ScreenShare;
 
 namespace Communicator.App.ViewModels.Meeting;
 
@@ -198,7 +198,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Updates the list of visible participants.
     /// </summary>
-    public void UpdateVisibleParticipants(System.Collections.Generic.List<string> visibleIds)
+    public void UpdateVisibleParticipants(IList<string> visibleIds)
     {
         if (visibleIds == null)
         {
@@ -208,43 +208,68 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         // Only update if changed to avoid unnecessary notifications
         if (!visibleIds.SequenceEqual(VisibleParticipants))
         {
+            // 1. Participants to ADD (Subscribe)
+            // Present in new list, but NOT in current list
+            List<string> toAdd = visibleIds.Except(VisibleParticipants).ToList();
+
+            // Participants to REMOVE (Unsubscribe)
+            // Present in current list, but NOT in new list
+            List<string> toRemove = VisibleParticipants.Except(visibleIds).ToList();
+
+            // Process Subscriptions (Additions)
+            foreach (string id in toAdd)
+            {
+                string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+                if (!string.IsNullOrEmpty(ip))
+                {
+                    SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                    _rpc?.Call("subscribeAsViewer", subscriberPacket.Serialize());
+                }
+            }
+
+            // Process Unsubscriptions (Removals)
+            foreach (string id in toRemove)
+            {
+                string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+                if (!string.IsNullOrEmpty(ip))
+                {
+                    SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                    _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
+                }
+            }
+
+            // Update the ObservableCollection to match the new state
             VisibleParticipants.Clear();
             foreach (string id in visibleIds)
             {
-                if (!VisibleParticipants.Contains(id))
-                {
-                    VisibleParticipants.Add(id);
-                    // Find IP for this email (id is email)
-                    string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
-
-                    if (!string.IsNullOrEmpty(ip))
-                    {
-                        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
-                        _rpc?.Call("subscribeAsViewer", subscriberPacket.Serialize());
-                    }
-                }
+                VisibleParticipants.Add(id);
             }
 
-            foreach (string existingId in VisibleParticipants.ToList())
-            {
-                if (!visibleIds.Contains(existingId))
-                {
-                    VisibleParticipants.Remove(existingId);
-
-                    // Find IP for this email (existingId is email)
-                    string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == existingId).Key;
-
-                    if (!string.IsNullOrEmpty(ip))
-                    {
-                        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
-                        _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
-                    }
-                }
-            }
-
-
-            Console.WriteLine($"[App] Visible participants updated: {string.Join(", ", visibleIds)}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Visible participants updated: {string.Join(", ", visibleIds)}");
         }
+    }
+
+    /// <summary>
+    /// Unsubscribes from all currently visible participants and clears the list.
+    /// Should be called when the view is unloaded or hidden.
+    /// </summary>
+    public void ClearVisibleParticipants()
+    {
+        // Create a copy to iterate safely
+        var currentVisible = VisibleParticipants.ToList();
+
+        foreach (string id in currentVisible)
+        {
+            string? ip = _meetingSessionViewModel.IpToMailMap.FirstOrDefault(x => x.Value == id).Key;
+            if (!string.IsNullOrEmpty(ip))
+            {
+                SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                _rpc?.Call("unSubscribeAsViewer", subscriberPacket.Serialize());
+            }
+        }
+
+        VisibleParticipants.Clear();
+        System.Diagnostics.Debug.WriteLine("[MeetingVideoSession] Cleared all visible participants (Unsubscribed).");
     }
 
     /// <summary>
@@ -338,7 +363,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is IndexOutOfRangeException || ex is IOException)
         {
-            System.Diagnostics.Debug.WriteLine($"Error processing frame: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Error processing frame: {ex.Message}");
         }
     }
 
@@ -357,7 +382,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
         {
-            System.Diagnostics.Debug.WriteLine($"Error in OnStopShare: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Error in OnStopShare: {ex.Message}");
         }
     }
 
@@ -368,7 +393,7 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
 
         ParticipantViewModel? participant = Participants.FirstOrDefault(p => p.User.Email == email);
 
-        Console.WriteLine($"[App] UPDATE_UI 3 Updating frame for participant with IP {rImage.Ip} mapped to email {email}" + participant);
+        System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] UPDATE_UI 3 Updating frame for participant with IP {rImage.Ip} mapped to email {email}" + participant);
         if (participant != null)
         {
             WriteableBitmap? bitmapSource = CreateBitmapSourceFromIntArray(rImage.Image);
@@ -377,11 +402,11 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
             // Otherwise update video frame
             // Note: This logic depends on IsScreenSharing flag being set correctly via other means (e.g. separate RPC call)
             // OR we can infer it.
-            Console.WriteLine($"[App] UPDATE_UI 4 Created bitmap source for participant {email} {participant.IsScreenSharing} " + bitmapSource + rImage.Image.Length);
+            System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] UPDATE_UI 4 Created bitmap source for participant {email} {participant.IsScreenSharing} " + bitmapSource + rImage.Image.Length);
 
             if (participant.IsScreenSharing)
             {
-                Console.WriteLine("[App] UPDATE_UI 5 Updating screen frame for participant " + participant);
+                System.Diagnostics.Debug.WriteLine("[MeetingVideoSession] UPDATE_UI 5 Updating screen frame for participant " + participant);
                 participant.Frame = bitmapSource;
                 // Also ensure we switch to screen focus if this is the first frame
                 if (ViewMode != VideoViewMode.ScreenFocus && FocusedParticipant == participant)
@@ -465,8 +490,8 @@ public sealed class VideoSessionViewModel : ObservableObject, IDisposable
     /// </summary>
     private void UpdateSortedParticipants()
     {
-        System.Diagnostics.Debug.WriteLine("[App] Updating sorted participants list.");
-        Console.WriteLine($"[App] Updating sorted participants list. Count: {Participants.Count}");
+        System.Diagnostics.Debug.WriteLine("[MeetingVideoSession] Updating sorted participants list.");
+        System.Diagnostics.Debug.WriteLine($"[MeetingVideoSession] Updating sorted participants list. Count: {Participants.Count}");
         var sorted = Participants.OrderByDescending(p => p.IsScreenSharing).ToList();
 
         SortedParticipants.Clear();

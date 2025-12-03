@@ -14,8 +14,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
-using Communicator.Core.UX.Models;
-using Communicator.Core.UX.Services;
+using Communicator.UX.Core.Models;
+using Communicator.UX.Core.Services;
 using Communicator.App.ViewModels;
 using Communicator.App.ViewModels.Common;
 using Microsoft.Extensions.DependencyInjection;
@@ -249,7 +249,7 @@ public sealed partial class MainView : Window
             if (result != 0)
             {
                 // Non-zero HRESULT indicates failure, but we can ignore it since it's cosmetic
-                System.Diagnostics.Debug.WriteLine($"DwmSetWindowAttribute returned HRESULT: 0x{result:X}");
+                System.Diagnostics.Debug.WriteLine($"[MainView] DwmSetWindowAttribute returned HRESULT: 0x{result:X}");
             }
         }
         catch (DllNotFoundException)

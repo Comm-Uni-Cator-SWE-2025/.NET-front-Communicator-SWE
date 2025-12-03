@@ -6,6 +6,9 @@ using System.Diagnostics;
 using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Linq;
+using Communicator.Cloud.CloudFunction.FunctionLibrary;
+using Communicator.Cloud.CloudFunction.DataStructures;
 
 namespace Communicator.Cloud.CrashHandler;
 
@@ -40,71 +43,89 @@ public class CrashHandler : ICrashHandler
 
         try
         {
-            CloudResponse responseCreate = _cloudFunctionLibrary.cloudCreate(
-                new Entity("CLOUD", s_collection, null, null, -1, null, null));
+            // Use an empty JSON object for Data where the original code passed null
+            var emptyData = JsonDocument.Parse("{}").RootElement;
 
-            CloudResponse responseGet = _cloudFunctionLibrary.cloudGet(
-                new Entity("CLOUD", s_collection, null, null, 1, null, null));
+            CloudResponse responseCreate = _cloudFunctionLibrary
+                .CloudCreateAsync(new Entity("CLOUD", s_collection, string.Empty, string.Empty, -1, null, emptyData))
+                .GetAwaiter().GetResult();
 
-            if (responseCreate.status_code() != s_successCode || responseGet.status_code() != s_successCode)
+            CloudResponse responseGet = _cloudFunctionLibrary
+                .CloudGetAsync(new Entity("CLOUD", s_collection, string.Empty, string.Empty, 1, null, emptyData))
+                .GetAwaiter().GetResult();
+
+            if (responseCreate.StatusCode != s_successCode || responseGet.StatusCode != s_successCode)
             {
                 throw new Exception("Cloud Error...");
             }
 
-            s_exceptionId = responseGet.data[0]["id"].GetValue<int>();
+            // Expecting the response data to be a JSON array and extracting the first element's id
+            s_exceptionId = responseGet.Data.EnumerateArray().First().GetProperty("id").GetInt32();
         }
-        catch (Exception e)
+        catch (Exception)
         {
             // Do nothing...
         }
 
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+        AppDomain.CurrentDomain.UnhandledException += async (sender, e) => {
             Exception? exception = e.ExceptionObject as Exception;
+            if (exception == null)
+            {
+                return;
+            }
 
-            string exceptionName = exception.GetType().FullName;
+            string exceptionName = exception.GetType().FullName ?? string.Empty;
             string timeStamp = DateTime.UtcNow.ToString();
-            string exceptionMessage = exception.Message;
-            string exceptionString = exception.ToString();
-            string exceptionStackTrace = exception.StackTrace;
+            string exceptionMessage = exception.Message ?? string.Empty;
+            string exceptionString = exception.ToString() ?? string.Empty;
+            string exceptionStackTrace = exception.StackTrace ?? string.Empty;
 
-            JsonNode exceptionJsonNode = ToJsonNode(exceptionName, timeStamp, exceptionMessage, exceptionString, exceptionStackTrace);
+            JsonNode? exceptionJsonNode = ToJsonNode(exceptionName, timeStamp, exceptionMessage, exceptionString, exceptionStackTrace);
+            if (exceptionJsonNode == null)
+            {
+                return;
+            }
 
             try
             {
-                string response = insightProvider.GetInsights(exceptionJsonNode.ToJsonString());
-                exceptionJsonNode["AIResponse"] = response;
+                string aiResponse = insightProvider.GetInsights(exceptionJsonNode.ToJsonString());
+                exceptionJsonNode["AIResponse"] = aiResponse;
                 StoreDataToFile(exceptionJsonNode.ToJsonString());
 
-                EntityHandle exceptionEntity = new Entity(
+                // Convert JsonNode to JsonElement expected by Entity
+                var dataElement = JsonDocument.Parse(exceptionJsonNode.ToJsonString()).RootElement;
+
+                var exceptionEntity = new Entity(
                     "CLOUD",
                     s_collection,
                     (++s_exceptionId).ToString(),
-                    null,
+                    string.Empty,
                     -1,
                     null,
-                    exceptionJsonNode
+                    dataElement
                 );
 
-                CloudResponse responsePost = _cloudFunctionLibrary.cloudPost(exceptionEntity);
-
+                await _cloudFunctionLibrary.CloudPostAsync(exceptionEntity).ConfigureAwait(false);
             }
-            catch { }
+            catch
+            {
+                // swallow exceptions in crash handler
+            }
         };
     }
 
-    private static JsonNode ToJsonNode(string eName, string timeStamp, string eMsg, string eDetails, string eTrace)
+    private static JsonNode? ToJsonNode(string eName, string timeStamp, string eMsg, string eDetails, string eTrace)
     {
         var payload = new {
             ExceptionName = eName,
             TimestampUtc = timeStamp,
-            ExceptionMessage = eMsg, 
+            ExceptionMessage = eMsg,
             ExceptionDetails = eDetails,
             StackTrace = eTrace
         };
 
-        JsonNode jsonNode = JsonSerializer.Serialize(payload);
-
-        return jsonNode;
+        // Serialize directly to JsonNode
+        return JsonSerializer.SerializeToNode(payload);
     }
 
     private void StoreDataToFile(string data)

@@ -12,11 +12,14 @@
  * -----------------------------------------------------------------------------
  */
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
 using Communicator.Canvas;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core.Services;
+using Communicator.Networking;
 
 namespace Communicator.UX.Canvas.ViewModels;
 
@@ -56,34 +59,29 @@ public class ClientViewModel : CanvasViewModel
         // Request history from the backend/host
         try
         {
-            System.Diagnostics.Debug.WriteLine("[Client] Requesting canvas history...");
-            byte[] response = await Rpc.Call("canvas:getHistory", Array.Empty<byte>());
+            System.Diagnostics.Debug.WriteLine("[CanvasClientModel] Requesting canvas shapes...");
+            byte[] whoAmIResponse = await Rpc.Call("canvas:whoami", Array.Empty<byte>());
+            ClientNode myClientNode = DataSerializer.Deserialize<ClientNode>(whoAmIResponse);
 
-            if (response != null && response.Length > 0)
+            if (myClientNode == null)
             {
-                // Deserialize list of byte arrays (history items)
-                List<byte[]> history = DataSerializer.Deserialize<List<byte[]>>(response);
-                if (history != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Client] Received {history.Count} history items.");
-                    foreach (byte[] item in history)
-                    {
-                        // Each item is a serialized NetworkMessage (string)
-                        // But wait, handleNetworkMessage stores 'data' which is byte[] of serialized string?
-                        // Let's check Java side. Java stores 'data' which is byte[].
-                        // And 'data' passed to handleNetworkMessage is what we sent.
-                        // We send DataSerializer.Serialize(json).
-                        // So each item in history is byte[] representing serialized string.
-
-                        string json = DataSerializer.Deserialize<string>(item);
-                        ProcessIncomingMessage(json);
-                    }
-                }
+                System.Diagnostics.Debug.WriteLine("[CanvasClientModel] Failed to get identity from canvas:whoami");
+                return;
             }
+
+            byte[] payloadBytes = DataSerializer.Serialize(myClientNode);
+            string payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
+
+            NetworkMessage netMsg = new NetworkMessage(NetworkMessageType.REQUEST_SHAPES, null, payloadJson);
+
+            string json = CanvasSerializer.SerializeNetworkMessage(netMsg);
+            byte[] data = DataSerializer.Serialize(json);
+
+            await Rpc.Call("canvas:sendToHost", data);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[Client] Failed to get history: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[CanvasClientModel] Failed to get history: {ex.Message}");
         }
     }
 
@@ -215,7 +213,11 @@ public class ClientViewModel : CanvasViewModel
     /// <param name="json">The serialized network message.</param>
     public void ProcessIncomingMessage(string json)
     {
+        Console.WriteLine("[CanvasClientModel] Processing incoming message...");
+        Console.WriteLine(json);
         NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
+        Console.WriteLine("[CanvasClientModel] Deserialized message:");
+        Console.WriteLine(msg);
         if (msg == null)
         {
             return;
@@ -223,7 +225,7 @@ public class ClientViewModel : CanvasViewModel
 
         if (msg.MessageType == NetworkMessageType.RESTORE)
         {
-            Console.WriteLine("[Client] Received RESTORE command.");
+            System.Diagnostics.Debug.WriteLine("[CanvasClientModel] Received RESTORE command.");
             if (!string.IsNullOrEmpty(msg.Payload))
             {
                 ApplyRestore(msg.Payload);

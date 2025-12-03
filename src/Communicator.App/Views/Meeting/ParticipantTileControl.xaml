@@ -47,13 +47,11 @@
                     <!-- Profile Image or Initial Circle -->
                     <Grid Width="80" Height="80">
                         <!-- Profile Image -->
-                        <Ellipse>
-                            <Ellipse.Fill>
-                                <ImageBrush ImageSource="{Binding ProfileImageUri}"
-                                            Stretch="UniformToFill"/>
-                            </Ellipse.Fill>
-                            <Ellipse.Style>
-                                <Style TargetType="Ellipse">
+                        <Border CornerRadius="40" ClipToBounds="True">
+                            <Image Source="{Binding ProfileImageUri, TargetNullValue={x:Null}, FallbackValue={x:Null}}"
+                                   Stretch="UniformToFill"/>
+                            <Border.Style>
+                                <Style TargetType="Border">
                                     <Setter Property="Visibility" Value="Visible"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ProfileImageUri}" Value="{x:Null}">
@@ -61,12 +59,12 @@
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Ellipse.Style>
-                        </Ellipse>
+                            </Border.Style>
+                        </Border>
 
                         <!-- Fallback: Initial Circle -->
                         <Border CornerRadius="40"
-                                Background="{DynamicResource AccentBrush}">
+                                Background="{DynamicResource PrimaryBrush}">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -80,7 +78,7 @@
                             <TextBlock Text="{Binding Initial}"
                                        FontSize="36"
                                        FontWeight="Bold"
-                                       Foreground="White"
+                                       Foreground="{DynamicResource TextOnPrimaryBrush}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"/>
                         </Border>

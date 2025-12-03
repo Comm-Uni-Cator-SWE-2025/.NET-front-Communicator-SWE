@@ -13,15 +13,15 @@
              xmlns:analyticsViews="clr-namespace:Communicator.UX.Analytics.Views;assembly=Communicator.UX.Analytics"
              xmlns:canvasVm="clr-namespace:Communicator.UX.Canvas.ViewModels;assembly=Communicator.UX.Canvas"
              xmlns:canvasViews="clr-namespace:Communicator.UX.Canvas;assembly=Communicator.UX.Canvas"
-             xmlns:converters="clr-namespace:Communicator.Core.UX.Converters;assembly=Communicator.Core">
+             xmlns:converters="clr-namespace:Communicator.UX.Core.Converters;assembly=Communicator.UX.Core">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Theme Resources - LightTheme loaded by default, dynamically switched by ThemeService -->
-                <ResourceDictionary Source="/Communicator.Core;component/UX/Themes/LightTheme.xaml"/>
+                <ResourceDictionary Source="/Communicator.UX.Core;component/Themes/LightTheme.xaml"/>
                 
                 <!-- Control Styles -->
-                <ResourceDictionary Source="/Communicator.Core;component/UX/Styles/ControlStyles.xaml"/>
+                <ResourceDictionary Source="/Communicator.UX.Core;component/Styles/ControlStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Converters -->

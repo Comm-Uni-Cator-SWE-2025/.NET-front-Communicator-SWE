@@ -4,6 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 Temp/
+coveragereports/
+coveragereport/
+
 
 # User-specific files
 *.rsuser
@@ -11,7 +14,6 @@ Temp/
 *.user
 *.userosscache
 *.sln.docstates
-*.env
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -421,5 +423,4 @@ FodyWeavers.xsd
 
 # Application configuration files with sensitive data
 # Protect cloud function URLs and secrets
-**/appsettings.json
 !**/appsettings.example.json

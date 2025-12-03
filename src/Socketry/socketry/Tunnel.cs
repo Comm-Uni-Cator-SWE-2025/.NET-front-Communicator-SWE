@@ -37,9 +37,9 @@ namespace socketry
             }
             CallIdentifier call = new CallIdentifier(2,3);
             TaskCompletionSource<byte[]> resFuture = new TaskCompletionSource<byte[]>();
-            Console.WriteLine("packet adding...");
+            System.Diagnostics.Debug.WriteLine("packet adding...");
             _packets.Add(call, resFuture);
-            Console.WriteLine("packet added...");
+            System.Diagnostics.Debug.WriteLine("packet added...");
         }
 
         public Tunnel(ISocket[] sockets) { 
@@ -54,7 +54,7 @@ namespace socketry
 
         private Packet FeedPacket(Packet packet)
         {
-            Console.WriteLine($"Feeding packet {packet.ToString()}");
+            // System.Diagnostics.Debug.WriteLine($"Feeding packet {packet.ToString()}");
             switch (packet)
             {
                 case Packet.Result resPacket : {
@@ -123,7 +123,7 @@ namespace socketry
                     }
                     catch(ThreadInterruptedException e)
                     {
-                        Console.WriteLine(e.ToString());
+                        System.Diagnostics.Debug.WriteLine(e.ToString());
                     }
                 }
                 CallIdentifier callIdentifier = new CallIdentifier(callId, fnId);
@@ -168,7 +168,7 @@ namespace socketry
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Failed to listen {e.ToString()}");
+                System.Diagnostics.Debug.WriteLine($"Failed to listen {e.ToString()}");
             }
 
             List<Packet> packetsToReturn = new List<Packet>();

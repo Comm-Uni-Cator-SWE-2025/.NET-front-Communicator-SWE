@@ -7,7 +7,7 @@
  *
  * -----------------------------------------------------------------------------
  */
-using Communicator.Core.UX;
+using Communicator.UX.Core;
 
 namespace Communicator.App.ViewModels.Common;
 

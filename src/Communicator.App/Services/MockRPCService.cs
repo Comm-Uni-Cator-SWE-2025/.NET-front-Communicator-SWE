@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 
 namespace Communicator.App.Services;
 

@@ -34,6 +34,14 @@ public sealed partial class VideoSessionView : UserControl
         CalculateVisibleParticipants();
     }
 
+    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is VideoSessionViewModel viewModel)
+        {
+            viewModel.ClearVisibleParticipants();
+        }
+    }
+
     private void UserControl_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         CalculateVisibleParticipants();
@@ -109,7 +117,7 @@ public sealed partial class VideoSessionView : UserControl
             }
         }
 
-        Console.WriteLine($"[View] Visible participants calculated: {string.Join(", ", visibleParticipants)}");
+        System.Diagnostics.Debug.WriteLine($"[MeetingVideoSessionView] Visible participants calculated: {string.Join(", ", visibleParticipants)}");
 
         viewModel.UpdateVisibleParticipants(visibleParticipants);
     }

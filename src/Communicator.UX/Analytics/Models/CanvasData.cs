@@ -1,4 +1,4 @@
-namespace Communicator.UX.Analytics.Models;
+﻿namespace Communicator.UX.Analytics.Models;
 
 /// <summary>
 /// Holds the count of each shape type from a snapshot of the canvas.

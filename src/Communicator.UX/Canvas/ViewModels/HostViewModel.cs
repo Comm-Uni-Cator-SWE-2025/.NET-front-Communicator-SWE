@@ -20,8 +20,9 @@ using Communicator.Cloud.CloudFunction.DataStructures;
 using Communicator.Cloud.CloudFunction.FunctionLibrary;
 using Communicator.Controller.Meeting;
 using Communicator.Controller.Serialization;
-using Communicator.Core.RPC;
-using Communicator.Core.UX.Services;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core.Services;
+using Communicator.Networking;
 using Microsoft.Win32;
 
 namespace Communicator.UX.Canvas.ViewModels;
@@ -57,7 +58,9 @@ public class HostViewModel : CanvasViewModel
 
         // --- Initialize and Start Auto-Save Timer ---
         _autoSaveTimer = new System.Timers.Timer(1 * 30 * 1000);
-        _autoSaveTimer.Elapsed += async (sender, e) => await CloudSave();
+        _autoSaveTimer.Elapsed += async (sender, e) => {
+            await CloudSave();
+        };
         _autoSaveTimer.AutoReset = true;
         _autoSaveTimer.Start();
 
@@ -271,7 +274,7 @@ public class HostViewModel : CanvasViewModel
         }
         else
         {
-            Console.WriteLine($"[Host] Local Action Rejected: {action.ActionType} on {action.NewShape?.ShapeId}");
+            System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Local Action Rejected: {action.ActionType} on {action.NewShape?.ShapeId}");
             RaiseRequestRedraw();
         }
     }
@@ -279,22 +282,43 @@ public class HostViewModel : CanvasViewModel
     /// <summary>
     /// Undo an action locally and broadcast the inverse action to clients.
     /// </summary>
+    /// <summary>
+    /// Undo an action locally and broadcast the inverse action to clients.
+    /// Includes validation to prevent undoing stale states.
+    /// </summary>
     public override void Undo()
     {
+        // 1. Ensure any pending edits are committed so they don't get lost or interfere
         CommitModification();
         SelectedShape = null;
-        CanvasAction? actionToUndo = StateManager.PeekUndo();
-        base.Undo();
 
-        if (actionToUndo != null)
+        // 2. Peek at the action we want to undo (don't remove it yet)
+        CanvasAction? actionToUndo = StateManager.PeekUndo();
+        if (actionToUndo == null) { return; }
+
+        // 3. Calculate the inverse operation (the actual change to be applied)
+        //    e.g., If undoing a 'Create', the inverse is 'Delete'.
+        CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
+
+        // 4. Validate this inverse action against the current state
+        //    This prevents the Host from undoing a shape that has been modified by a client recently.
+        if (ValidateAction(reverseAction))
         {
-            CanvasAction reverseAction = GetInverseAction(actionToUndo, CurrentUserId);
+            // 5. If valid, perform the local undo and broadcast
+            base.Undo(); // Updates local _shapes and StateManager
+
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.UNDO, reverseAction);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
 
             // Broadcast to all clients via Java Backend
             Rpc.Call("canvas:broadcast", data);
+        }
+        else
+        {
+            // 6. Handle conflict (Log it so we know why nothing happened)
+            LogToDesktop($"[HostViewModel] Undo Blocked: Validation failed for shape {reverseAction.NewShape?.ShapeId ?? "N/A"}. Shape may have been modified by another user.");
+            System.Diagnostics.Debug.WriteLine($"[HostViewModel] Undo Blocked: Validation failed.");
         }
     }
 
@@ -304,11 +328,18 @@ public class HostViewModel : CanvasViewModel
     public override void Redo()
     {
         SelectedShape = null;
-        CanvasAction? actionToRedo = StateManager.PeekRedo();
-        base.Redo();
 
-        if (actionToRedo != null)
+        // 1. Peek at the action we want to redo
+        CanvasAction? actionToRedo = StateManager.PeekRedo();
+        if (actionToRedo == null) { return; }
+
+        // 2. Validate the action against the current state
+        //    Ensure the shape is in the expected state (PrevShape) before re-applying changes.
+        if (ValidateAction(actionToRedo))
         {
+            // 3. If valid, perform local redo and broadcast
+            base.Redo(); // Updates local _shapes and StateManager
+
             NetworkMessage msg = new NetworkMessage(NetworkMessageType.REDO, actionToRedo);
             string json = CanvasSerializer.SerializeNetworkMessage(msg);
             byte[] data = DataSerializer.Serialize(json);
@@ -316,8 +347,12 @@ public class HostViewModel : CanvasViewModel
             // Broadcast to all clients via Java Backend
             Rpc.Call("canvas:broadcast", data);
         }
+        else
+        {
+            LogToDesktop($"[HostViewModel] Redo Blocked: Validation failed for shape {actionToRedo.NewShape?.ShapeId ?? "N/A"}");
+            System.Diagnostics.Debug.WriteLine($"[HostViewModel] Redo Blocked: Validation failed.");
+        }
     }
-
     /// <summary>
     /// Restores the canvas from a local file and broadcasts the state to clients.
     /// </summary>
@@ -340,7 +375,7 @@ public class HostViewModel : CanvasViewModel
                 NetworkMessage msg = new NetworkMessage(NetworkMessageType.RESTORE, null, json);
                 string networkJson = CanvasSerializer.SerializeNetworkMessage(msg);
 
-                Console.WriteLine("[Host] Broadcasting RESTORE command...");
+                System.Diagnostics.Debug.WriteLine("[CanvasHostModel] Broadcasting RESTORE command...");
                 byte[] data = DataSerializer.Serialize(networkJson);
 
                 // Broadcast to all clients via Java Backend
@@ -348,7 +383,7 @@ public class HostViewModel : CanvasViewModel
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Host] Failed to restore: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Failed to restore: {ex.Message}");
             }
         }
     }
@@ -359,9 +394,60 @@ public class HostViewModel : CanvasViewModel
     /// <param name="json">The serialized message.</param>
     public void ProcessIncomingMessage(string json)
     {
+        Console.WriteLine("[CanvasHostModel] Processing incoming message...");
+        Console.WriteLine(json);
         NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
+        Console.WriteLine("[CanvasHostModel] Deserialized message:");
+        Console.WriteLine(msg);
         if (msg == null)
         {
+            return;
+        }
+
+        if (msg.MessageType == NetworkMessageType.REQUEST_SHAPES)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(msg.Payload))
+                {
+                    byte[] payloadBytes = Encoding.UTF8.GetBytes(msg.Payload);
+                    ClientNode? replyTo = DataSerializer.Deserialize<ClientNode>(payloadBytes);
+
+                    if (replyTo != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Received shape request from {replyTo.HostName}:{replyTo.Port}");
+
+                        Application.Current.Dispatcher.InvokeAsync(() => {
+                            try
+                            {
+                                // Serialize current shapes
+                                string shapesJson = CanvasSerializer.SerializeShapesDictionary(_shapes);
+
+                                // Wrap in NetworkMessage (RESTORE type) so Client recognizes it
+                                NetworkMessage restoreMsg = new NetworkMessage(NetworkMessageType.RESTORE, null, shapesJson);
+                                string networkMsgJson = CanvasSerializer.SerializeNetworkMessage(restoreMsg);
+
+                                // Create response payload
+                                var response = new {
+                                    target = replyTo,
+                                    data = networkMsgJson
+                                };
+
+                                byte[] responseBytes = DataSerializer.Serialize(response);
+                                Rpc.Call("canvas:sendToClient", responseBytes);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Failed to send shapes to client: {ex.Message}");
+                            }
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Error processing shape request: {ex.Message}");
+            }
             return;
         }
 
@@ -387,7 +473,7 @@ public class HostViewModel : CanvasViewModel
                 }
                 else
                 {
-                    Console.WriteLine($"[Host] Validation Failed for Incoming Action: {action.ActionType}");
+                    System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Validation Failed for Incoming Action: {action.ActionType}");
                 }
             }
         }
@@ -435,7 +521,7 @@ public class HostViewModel : CanvasViewModel
 
                 if (currentHostShape.LastModifiedBy != incomingPrevShape.LastModifiedBy)
                 {
-                    Console.WriteLine($"[Host] Version Mismatch! HostVer: {currentHostShape.LastModifiedBy}, IncomingVer: {incomingPrevShape.LastModifiedBy}");
+                    System.Diagnostics.Debug.WriteLine($"[CanvasHostModel] Version Mismatch! HostVer: {currentHostShape.LastModifiedBy}, IncomingVer: {incomingPrevShape.LastModifiedBy}");
                     return false;
                 }
 

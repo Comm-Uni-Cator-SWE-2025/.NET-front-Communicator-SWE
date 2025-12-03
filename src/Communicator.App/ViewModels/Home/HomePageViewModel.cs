@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Communicator.Controller.Serialization;
 using Communicator.Controller.Meeting;
-using Communicator.Core.RPC;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Communicator.App.ViewModels.Meeting;
 
 namespace Communicator.App.ViewModels.Home;

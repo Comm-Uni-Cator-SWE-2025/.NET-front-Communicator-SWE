@@ -19,10 +19,10 @@ using Communicator.App.ViewModels;
 using Communicator.App.Views;
 using Communicator.Controller;
 using Communicator.Controller.Meeting;
-using Communicator.Core.RPC;
-using Communicator.Core.UX;
-using Communicator.Core.UX.Services;
-using Microsoft.Extensions.Configuration;
+using Communicator.Controller.Logging;
+using Communicator.Controller.RPC;
+using Communicator.UX.Core;
+using Communicator.UX.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Communicator.App;
@@ -34,6 +34,9 @@ public sealed partial class MainApp : Application
 
     public MainApp()
     {
+        // Load environment variables from .env file at solution root (or any parent)
+        EnvLoader.Load();
+
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
     }
@@ -41,9 +44,6 @@ public sealed partial class MainApp : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         ArgumentNullException.ThrowIfNull(e);
-
-        // Load environment variables from .env file
-        DotNetEnv.Env.TraversePath().Load();
 
         base.OnStartup(e);
 
@@ -65,29 +65,31 @@ public sealed partial class MainApp : Application
         // Subscribe to UserLoggedIn to sync theme with cloud
         IAuthenticationService authService = Services.GetRequiredService<IAuthenticationService>();
         authService.UserLoggedIn += (s, args) => {
-            Console.WriteLine($"[App] UserLoggedIn event fired for: {args.User?.Email}");
             if (args.User != null && !string.IsNullOrEmpty(args.User.Email))
             {
                 themeService.SetUser(args.User.Email);
             }
         };
 
+        // Get Logger
+        ILoggerFactory loggerFactory = Services.GetRequiredService<ILoggerFactory>();
+        ILogger logger = loggerFactory.GetLogger("UX");
+
         // Subscribe to RPC methods BEFORE starting connection (like Java)
         IRpcEventService rpcEventService = Services.GetRequiredService<IRpcEventService>();
-        SubscribeRpcMethods(rpc, rpcEventService);
+        SubscribeRpcMethods(rpc, rpcEventService, logger);
 
         // Start RPC connection in background thread (like Java does)
         // This allows UI to appear while waiting for backend to connect
 
         // Debug args
         string argsStr = string.Join(", ", e.Args);
-        System.Diagnostics.Debug.WriteLine($"[App] Startup Args: {argsStr}");
 
         if (e.Args.Contains("--test-mode"))
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("[App] Test mode detected. Skipping RPC connection.");
+                logger.LogInfo("[App] Test mode detected. Skipping RPC connection.");
 
                 // Resolve services
                 MainViewModel mainViewModel = Services.GetRequiredService<MainViewModel>();
@@ -101,9 +103,9 @@ public sealed partial class MainApp : Application
 
                 // Create dummy user
                 UserProfile dummyUser = new UserProfile(
-                    "test@example.com", 
-                    "Test User", 
-                    ParticipantRole.STUDENT, 
+                    "test@example.com",
+                    "Test User",
+                    ParticipantRole.STUDENT,
                     new Uri("https://via.placeholder.com/150"));
 
                 // Auto-login
@@ -120,38 +122,33 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
+                logger.LogError($"Test Mode Error: {ex.Message}", ex);
                 MessageBox.Show($"Test Mode Error: {ex.Message}\n{ex.StackTrace}", "Test Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             }
         }
         else
         {
-            StartRpcConnectionInBackground(rpc, e.Args);
+            StartRpcConnectionInBackground(rpc, e.Args, logger);
         }
     }
 
     /// <summary>
     /// Subscribes to RPC methods that the backend may call.
-    /// Must be called BEFORE Connect(), matching Java frontend pattern.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "RPC callbacks must not crash the app")]
-    private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService)
+    private static void SubscribeRpcMethods(IRPC rpc, IRpcEventService rpcEventService, ILogger logger)
     {
-        System.Diagnostics.Debug.WriteLine("[App] Subscribing to RPC methods...");
-
-
 
         // Subscribe to UPDATE_UI to receive video/screen frames
         rpc.Subscribe(ScreenShare.Utils.UPDATE_UI, (byte[] data) => {
             try
             {
-                Console.WriteLine($"[App] UPDATE_UI Received UPDATE_UI with {data.Length} bytes");
-                System.Diagnostics.Debug.WriteLine("UPDATE UI : Triggering FrameReceived event");
                 rpcEventService.TriggerFrameReceived(data);
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in UPDATE_UI: {ex.Message}");
+                logger.LogError($"[App] Error in UPDATE_UI: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -164,7 +161,7 @@ public sealed partial class MainApp : Application
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in STOP_SHARE: {ex.Message}");
+                logger.LogError($"[App] Error in STOP_SHARE: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -174,20 +171,18 @@ public sealed partial class MainApp : Application
             try
             {
                 string json = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] Participant list updated: {json}");
-
                 rpcEventService.TriggerParticipantsListUpdated(json);
 
                 return Array.Empty<byte>();
             }
             catch (ArgumentException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/updateParticipants: {ex.Message}");
+                logger.LogError($"[App] Error in core/updateParticipants: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
             catch (System.Text.Json.JsonException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error parsing JSON in core/updateParticipants: {ex.Message}");
+                logger.LogError($"[App] Error parsing JSON in core/updateParticipants: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
         });
@@ -197,13 +192,12 @@ public sealed partial class MainApp : Application
             try
             {
                 string message = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] Logout received: {message}");
                 rpcEventService.TriggerLogout(message);
                 return Array.Empty<byte>();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/logout: {ex.Message}");
+                logger.LogError($"[App] Error in core/logout: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
         });
@@ -213,13 +207,12 @@ public sealed partial class MainApp : Application
             try
             {
                 string message = System.Text.Encoding.UTF8.GetString(data);
-                System.Diagnostics.Debug.WriteLine($"[App] EndMeeting received: {message}");
                 rpcEventService.TriggerEndMeeting(message);
                 return Array.Empty<byte>();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in core/endMeeting: {ex.Message}");
+                logger.LogError($"[App] Error in core/endMeeting: {ex.Message}", ex);
                 return Array.Empty<byte>();
             }
         });
@@ -235,7 +228,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:new-message: {ex.Message}");
+                logger.LogError($"[App] Error in chat:new-message: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -247,7 +240,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-metadata-received: {ex.Message}");
+                logger.LogError($"[App] Error in chat:file-metadata-received: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -259,7 +252,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-saved-success: {ex.Message}");
+                logger.LogError($"[App] Error in chat:file-saved-success: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -271,7 +264,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:file-saved-error: {ex.Message}");
+                logger.LogError($"[App] Error in chat:file-saved-error: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -283,7 +276,7 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App] Error in chat:message-deleted: {ex.Message}");
+                logger.LogError($"[App] Error in chat:message-deleted: {ex.Message}", ex);
             }
             return Array.Empty<byte>();
         });
@@ -297,12 +290,21 @@ public sealed partial class MainApp : Application
             }
             catch (Exception ex)
             {
+                logger.LogError($"[App] Error in canvas:update: {ex.Message}", ex);
+            }
+            return Array.Empty<byte>();
+        });
+        rpc.Subscribe("controller:canvasAnalytics", (byte[] data) => {
+            try
+            {
+                rpcEventService.TriggerCanvasAnalyticsUpdateReceived(data);
+            }
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"[App] Error in canvas:update: {ex.Message}");
             }
             return Array.Empty<byte>();
         });
-
-        System.Diagnostics.Debug.WriteLine("[App] RPC method subscriptions complete");
     }
 
     /// <summary>
@@ -310,9 +312,9 @@ public sealed partial class MainApp : Application
     /// This matches Java frontend pattern where connect() is called and returns a Thread.
     /// The UI can appear while we wait for backend to connect.
     /// </summary>
-    private static void StartRpcConnectionInBackground(IRPC rpc, string[] args)
+    private static void StartRpcConnectionInBackground(IRPC rpc, string[] args, ILogger logger)
     {
-        System.Diagnostics.Debug.WriteLine("[App] Starting RPC connection in background thread...");
+        logger.LogInfo("[App] Starting RPC connection in background thread...");
 
         // Show loading screen
         var loadingViewModel = new ViewModels.Common.LoadingViewModel { Message = "Connecting to backend..." };
@@ -329,13 +331,13 @@ public sealed partial class MainApp : Application
                     portNumber = parsedPort;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[App] RPC thread: Connecting to port {portNumber}...");
+                logger.LogInfo($"[App] RPC thread: Connecting to port {portNumber}...");
 
                 // This will BLOCK until backend connects and completes handshake
                 // Just like Java: new SocketryServer(portNumber, methods)
                 Thread rpcThread = rpc.Connect(portNumber);
 
-                System.Diagnostics.Debug.WriteLine("[App] RPC thread: Backend connected, server running");
+                logger.LogInfo("[App] RPC thread: Backend connected, server running");
 
                 // Connection successful, switch to MainView on UI thread
                 Application.Current?.Dispatcher.Invoke(() => {
@@ -355,19 +357,19 @@ public sealed partial class MainApp : Application
             }
             catch (System.Net.Sockets.SocketException ex)
             {
-                HandleRpcConnectionError(ex, loadingViewModel, loadingView);
+                HandleRpcConnectionError(ex, loadingViewModel, loadingView, logger);
             }
             catch (System.IO.IOException ex)
             {
-                HandleRpcConnectionError(ex, loadingViewModel, loadingView);
+                HandleRpcConnectionError(ex, loadingViewModel, loadingView, logger);
             }
         });
     }
 
-    private static void HandleRpcConnectionError(Exception ex, ViewModels.Common.LoadingViewModel loadingViewModel, Views.Common.LoadingView loadingView)
+    private static void HandleRpcConnectionError(Exception ex, ViewModels.Common.LoadingViewModel loadingViewModel, Views.Common.LoadingView loadingView, ILogger logger)
     {
-        System.Diagnostics.Debug.WriteLine($"[App] RPC thread error: {ex.Message}");
-        Console.Error.WriteLine($"[App] RPC connection failed: {ex}");
+        logger.LogError($"[App] RPC thread error: {ex.Message}", ex);
+        logger.LogError($"[App] RPC connection failed: {ex}");
 
         // Show error on UI thread
         Application.Current?.Dispatcher.Invoke(() => {
@@ -395,12 +397,10 @@ public sealed partial class MainApp : Application
     /// </summary>
     internal static void ConfigureServices(IServiceCollection services, bool isTestMode = false)
     {
-        // Register Configuration (loads appsettings.json)
-        IConfiguration configuration = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-        services.AddSingleton<IConfiguration>(configuration);
+        // Environment variables are already loaded by EnvLoader in MainApp constructor.
+
+        // Register Communicator.Controller services (Logger)
+        services.AddControllerServices();
 
         // Register Communicator.Core.UX services (Toast, Theme)
         services.AddUXCoreServices();
@@ -473,6 +473,19 @@ public sealed partial class MainApp : Application
 
     private static void ReportException(Exception exception)
     {
+        try
+        {
+            ILoggerFactory? factory = Services?.GetService<ILoggerFactory>();
+            ILogger? logger = factory?.GetLogger("App");
+            logger?.LogError("Unhandled exception", exception);
+        }
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch (Exception)
+#pragma warning restore CA1031 // Do not catch general exception types
+        {
+            // Ignore logging errors during crash reporting
+        }
+
         Console.Error.WriteLine(exception);
         MessageBox.Show(exception.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
     }

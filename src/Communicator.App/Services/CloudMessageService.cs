@@ -52,7 +52,6 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
             string negotiateUrl =
                 $"{_cloudConfig.NegotiateUrl}?userId={Uri.EscapeDataString(username)}";
 
-            Console.WriteLine($"[CloudMessage] NEGOTIATE: Calling: {negotiateUrl}");
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] NEGOTIATE: Calling: {negotiateUrl}");
 
             string negotiateJson =
@@ -103,7 +102,6 @@ public sealed class CloudMessageService : ICloudMessageService, IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[CloudMessage] Connect ERROR: {ex}");
             System.Diagnostics.Debug.WriteLine($"[CloudMessage] Connect ERROR: {ex}");
             throw;
         }

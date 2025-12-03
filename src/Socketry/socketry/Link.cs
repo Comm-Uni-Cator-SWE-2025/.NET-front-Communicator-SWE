@@ -87,7 +87,7 @@ namespace socketry
         {
             bool initialState = _clientChannel.IsBlocking();
             int dataRead = ReadAndParsePackets();
-            Console.WriteLine("Read packets...");
+            // Console.WriteLine("Read packets...");
             _clientChannel.ConfigureBlocking(false);
 
             while (dataRead > 0)
@@ -112,7 +112,7 @@ namespace socketry
         int ReadAndParsePackets()
         {
             MemoryStream buffer = ReadData();
-            Console.WriteLine("Read from socket...");
+            // Console.WriteLine("Read from socket...");
             int remaining = (int)(buffer.Length - buffer.Position);
             byte[] data = new byte[remaining];
             buffer.Read(data,0,remaining);
@@ -163,7 +163,7 @@ namespace socketry
                 return null;
             }
             Packet packet = _packets.TryDequeue(out var p) ? p : null;
-            Console.WriteLine($"packet {packet.ToString()}");
+            // Console.WriteLine($"packet {packet.ToString()}");
             return packet;
         }
 
@@ -178,12 +178,11 @@ namespace socketry
             writer.Write((byte)(packetData.Length & 0xFF));
             writer.Write(packetData);
             socketData.Position = 0;
-            Console.WriteLine($"Sent packet {socketData.Length}");
+            // Console.WriteLine($"Sent packet {socketData.Length}");
             if (_clientChannel != null)
             {
                 try
                 {
-                    Console.WriteLine($"Writing packet of length {socketData.Length} to client channel.");
                     _clientChannel.Write(socketData);
                 }
                 catch (IOException e)

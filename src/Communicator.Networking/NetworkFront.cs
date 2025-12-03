@@ -4,7 +4,7 @@
 
 using System.Text;
 using System.Net;
-using Communicator.Core.RPC;
+using Communicator.Controller.RPC;
 
 namespace Communicator.Networking;
 public class NetworkFront : IController, INetworking
@@ -75,7 +75,7 @@ public class NetworkFront : IController, INetworking
             }
             else
             {
-                Console.WriteLine($"[NetworkFront] Received data for module {moduleId} but no listener subscribed.");
+                System.Diagnostics.Debug.WriteLine($"[NetworkFront] Received data for module {moduleId} but no listener subscribed.");
             }
             return new byte[0];
         });
@@ -140,7 +140,7 @@ public class NetworkFront : IController, INetworking
 
     public void CloseNetworking()
     {
-        Console.WriteLine("Closing Networking in front...");
+        System.Diagnostics.Debug.WriteLine("Closing Networking in front...");
         _moduleRpc.Call("networkRPCCloseNetworking", new byte[0]);
     }
 
