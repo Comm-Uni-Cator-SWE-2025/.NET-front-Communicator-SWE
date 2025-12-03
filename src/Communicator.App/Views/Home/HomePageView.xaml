@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
-             xmlns:analytics="clr-namespace:Communicator.UX.Analytics.Views;assembly=Communicator.UX.Analytics"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              Background="{DynamicResource AppBackgroundBrush}">
@@ -112,16 +111,11 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="32"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Analytics Dashboard (Left) -->
-            <analytics:MeetAnalyticsView/>
-
-            <!-- Clock and Calendar (Right) -->
-            <StackPanel Grid.Column="2" Width="340">
-                <!-- Analog Clock -->
-                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="20" Margin="0,0,0,24">
+            <!-- Analog Clock (Left) -->
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="20" VerticalAlignment="Top">
                     <Border.Effect>
                         <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
                     </Border.Effect>
@@ -163,8 +157,8 @@
                     </Viewbox>
                 </Border>
 
-                <!-- Calendar -->
-                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="10">
+                <!-- Calendar (Right) -->
+                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="20" Padding="10" VerticalAlignment="Top">
                     <Border.Effect>
                         <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="20" ShadowDepth="0"/>
                     </Border.Effect>
@@ -384,7 +378,6 @@
                         </Calendar.CalendarItemStyle>
                     </Calendar>
                 </Border>
-            </StackPanel>
         </Grid>
     </Grid>
     </ScrollViewer>
