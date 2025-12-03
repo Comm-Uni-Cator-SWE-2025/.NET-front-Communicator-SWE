@@ -76,6 +76,7 @@ public class MessageSignalRTests
 
         Assert.NotNull(result.SignalRMessage);
         Assert.Equal("ReceiveDoubt", result.SignalRMessage.Target);
+        Assert.NotNull(result.SignalRMessage.Arguments);
         Assert.Single(result.SignalRMessage.Arguments);
         Assert.Equal("Test Doubt", result.SignalRMessage.Arguments[0]);
         Assert.Equal("Test123", result.SignalRMessage.GroupName);
@@ -113,11 +114,12 @@ public class MessageSignalRTests
         _mockRequest.Setup(r => r.Query).Returns(query);
 
         MessageResponse result = await _function.Run(_mockRequest.Object);
-
         Assert.NotNull(result.SignalRMessage);
         Assert.Equal("ReceiveDoubt", result.SignalRMessage.Target);
+        Assert.NotNull(result.SignalRMessage.Arguments);
         Assert.Single(result.SignalRMessage.Arguments);
         Assert.Equal("New Doubt Raised!", result.SignalRMessage.Arguments[0]);
+        Assert.Equal("Test123", result.SignalRMessage.GroupName);
         Assert.Equal("Test123", result.SignalRMessage.GroupName);
 
         Assert.NotNull(result.HttpResponse);

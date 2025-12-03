@@ -113,8 +113,8 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <icons:Icon IconName="message-square" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock Text="AI Messages" Style="{StaticResource AnalyticsTitleStyle}"/>
+                        <icons:Icon IconName="list-checks" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
+                        <TextBlock Text="Action Items" Style="{StaticResource AnalyticsTitleStyle}"/>
                     </StackPanel>
                     
                     <ListBox x:Name="AI_Message" 

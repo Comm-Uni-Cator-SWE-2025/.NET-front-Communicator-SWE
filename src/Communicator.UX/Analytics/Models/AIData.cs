@@ -11,11 +11,26 @@ public class AIData
     /// The timestamp of the data point.
     /// </summary>
     [JsonPropertyName("time")]
-    public DateTime Time { get; set; }
+    public string Time { get; set; } = string.Empty;
 
     /// <summary>
     /// The sentiment value from the API (mapped to "sentiment").
     /// </summary>
     [JsonPropertyName("sentiment")]
     public double Value { get; set; }
+
+    /// <summary>
+    /// Gets the formatted time label for display (e.g., "10:01").
+    /// </summary>
+    [JsonIgnore]
+    public string TimeLabel
+    {
+        get {
+            if (DateTime.TryParse(Time, out DateTime dt))
+            {
+                return dt.ToString("HH:mm");
+            }
+            return Time;
+        }
+    }
 }

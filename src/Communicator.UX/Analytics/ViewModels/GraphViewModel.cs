@@ -11,7 +11,7 @@ namespace Communicator.UX.Analytics.ViewModels;
 
 /// <summary>
 /// ViewModel responsible for managing the real-time sentiment line graph.
-/// Supports dynamic scrolling and time-window visualization.
+/// Supports dynamic scrolling and time-window visualization with time labels.
 /// </summary>
 public class GraphViewModel : ObservableObject
 {
@@ -19,6 +19,11 @@ public class GraphViewModel : ObservableObject
     /// Collection of time-series points used by the sentiment line chart.
     /// </summary>
     public ObservableCollection<ObservablePoint> Points { get; } = new();
+
+    /// <summary>
+    /// Collection of time labels corresponding to each point index.
+    /// </summary>
+    private readonly List<string> _timeLabels = new();
 
     /// <summary>Chart series rendered on the line graph.</summary>
     public ISeries[] Series { get; }
@@ -30,9 +35,9 @@ public class GraphViewModel : ObservableObject
     public Axis[] YAxes { get; }
 
     /// <summary>
-    /// Number of seconds visible in the scrolling chart window.
+    /// Number of points visible in the scrolling chart window.
     /// </summary>
-    public double WindowSeconds { get; set; } = 60;
+    public int WindowSize { get; set; } = 10;
 
     /// <summary>
     /// Initializes the sentiment graph, setting up series and axes.
@@ -55,23 +60,31 @@ public class GraphViewModel : ObservableObject
         {
             new Axis
             {
-                Name = "Time (s)",
+                Name = "Time",
                 NamePaint = new SolidColorPaint(SKColors.White),
                 NameTextSize = 14,
                 TextSize = 12,
 
                 // Initial time window
                 MinLimit = 0,
-                MaxLimit = WindowSeconds,
+                MaxLimit = WindowSize,
 
                 LabelsPaint = new SolidColorPaint(SKColors.LightGray),
                 TicksPaint = new SolidColorPaint(SKColors.Gray),
                 SeparatorsPaint = new SolidColorPaint(new SKColor(80, 80, 80)),
 
-                // Format numeric labels
-                Labeler = v => v.ToString("0"),
+                // Format labels using time strings
+                Labeler = v =>
+                {
+                    int index = (int)Math.Round(v);
+                    if (index >= 0 && index < _timeLabels.Count)
+                    {
+                        return _timeLabels[index];
+                    }
+                    return string.Empty;
+                },
 
-                MinStep = 5
+                MinStep = 1
             }
         };
 
@@ -87,15 +100,15 @@ public class GraphViewModel : ObservableObject
                 SeparatorsPaint = new SolidColorPaint(new SKColor(80, 80, 80))
             }
         };
-        
+
         ApplyTheme();
     }
 
     public void ApplyTheme()
     {
-        var textPrimary = GetThemeColor("TextPrimaryColor");
-        var textSecondary = GetThemeColor("TextSecondaryColor");
-        var borderColor = GetThemeColor("BorderColor");
+        SKColor textPrimary = GetThemeColor("TextPrimaryColor");
+        SKColor textSecondary = GetThemeColor("TextSecondaryColor");
+        SKColor borderColor = GetThemeColor("BorderColor");
 
         if (XAxes != null && XAxes.Length > 0)
         {
@@ -122,32 +135,65 @@ public class GraphViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Adds a new data point using time value <paramref name="t"/> and sentiment <paramref name="val"/>.
-    /// Automatically adjusts the X-axis window when the data exceeds the visible duration.
+    /// Adds a new data point with a time label.
+    /// </summary>
+    /// <param name="timeLabel">The time label to display (e.g., "10:01")</param>
+    /// <param name="sentiment">The sentiment value</param>
+    public void AddPointWithLabel(string timeLabel, double sentiment)
+    {
+        int index = Points.Count;
+        _timeLabels.Add(timeLabel);
+        Points.Add(new ObservablePoint(index, sentiment));
+
+        // Adjust window to show latest points
+        if (index >= WindowSize)
+        {
+            XAxes[0].MinLimit = index - WindowSize + 1;
+            XAxes[0].MaxLimit = index + 1;
+        }
+        else
+        {
+            XAxes[0].MinLimit = 0;
+            XAxes[0].MaxLimit = Math.Max(WindowSize, index + 1);
+        }
+    }
+
+    /// <summary>
+    /// Adds a new data point using time value and sentiment (legacy numeric method).
     /// </summary>
     public void AddPoint(double t, double val)
     {
         Points.Add(new ObservablePoint(t, val));
 
-        if (t > WindowSeconds)
+        if (t > WindowSize)
         {
-            XAxes[0].MinLimit = t - WindowSeconds;
+            XAxes[0].MinLimit = t - WindowSize;
             XAxes[0].MaxLimit = t;
         }
     }
 
     /// <summary>
     /// Adds a new data point (alternate method).
-    /// Automatically scrolls when <paramref name="x"/> exceeds 60 seconds.
     /// </summary>
     public void Add(double x, double y)
     {
         Points.Add(new ObservablePoint(x, y));
 
-        if (x > WindowSeconds)
+        if (x > WindowSize)
         {
-            XAxes[0].MinLimit = x - WindowSeconds;
+            XAxes[0].MinLimit = x - WindowSize;
             XAxes[0].MaxLimit = x;
         }
+    }
+
+    /// <summary>
+    /// Clears all data points and time labels.
+    /// </summary>
+    public void Clear()
+    {
+        Points.Clear();
+        _timeLabels.Clear();
+        XAxes[0].MinLimit = 0;
+        XAxes[0].MaxLimit = WindowSize;
     }
 }
