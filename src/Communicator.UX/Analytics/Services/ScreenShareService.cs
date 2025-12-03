@@ -39,24 +39,24 @@ public class ScreenShareService
     {
         if (_rpc == null)
         {
-            System.Diagnostics.Debug.WriteLine("ScreenShare Service not initialized - RPC not available");
+            // System.Diagnostics.Debug.WriteLine("ScreenShare Service not initialized - RPC not available");
             return new List<ScreenVideoTelemetryModel>();
         }
 
         try
         {
-            System.Diagnostics.Debug.WriteLine("Fetching Screen Telemetry from Core Module...");
+            // System.Diagnostics.Debug.WriteLine("Fetching Screen Telemetry from Core Module...");
             byte[] response = await _rpc.Call("core/ScreenTelemetry", Array.Empty<byte>()).ConfigureAwait(false);
 
             if (response == null || response.Length == 0)
             {
-                System.Diagnostics.Debug.WriteLine("No screen telemetry received from core");
+                // System.Diagnostics.Debug.WriteLine("No screen telemetry received from core");
                 return new List<ScreenVideoTelemetryModel>();
             }
 
             // Deserialize the response - it's a List<ScreenVideoTelemetryModel>
             List<ScreenVideoTelemetryModel> telemetryList = DataSerializer.Deserialize<List<ScreenVideoTelemetryModel>>(response);
-            System.Diagnostics.Debug.WriteLine($"Received {telemetryList.Count} telemetry entries");
+            // System.Diagnostics.Debug.WriteLine($"Received {telemetryList.Count} telemetry entries");
 
             List<ScreenVideoTelemetryModel> newEntries = new();
 
@@ -74,7 +74,7 @@ public class ScreenShareService
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"Added {newEntries.Count} new telemetry entries");
+            // System.Diagnostics.Debug.WriteLine($"Added {newEntries.Count} new telemetry entries");
             return newEntries;
         }
         catch (Exception ex)

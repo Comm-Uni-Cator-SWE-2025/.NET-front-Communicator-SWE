@@ -1,6 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Text;
 using Communicator.Controller.RPC;
+using Communicator.Controller.Meeting;
+using Communicator.Controller.Serialization;
 using Communicator.UX.Analytics.Models;
 using Communicator.UX.Analytics.Services;
 using Communicator.UX.Core;
@@ -28,6 +31,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     private readonly CanvasDataService _canvasService = new();
     private readonly ScreenShareService? _screenService;
     private readonly IThemeService? _themeService;
+    private readonly IRpcEventService? _rpcEventService;
 
     // 
     // TIMERS
@@ -40,6 +44,47 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     // STATE
     // 
     private int _canvasIndex = 1;
+    private MeetStats _meetStats = new()
+    {
+        UsersPresent = 1, // Default to 1 (self)
+        UsersLoggedOut = 0,
+        PreviousSummary = "Meeting in progress..."
+    };
+
+    private bool _hasAIData;
+    private bool _hasCanvasData;
+    private bool _hasActionItems;
+    private bool _hasScreenData;
+
+    public bool HasAIData
+    {
+        get => _hasAIData;
+        set => SetProperty(ref _hasAIData, value);
+    }
+
+    public bool HasCanvasData
+    {
+        get => _hasCanvasData;
+        set => SetProperty(ref _hasCanvasData, value);
+    }
+
+    public bool HasActionItems
+    {
+        get => _hasActionItems;
+        set => SetProperty(ref _hasActionItems, value);
+    }
+
+    public bool HasScreenData
+    {
+        get => _hasScreenData;
+        set => SetProperty(ref _hasScreenData, value);
+    }
+
+    public MeetStats MeetStats
+    {
+        get => _meetStats;
+        set => SetProperty(ref _meetStats, value);
+    }
 
     public ObservableCollection<string> MessageList { get; } = new();
 
@@ -49,6 +94,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     public AnalyticsViewModel(IThemeService? themeService = null, IRpcEventService? rpcEventService = null, IRPC? rpc = null)
     {
         _themeService = themeService;
+        _rpcEventService = rpcEventService;
 
         // Initialize services with RPC if available
         if (rpc != null)
@@ -63,9 +109,10 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
             _themeService.ThemeChanged += OnThemeChanged;
         }
 
-        if (rpcEventService != null)
+        if (_rpcEventService != null)
         {
             System.Diagnostics.Debug.WriteLine("RPC event service registeration happens");
+            _rpcEventService.ParticipantsListUpdated += OnParticipantsListUpdated;
         }
 
         // AI Graph Timer (1 minute) - calls core/AiSentiment
@@ -106,11 +153,40 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         Graph4_Screen.ApplyTheme();
     }
 
+    private void OnParticipantsListUpdated(object? sender, RpcStringEventArgs e)
+    {
+        try
+        {
+            var participantsMap = DataSerializer.Deserialize<Dictionary<string, UserProfile>>(Encoding.UTF8.GetBytes(e.Value));
+            if (participantsMap != null)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MeetStats = new MeetStats 
+                    { 
+                        UsersPresent = participantsMap.Count,
+                        UsersLoggedOut = _meetStats.UsersLoggedOut,
+                        PreviousSummary = _meetStats.PreviousSummary
+                    };
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error parsing participants list in Analytics: {ex.Message}");
+        }
+    }
+
     public void Dispose()
     {
         if (_themeService != null)
         {
             _themeService.ThemeChanged -= OnThemeChanged;
+        }
+
+        if (_rpcEventService != null)
+        {
+            _rpcEventService.ParticipantsListUpdated -= OnParticipantsListUpdated;
         }
 
         CanvasDataService.CanvasDataChanged -= OnCanvasDataReceived;
@@ -154,6 +230,11 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
                 });
             }
 
+            // Check if we have meaningful data (not all zeros)
+            Application.Current.Dispatcher.Invoke(() => {
+                HasAIData = Graph1_AI.Points.Any(p => p.Y != 0);
+            });
+
             System.Diagnostics.Debug.WriteLine($"Added {newData.Count} new sentiment points to graph");
         }
         catch (Exception ex)
@@ -170,6 +251,9 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         Application.Current.Dispatcher.Invoke(() => {
             Graph2_Canvas.AddSnapshot(data, $"T{_canvasIndex}");
             _canvasIndex++;
+            // Check if we have any canvas activity
+            HasCanvasData = data.FreeHand > 0 || data.StraightLine > 0 || 
+                           data.Rectangle > 0 || data.Ellipse > 0 || data.Triangle > 0;
         });
     }
 
@@ -205,6 +289,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
                         MessageList.Add(m.Message);
                     }
                 }
+                HasActionItems = MessageList.Count > 0;
             });
 
             System.Diagnostics.Debug.WriteLine($"Added {newMessages.Count} new action items");
@@ -253,6 +338,8 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
                         Graph4_Screen.AddPointWithLabel(timeLabel, fps);
                     }
                 }
+                // Check if we have meaningful FPS data
+                HasScreenData = Graph4_Screen.Points.Any(p => p.Y != 0);
             });
 
             System.Diagnostics.Debug.WriteLine($"Added telemetry from {newTelemetry.Count} entries");

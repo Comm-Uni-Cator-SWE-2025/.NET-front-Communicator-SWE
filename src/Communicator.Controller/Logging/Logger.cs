@@ -47,6 +47,6 @@ public class Logger : ILogger
     /// <inheritdoc />
     public void LogDebug(string message)
     {
-        System.Diagnostics.Debug.WriteLine($"[DEBUG] {message}");
+        // System.Diagnostics.Debug.WriteLine($"[] {message}");
     }
 }

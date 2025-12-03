@@ -3,144 +3,171 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:wpf="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:icons="clr-namespace:Communicator.Icons;assembly=Communicator.Icons"
+             xmlns:converters="clr-namespace:Communicator.UX.Core.Converters;assembly=Communicator.UX.Core"
              Background="{DynamicResource AppBackgroundBrush}">
 
     <UserControl.Resources>
-        <Style x:Key="AnalyticsCardStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="Margin" Value="8"/>
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.1" Color="Black"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="AnalyticsTitleStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="16"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
         </Style>
+        
+        <Style x:Key="PlaceholderStyle" TargetType="StackPanel">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid Margin="16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <StackPanel Margin="24">
+            
+            <!-- HEADER: Active Participants -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <icons:Icon IconName="users" IconSize="28" Foreground="{DynamicResource PrimaryBrush}"/>
+                    <TextBlock Text="Active Participants" FontSize="20" FontWeight="SemiBold" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="300"/>
-                <ColumnDefinition Width="*" MinWidth="300"/>
-            </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding MeetStats.UsersPresent}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                    <TextBlock Text=" users" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Bottom" Margin="4,0,0,6"/>
+                </StackPanel>
+            </Grid>
+            
+            <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,0,0,24"/>
 
-            <!-- GRAPH 1: AI Analysis -->
-            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource AnalyticsCardStyle}" Height="300">
-                <Grid>
+            <!-- 2x2 GRID LAYOUT -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="280"/>
+                    <RowDefinition Height="24"/>
+                    <RowDefinition Height="280"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- AI ANALYSIS -->
+                <Grid Grid.Row="0" Grid.Column="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <icons:Icon IconName="activity" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock Text="AI Analysis" Style="{StaticResource AnalyticsTitleStyle}"/>
+                        <icons:Icon IconName="activity" IconSize="18" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="AI Sentiment Analysis" Style="{StaticResource SectionTitleStyle}"/>
                     </StackPanel>
 
-                    <wpf:CartesianChart
-                        Grid.Row="1"
+                    <!-- Chart when data exists -->
+                    <wpf:CartesianChart Grid.Row="1"
+                        Visibility="{Binding HasAIData, Converter={StaticResource BoolToVis}}"
                         Series="{Binding Graph1_AI.Series}"
                         XAxes="{Binding Graph1_AI.XAxes}"
                         YAxes="{Binding Graph1_AI.YAxes}"
                         ZoomMode="None"/>
+                    
+                    <!-- Placeholder when no data -->
+                    <StackPanel Grid.Row="1" Style="{StaticResource PlaceholderStyle}"
+                                Visibility="{Binding HasAIData, Converter={StaticResource BoolToVis}, ConverterParameter=True}">
+                        <icons:Icon IconName="chart-line" IconSize="48" Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No sentiment data yet" FontSize="14" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                        <TextBlock Text="Data will appear as meeting progresses" FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
                 </Grid>
-            </Border>
 
-            <!-- GRAPH 2: Canvas Activity -->
-            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource AnalyticsCardStyle}" Height="300">
-                <Grid>
+                <!-- CANVAS ACTIVITY -->
+                <Grid Grid.Row="0" Grid.Column="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <icons:Icon IconName="pen-tool" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock Text="Canvas Activity" Style="{StaticResource AnalyticsTitleStyle}"/>
+                        <icons:Icon IconName="pen-tool" IconSize="18" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="Canvas Activity" Style="{StaticResource SectionTitleStyle}"/>
                     </StackPanel>
 
-                    <wpf:CartesianChart
-                        Grid.Row="1"
-                        Series="{Binding Graph2_Canvas.Series}"
-                        XAxes="{Binding Graph2_Canvas.XAxes}"
-                        YAxes="{Binding Graph2_Canvas.YAxes}"/>
+                    <!-- Chart when data exists -->
+                    <Grid Grid.Row="1" Visibility="{Binding HasCanvasData, Converter={StaticResource BoolToVis}}">
+                        <wpf:CartesianChart
+                            Series="{Binding Graph2_Canvas.Series}"
+                            XAxes="{Binding Graph2_Canvas.XAxes}"
+                            YAxes="{Binding Graph2_Canvas.YAxes}"/>
 
-                    <!-- Legend -->
-                    <Border Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="8"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Margin="0,0,10,0"
-                            Opacity="0.9">
-                        <StackPanel>
-                            <TextBlock Text="Legend" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                            <TextBlock Text="■ FreeHand" FontSize="11" Foreground="LightSkyBlue"/>
-                            <TextBlock Text="■ Straight Line" FontSize="11" Foreground="Brown"/>
-                            <TextBlock Text="■ Rectangle" FontSize="11" Foreground="Green"/>
-                            <TextBlock Text="■ Ellipse" FontSize="11" Foreground="Blue"/>
-                            <TextBlock Text="■ Triangle" FontSize="11" Foreground="BlueViolet"/>
+                        <!-- Legend -->
+                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0">
+                            <TextBlock Text="■ FreeHand" FontSize="10" Foreground="LightSkyBlue"/>
+                            <TextBlock Text="■ Line" FontSize="10" Foreground="Brown"/>
+                            <TextBlock Text="■ Rect" FontSize="10" Foreground="Green"/>
+                            <TextBlock Text="■ Ellipse" FontSize="10" Foreground="Blue"/>
+                            <TextBlock Text="■ Triangle" FontSize="10" Foreground="BlueViolet"/>
                         </StackPanel>
-                    </Border>
+                    </Grid>
+                    
+                    <!-- Placeholder when no data -->
+                    <StackPanel Grid.Row="1" Style="{StaticResource PlaceholderStyle}"
+                                Visibility="{Binding HasCanvasData, Converter={StaticResource BoolToVis}, ConverterParameter=True}">
+                        <icons:Icon IconName="pencil-off" IconSize="48" Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No canvas activity" FontSize="14" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                        <TextBlock Text="Draw on the whiteboard to see stats" FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
                 </Grid>
-            </Border>
 
-            <!-- MESSAGE LIST -->
-            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource AnalyticsCardStyle}" Height="300">
-                <Grid>
+                <!-- ACTION ITEMS -->
+                <Grid Grid.Row="2" Grid.Column="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <icons:Icon IconName="list-checks" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock Text="Action Items" Style="{StaticResource AnalyticsTitleStyle}"/>
+                        <icons:Icon IconName="list-checks" IconSize="18" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="Action Items" Style="{StaticResource SectionTitleStyle}"/>
                     </StackPanel>
                     
-                    <ListBox x:Name="AI_Message" 
-                             Grid.Row="1"
+                    <!-- List when data exists -->
+                    <ListBox Grid.Row="1"
+                             Visibility="{Binding HasActionItems, Converter={StaticResource BoolToVis}}"
                              ItemsSource="{Binding MessageList}" 
-                             FontSize="14"
-                             Background="{DynamicResource SurfaceBrush}" 
-                             BorderBrush="{DynamicResource BorderBrush}" 
-                             BorderThickness="1" 
-                             Foreground="{DynamicResource TextPrimaryBrush}"
-                             Padding="8">
+                             FontSize="13"
+                             Background="Transparent" 
+                             BorderThickness="0" 
+                             Foreground="{DynamicResource TextPrimaryBrush}">
                          <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
-                                <Setter Property="Padding" Value="4"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="Margin" Value="0,2"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                            <Border x:Name="Bd" CornerRadius="6" Background="Transparent" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </StackPanel>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ActiveOverlayBrush}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -149,32 +176,51 @@
                             </Style>
                          </ListBox.ItemContainerStyle>
                     </ListBox>
+                    
+                    <!-- Placeholder when no data -->
+                    <StackPanel Grid.Row="1" Style="{StaticResource PlaceholderStyle}"
+                                Visibility="{Binding HasActionItems, Converter={StaticResource BoolToVis}, ConverterParameter=True}">
+                        <icons:Icon IconName="clipboard" IconSize="48" Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No action items yet" FontSize="14" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                        <TextBlock Text="AI will extract action items from discussion" FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
                 </Grid>
-            </Border>
 
-            <!-- SCREEN/VIDEO TELEMETRY -->
-            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource AnalyticsCardStyle}" Height="300">
-                <Grid>
+                <!-- SCREEN/VIDEO FPS -->
+                <Grid Grid.Row="2" Grid.Column="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <icons:Icon IconName="activity" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock Text="Screen/Video FPS" Style="{StaticResource AnalyticsTitleStyle}"/>
+                        <icons:Icon IconName="device-tv" IconSize="18" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="Screen/Video FPS" Style="{StaticResource SectionTitleStyle}"/>
                     </StackPanel>
 
-                    <wpf:CartesianChart
-                        Grid.Row="1"
+                    <!-- Chart when data exists -->
+                    <wpf:CartesianChart Grid.Row="1"
+                        Visibility="{Binding HasScreenData, Converter={StaticResource BoolToVis}}"
                         Series="{Binding Graph4_Screen.Series}"
                         XAxes="{Binding Graph4_Screen.XAxes}"
                         YAxes="{Binding Graph4_Screen.YAxes}"
                         ZoomMode="X"/>
+                    
+                    <!-- Placeholder when no data -->
+                    <StackPanel Grid.Row="1" Style="{StaticResource PlaceholderStyle}"
+                                Visibility="{Binding HasScreenData, Converter={StaticResource BoolToVis}, ConverterParameter=True}">
+                        <icons:Icon IconName="screen-share-off" IconSize="48" Foreground="{DynamicResource TextTertiaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No screen sharing data" FontSize="14" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                        <TextBlock Text="Start screen sharing to see FPS metrics" FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" 
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
                 </Grid>
-            </Border>
 
-        </Grid>
+            </Grid>
+        </StackPanel>
     </ScrollViewer>
 
 </UserControl>
