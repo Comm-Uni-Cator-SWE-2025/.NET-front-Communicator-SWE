@@ -1,92 +1,178 @@
-﻿using System;
-using System.Linq;
+﻿using Moq;
 using Xunit;
+using Communicator.Controller.RPC;
 using Communicator.UX.Analytics.Services;
 using Communicator.UX.Analytics.Models;
 
 namespace AnalyticsApp.Tests
 {
+    /// <summary>
+    /// Tests for AIMessageService which fetches action items from core/AiAction RPC.
+    /// </summary>
     public class AIMessageServiceTests
     {
-        // -----------------------------------------------------------
-        // TEST 1 — Service must return at least 1 message
-        // -----------------------------------------------------------
+        /// <summary>
+        /// Service with default constructor creates instance (for testing without RPC).
+        /// </summary>
         [Fact]
-        public void GetNext_ShouldReturnMessages()
+        public void AIMessageService_DefaultConstructor_CreatesInstance()
+        {
+            // Arrange & Act
+            var service = new AIMessageService();
+
+            // Assert
+            Assert.NotNull(service);
+        }
+
+        /// <summary>
+        /// Service with RPC parameter creates instance.
+        /// </summary>
+        [Fact]
+        public void AIMessageService_WithRpc_CreatesInstance()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+
+            // Act
+            var service = new AIMessageService(mockRpc.Object);
+
+            // Assert
+            Assert.NotNull(service);
+        }
+
+        /// <summary>
+        /// GetAllMessages returns empty list initially.
+        /// </summary>
+        [Fact]
+        public void GetAllMessages_Initially_ReturnsEmptyList()
         {
             // Arrange
             var service = new AIMessageService();
 
             // Act
-            var messages = service.GetNext();
+            var messages = service.GetAllMessages();
 
             // Assert
             Assert.NotNull(messages);
-            Assert.NotEmpty(messages);
+            Assert.Empty(messages);
         }
 
-        // -----------------------------------------------------------
-        // TEST 2 — Returned messages must match the expected first group
-        // -----------------------------------------------------------
+        /// <summary>
+        /// FetchNextAsync without RPC returns empty list.
+        /// </summary>
         [Fact]
-        public void GetNext_FirstGroup_ShouldMatchExpectedMessages()
-        {
-            // Arrange
-            var service = new AIMessageService();
-
-            var expected = new[]
-            {
-                "Developer 1 will handle the backend deployment scripts.",
-                "Developer 2 will update the UI today."
-            };
-
-            // Act
-            var result = service.GetNext().Select(m => m.Message).ToArray();
-
-            // Assert
-            Assert.Equal(expected.Length, result.Length);
-            Assert.Equal(expected, result);
-        }
-
-        // -----------------------------------------------------------
-        // TEST 3 — Each returned message must have a timestamp
-        // -----------------------------------------------------------
-        [Fact]
-        public void GetNext_ShouldAssignDateTimeForEachMessage()
+        public async Task FetchNextAsync_WithoutRpc_ReturnsEmptyList()
         {
             // Arrange
             var service = new AIMessageService();
 
             // Act
-            var messages = service.GetNext();
+            var result = await service.FetchNextAsync();
 
             // Assert
-            foreach (var msg in messages)
-            {
-                Assert.True(msg.Time > DateTime.MinValue);
-            }
+            Assert.NotNull(result);
+            Assert.Empty(result);
         }
 
-        // -----------------------------------------------------------
-        // TEST 4 — Service should cycle (round-robin)
-        // -----------------------------------------------------------
+        /// <summary>
+        /// FetchNextAsync with null response returns empty list.
+        /// </summary>
         [Fact]
-        public void GetNext_ShouldCycleMessageGroups()
+        public async Task FetchNextAsync_WithNullResponse_ReturnsEmptyList()
         {
             // Arrange
-            var service = new AIMessageService();
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/AiAction", It.IsAny<byte[]>()))
+                   .ReturnsAsync((byte[])null!);
+
+            var service = new AIMessageService(mockRpc.Object);
 
             // Act
-            var g1 = service.GetNext().Select(m => m.Message).ToArray();
-            var g2 = service.GetNext().Select(m => m.Message).ToArray();
-            var g3 = service.GetNext().Select(m => m.Message).ToArray();
-            var g4 = service.GetNext().Select(m => m.Message).ToArray();
-
-            // After 4 calls, next must be g1 again
-            var g5 = service.GetNext().Select(m => m.Message).ToArray();
+            var result = await service.FetchNextAsync();
 
             // Assert
-            Assert.Equal(g1, g5);
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// FetchNextAsync with empty response returns empty list.
+        /// </summary>
+        [Fact]
+        public async Task FetchNextAsync_WithEmptyResponse_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/AiAction", It.IsAny<byte[]>()))
+                   .ReturnsAsync(Array.Empty<byte>());
+
+            var service = new AIMessageService(mockRpc.Object);
+
+            // Act
+            var result = await service.FetchNextAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// FetchNextAsync calls the correct RPC endpoint.
+        /// </summary>
+        [Fact]
+        public async Task FetchNextAsync_CallsCorrectRpcEndpoint()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/AiAction", It.IsAny<byte[]>()))
+                   .ReturnsAsync(Array.Empty<byte>());
+
+            var service = new AIMessageService(mockRpc.Object);
+
+            // Act
+            await service.FetchNextAsync();
+
+            // Assert
+            mockRpc.Verify(r => r.Call("core/AiAction", It.IsAny<byte[]>()), Times.Once);
+        }
+
+        /// <summary>
+        /// FetchNextAsync handles exceptions gracefully.
+        /// </summary>
+        [Fact]
+        public async Task FetchNextAsync_WithException_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/AiAction", It.IsAny<byte[]>()))
+                   .ThrowsAsync(new InvalidOperationException("RPC error"));
+
+            var service = new AIMessageService(mockRpc.Object);
+
+            // Act
+            var result = await service.FetchNextAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// GetAllMessages returns same list instance.
+        /// </summary>
+        [Fact]
+        public void GetAllMessages_ReturnsSameListInstance()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            var service = new AIMessageService(mockRpc.Object);
+
+            // Act
+            var messages1 = service.GetAllMessages();
+            var messages2 = service.GetAllMessages();
+
+            // Assert
+            Assert.Same(messages1, messages2);
         }
     }
 }
