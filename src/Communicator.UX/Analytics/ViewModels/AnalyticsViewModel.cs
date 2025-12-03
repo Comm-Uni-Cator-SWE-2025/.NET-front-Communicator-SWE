@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using Communicator.Controller.RPC;
 using Communicator.UX.Analytics.Models;
 using Communicator.UX.Analytics.Services;
 using Communicator.UX.Core;
@@ -17,15 +18,15 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     public GraphViewModel Graph1_AI { get; } = new();
     public CanvasGraphViewModel Graph2_Canvas { get; } = new();
     public GraphViewModel Graph3_Msg { get; } = new();
-    public GraphViewModel Graph4_Screen { get; } = new();
+    public GraphViewModel Graph4_Screen { get; } = new("FPS");
 
     // 
     // SERVICES
     // 
-    private readonly ApiService _aiService = new();
-    private readonly AIMessageService _msgService = new();
+    private readonly ApiService? _aiService;
+    private readonly AIMessageService? _msgService;
     private readonly CanvasDataService _canvasService = new();
-    private readonly ScreenShareService _screenService = new();   //s
+    private readonly ScreenShareService? _screenService;
     private readonly IThemeService? _themeService;
 
     // 
@@ -33,17 +34,11 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     // 
     private readonly Timer _aiTimer;
     private readonly Timer _msgTimer;
-    private readonly Timer _screenTimer;   //s
+    private readonly Timer _screenTimer;
 
     // 
     // STATE
     // 
-    private bool _aiInitialLoaded = false;
-    private bool _screenInitialLoaded = false;
-
-    private double _aiTimeCounter = 0;
-    private double _screenTimeCounter = 0;
-
     private int _canvasIndex = 1;
 
     public ObservableCollection<string> MessageList { get; } = new();
@@ -51,9 +46,17 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     // 
     // CONSTRUCTOR
     // 
-    public AnalyticsViewModel(IThemeService? themeService = null, IRpcEventService rpcEventService = null!)
+    public AnalyticsViewModel(IThemeService? themeService = null, IRpcEventService? rpcEventService = null, IRPC? rpc = null)
     {
         _themeService = themeService;
+
+        // Initialize services with RPC if available
+        if (rpc != null)
+        {
+            _aiService = new ApiService(rpc);
+            _msgService = new AIMessageService(rpc);
+            _screenService = new ScreenShareService(rpc);
+        }
 
         if (_themeService != null)
         {
@@ -65,19 +68,20 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
             System.Diagnostics.Debug.WriteLine("RPC event service registeration happens");
         }
 
-        // AI Graph Timer (4s)
-        _aiTimer = new Timer(4000);
+        // AI Graph Timer (1 minute) - calls core/AiSentiment
+        _aiTimer = new Timer(60 * 1000);
         _aiTimer.Elapsed += async (_, _) => await UpdateAI();
         _aiTimer.Start();
         _ = UpdateAI();
 
-        // Message Timer (5s)
-        _msgTimer = new Timer(5000);
-        _msgTimer.Elapsed += (_, _) => AddMessages();
+        // Message Timer (1 minute) - calls core/AiAction
+        _msgTimer = new Timer(60 * 1000);
+        _msgTimer.Elapsed += async (_, _) => await UpdateMessages();
         _msgTimer.Start();
+        _ = UpdateMessages();
 
-        // ScreenShare Timer (7s)
-        _screenTimer = new Timer(7000);
+        // ScreenShare Timer (3 seconds) - calls core/ScreenTelemetry
+        _screenTimer = new Timer(3000);
         _screenTimer.Elapsed += async (_, _) => await UpdateScreenShare();
         _screenTimer.Start();
         _ = UpdateScreenShare();
@@ -91,7 +95,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
 
     private void OnThemeChanged(object? sender, ThemeChangedEventArgs e)
     {
-        Application.Current.Dispatcher.Invoke(() => ApplyTheme());
+        Application.Current.Dispatcher.Invoke(ApplyTheme);
     }
 
     public void ApplyTheme()
@@ -121,35 +125,41 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     }
 
     // 
-    // GRAPH 1 — AI SENTIMENT (Dynamic)
+    // GRAPH 1 — AI SENTIMENT (Dynamic) - Fetches from core/AiSentiment via RPC
     //
     private async Task UpdateAI()
     {
-        if (!_aiInitialLoaded)
+        if (_aiService == null)
         {
-            List<AIData> initialData = await _aiService.FetchAIDataAsync();
-
-            foreach (AIData d in initialData)
-            {
-                Application.Current.Dispatcher.Invoke(() => {
-                    Graph1_AI.AddPoint(_aiTimeCounter, d.Value);
-                    _aiTimeCounter += 5;
-                });
-            }
-
-            _aiInitialLoaded = true;
+            System.Diagnostics.Debug.WriteLine("AI Service not initialized - RPC not available");
             return;
         }
 
-        // Add random new point
-        var rand = new Random();
-        double newValue = rand.Next(-5, 10);
+        try
+        {
+            // Fetch new sentiment data from RPC
+            List<AIData> newData = await _aiService.FetchAIDataAsync();
 
-        Application.Current.Dispatcher.Invoke(() => {
-            Graph1_AI.Add(_aiTimeCounter, newValue);
-        });
+            if (newData.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("No new sentiment data received");
+                return;
+            }
 
-        _aiTimeCounter += 4;
+            // Add new points to the graph with time labels
+            foreach (AIData d in newData)
+            {
+                Application.Current.Dispatcher.Invoke(() => {
+                    Graph1_AI.AddPointWithLabel(d.TimeLabel, d.Value);
+                });
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Added {newData.Count} new sentiment points to graph");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating AI sentiment: {ex.Message}");
+        }
     }
 
     //
@@ -164,50 +174,92 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     }
 
     // 
-    // GRAPH 3 — AI Messages
+    // GRAPH 3 — AI Action Items - Fetches from core/AiAction via RPC
     //
-    private void AddMessages()
+    private async Task UpdateMessages()
     {
-        List<AIMessageData> messages = _msgService.GetNext();
-
-        Application.Current.Dispatcher.Invoke(() => {
-            foreach (AIMessageData m in messages)
-            {
-                MessageList.Add(m.Message);
-            }
-        });
-    }
-
-    // 
-    // GRAPH 4 — ScreenShare Sentiment (NEW)
-    // 
-    private async Task UpdateScreenShare()
-    {
-        // FIRST LOAD
-        if (!_screenInitialLoaded)
+        if (_msgService == null)
         {
-            List<ScreenShareData> initial = await _screenService.ScreenShareDatasAsync();
-
-            foreach (ScreenShareData d in initial)
-            {
-                Application.Current.Dispatcher.Invoke(() => {
-                    Graph4_Screen.AddPoint(_screenTimeCounter, d.Sentiment);
-                    _screenTimeCounter += 10;
-                });
-            }
-
-            _screenInitialLoaded = true;
+            System.Diagnostics.Debug.WriteLine("Message Service not initialized - RPC not available");
             return;
         }
 
-        //  add random new screenshare sentiment
-        var rand = new Random();
-        double newSentiment = rand.Next(-5, 10);
+        try
+        {
+            // Fetch new action items from RPC
+            List<AIMessageData> newMessages = await _msgService.FetchNextAsync();
 
-        Application.Current.Dispatcher.Invoke(() => {
-            Graph4_Screen.Add(_screenTimeCounter, newSentiment);
-        });
+            if (newMessages.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("No new action items received");
+                return;
+            }
 
-        _screenTimeCounter += 8;
+            // Add new messages to the list (skip duplicates)
+            Application.Current.Dispatcher.Invoke(() => {
+                foreach (AIMessageData m in newMessages)
+                {
+                    // Check if action already exists (case-insensitive)
+                    if (!MessageList.Any(existing => string.Equals(existing, m.Message, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        MessageList.Add(m.Message);
+                    }
+                }
+            });
+
+            System.Diagnostics.Debug.WriteLine($"Added {newMessages.Count} new action items");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating action items: {ex.Message}");
+        }
+    }
+
+    // 
+    // GRAPH 4 — Screen/Video Telemetry (FPS) - Fetches from core/ScreenTelemetry via RPC
+    // 
+    private async Task UpdateScreenShare()
+    {
+        if (_screenService == null)
+        {
+            System.Diagnostics.Debug.WriteLine("ScreenShare Service not initialized - RPC not available");
+            return;
+        }
+
+        try
+        {
+            // Fetch new telemetry data from RPC
+            List<ScreenVideoTelemetryModel> newTelemetry = await _screenService.FetchTelemetryAsync();
+
+            if (newTelemetry.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("No new screen telemetry received");
+                return;
+            }
+
+            // Add FPS data points to the graph with time labels
+            Application.Current.Dispatcher.Invoke(() => {
+                foreach (ScreenVideoTelemetryModel entry in newTelemetry)
+                {
+                    DateTime startTime = entry.StartDateTime;
+
+                    // Add each FPS reading (every 3 seconds)
+                    for (int i = 0; i < entry.FpsEvery3Seconds.Count; i++)
+                    {
+                        DateTime pointTime = startTime.AddSeconds(i * 3);
+                        string timeLabel = pointTime.ToString("HH:mm:ss");
+                        double fps = entry.FpsEvery3Seconds[i];
+
+                        Graph4_Screen.AddPointWithLabel(timeLabel, fps);
+                    }
+                }
+            });
+
+            System.Diagnostics.Debug.WriteLine($"Added telemetry from {newTelemetry.Count} entries");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating screen telemetry: {ex.Message}");
+        }
     }
 }

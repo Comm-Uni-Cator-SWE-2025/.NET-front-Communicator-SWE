@@ -394,7 +394,11 @@ public class HostViewModel : CanvasViewModel
     /// <param name="json">The serialized message.</param>
     public void ProcessIncomingMessage(string json)
     {
+        Console.WriteLine("[CanvasHostModel] Processing incoming message...");
+        Console.WriteLine(json);
         NetworkMessage? msg = CanvasSerializer.DeserializeNetworkMessage(json);
+        Console.WriteLine("[CanvasHostModel] Deserialized message:");
+        Console.WriteLine(msg);
         if (msg == null)
         {
             return;

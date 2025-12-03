@@ -40,7 +40,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
     private readonly ICloudConfigService _cloudConfig;
     private readonly INavigationService _navigationService;
     private readonly IThemeService _themeService;
-    // private readonly INetworking _networking; // Removed unused dependency
     private readonly UserProfile _currentUser;
     private MeetingTabViewModel? _currentTab;
     private object? _currentPage;
@@ -78,7 +77,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Builds meeting tabs for the supplied user and initializes navigation state.
-    /// Services are injected via constructor for better testability.
     /// </summary>
     public MeetingSessionViewModel(
         UserProfile currentUser,
@@ -98,7 +96,6 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
         _cloudConfig = cloudConfig ?? throw new ArgumentNullException(nameof(cloudConfig));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
-        // _networking = networking ?? throw new ArgumentNullException(nameof(networking));
         _rpc = rpc;
         _rpcEventService = rpcEventService;
 
@@ -122,7 +119,7 @@ public sealed class MeetingSessionViewModel : ObservableObject, IDisposable
             // Note: clientVM.Initialize() must be called after meeting join is confirmed
         }
 
-        AIInsights = new AnalyticsViewModel(_themeService, _rpcEventService!);
+        AIInsights = new AnalyticsViewModel(_themeService, _rpcEventService!, _rpc);
 
         // Create toolbar with tabs
         _toolbarViewModel = new MeetingToolbarViewModel(CreateTabs(), this);
