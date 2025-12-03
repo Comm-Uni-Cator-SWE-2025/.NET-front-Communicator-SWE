@@ -10,7 +10,6 @@ public sealed class UIImage : IEquatable<UIImage>
 {
     /// <summary>
     /// Gets the image.
-    /// (Java's BufferedImage is System.Drawing.Bitmap in .NET)
     /// </summary>
     public Bitmap Image { get; init; }
 
@@ -62,8 +61,7 @@ public sealed class UIImage : IEquatable<UIImage>
             return true;
         }
 
-        // This replicates the behavior of Java's Objects.equals,
-        // which performs reference equality on 'image'.
+        // performs reference equality on 'image'.
         return Equals(Image, other.Image) &&
                Ip == other.Ip &&
                IsSuccess == other.IsSuccess;
@@ -75,7 +73,6 @@ public sealed class UIImage : IEquatable<UIImage>
     /// <returns>A hash code for the current object.</returns>
     public override int GetHashCode()
     {
-        // C#'s modern equivalent of Java's Objects.hash()
         return HashCode.Combine(Image, Ip, IsSuccess);
     }
 
@@ -85,7 +82,6 @@ public sealed class UIImage : IEquatable<UIImage>
     /// <returns>A string representation.</returns>
     public override string ToString()
     {
-        // Replicating the Java record-style toString() format
         return $"UIImage[Image={Image}, Ip={Ip}, IsSuccess={IsSuccess}]";
     }
 }

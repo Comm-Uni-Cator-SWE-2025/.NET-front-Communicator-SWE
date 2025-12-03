@@ -1,9 +1,9 @@
 ﻿/*
  * -----------------------------------------------------------------------------
  *  File: ScreenShareViewModel.cs
- *  Owner: UpdateNamesForEachModule
- *  Roll Number :
- *  Module : 
+ *  Owner: Devansh Manoj Kesan
+ *  Roll Number :142201017  
+ *  Module : ScreenShare
  *
  * -----------------------------------------------------------------------------
  */
