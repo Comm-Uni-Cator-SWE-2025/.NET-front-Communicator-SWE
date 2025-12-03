@@ -152,7 +152,7 @@
                 </Grid>
             </Border>
 
-            <!-- SCREEN SHARE -->
+            <!-- SCREEN/VIDEO TELEMETRY -->
             <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource AnalyticsCardStyle}" Height="300">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -161,8 +161,8 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <icons:Icon IconName="monitor" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
-                        <TextBlock Text="Screen Share Usage" Style="{StaticResource AnalyticsTitleStyle}"/>
+                        <icons:Icon IconName="activity" IconSize="20" Foreground="{DynamicResource IconBrush}"/>
+                        <TextBlock Text="Screen/Video FPS" Style="{StaticResource AnalyticsTitleStyle}"/>
                     </StackPanel>
 
                     <wpf:CartesianChart

@@ -78,8 +78,7 @@ public class AIMessageService
                 if (!alreadyExists)
                 {
                     _allMessages.Add(message);
-                    addedMessages.Add(new AIMessageData
-                    {
+                    addedMessages.Add(new AIMessageData {
                         Time = DateTime.Now,
                         Message = message
                     });

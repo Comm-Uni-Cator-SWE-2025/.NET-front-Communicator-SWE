@@ -18,7 +18,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     public GraphViewModel Graph1_AI { get; } = new();
     public CanvasGraphViewModel Graph2_Canvas { get; } = new();
     public GraphViewModel Graph3_Msg { get; } = new();
-    public GraphViewModel Graph4_Screen { get; } = new();
+    public GraphViewModel Graph4_Screen { get; } = new("FPS");
 
     // 
     // SERVICES
@@ -26,7 +26,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     private readonly ApiService? _aiService;
     private readonly AIMessageService? _msgService;
     private readonly CanvasDataService _canvasService = new();
-    private readonly ScreenShareService _screenService = new();
+    private readonly ScreenShareService? _screenService;
     private readonly IThemeService? _themeService;
 
     // 
@@ -39,8 +39,6 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     // 
     // STATE
     // 
-    private bool _screenInitialLoaded = false;
-    private double _screenTimeCounter = 0;
     private int _canvasIndex = 1;
 
     public ObservableCollection<string> MessageList { get; } = new();
@@ -57,6 +55,7 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         {
             _aiService = new ApiService(rpc);
             _msgService = new AIMessageService(rpc);
+            _screenService = new ScreenShareService(rpc);
         }
 
         if (_themeService != null)
@@ -81,8 +80,8 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
         _msgTimer.Start();
         _ = UpdateMessages();
 
-        // ScreenShare Timer (7s)
-        _screenTimer = new Timer(7000);
+        // ScreenShare Timer (3 seconds) - calls core/ScreenTelemetry
+        _screenTimer = new Timer(3000);
         _screenTimer.Elapsed += async (_, _) => await UpdateScreenShare();
         _screenTimer.Start();
         _ = UpdateScreenShare();
@@ -217,35 +216,50 @@ public class AnalyticsViewModel : ObservableObject, IDisposable
     }
 
     // 
-    // GRAPH 4 — ScreenShare Sentiment
+    // GRAPH 4 — Screen/Video Telemetry (FPS) - Fetches from core/ScreenTelemetry via RPC
     // 
     private async Task UpdateScreenShare()
     {
-        // FIRST LOAD
-        if (!_screenInitialLoaded)
+        if (_screenService == null)
         {
-            List<ScreenShareData> initial = await _screenService.ScreenShareDatasAsync();
-
-            foreach (ScreenShareData d in initial)
-            {
-                Application.Current.Dispatcher.Invoke(() => {
-                    Graph4_Screen.AddPoint(_screenTimeCounter, d.Sentiment);
-                    _screenTimeCounter += 10;
-                });
-            }
-
-            _screenInitialLoaded = true;
+            System.Diagnostics.Debug.WriteLine("ScreenShare Service not initialized - RPC not available");
             return;
         }
 
-        // Add random new screenshare sentiment
-        Random rand = new();
-        double newSentiment = rand.Next(-5, 10);
+        try
+        {
+            // Fetch new telemetry data from RPC
+            List<ScreenVideoTelemetryModel> newTelemetry = await _screenService.FetchTelemetryAsync();
 
-        Application.Current.Dispatcher.Invoke(() => {
-            Graph4_Screen.Add(_screenTimeCounter, newSentiment);
-        });
+            if (newTelemetry.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("No new screen telemetry received");
+                return;
+            }
 
-        _screenTimeCounter += 8;
+            // Add FPS data points to the graph with time labels
+            Application.Current.Dispatcher.Invoke(() => {
+                foreach (ScreenVideoTelemetryModel entry in newTelemetry)
+                {
+                    DateTime startTime = entry.StartDateTime;
+
+                    // Add each FPS reading (every 3 seconds)
+                    for (int i = 0; i < entry.FpsEvery3Seconds.Count; i++)
+                    {
+                        DateTime pointTime = startTime.AddSeconds(i * 3);
+                        string timeLabel = pointTime.ToString("HH:mm:ss");
+                        double fps = entry.FpsEvery3Seconds[i];
+
+                        Graph4_Screen.AddPointWithLabel(timeLabel, fps);
+                    }
+                }
+            });
+
+            System.Diagnostics.Debug.WriteLine($"Added telemetry from {newTelemetry.Count} entries");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating screen telemetry: {ex.Message}");
+        }
     }
 }

@@ -40,9 +40,17 @@ public class GraphViewModel : ObservableObject
     public int WindowSize { get; set; } = 10;
 
     /// <summary>
-    /// Initializes the sentiment graph, setting up series and axes.
+    /// Initializes the graph with default "Sentiment" Y-axis label.
     /// </summary>
-    public GraphViewModel()
+    public GraphViewModel() : this("Sentiment")
+    {
+    }
+
+    /// <summary>
+    /// Initializes the graph with a custom Y-axis label.
+    /// </summary>
+    /// <param name="yAxisName">The name to display on the Y-axis</param>
+    public GraphViewModel(string yAxisName)
     {
         Series = new ISeries[]
         {
@@ -92,7 +100,7 @@ public class GraphViewModel : ObservableObject
         {
             new Axis
             {
-                Name = "Sentiment",
+                Name = yAxisName,
                 NamePaint = new SolidColorPaint(SKColors.White),
                 NameTextSize = 14,
                 TextSize = 12,
