@@ -25,8 +25,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Communicator.App\Communicator.App.csproj" />
+    <ProjectReference Include="..\..\src\Communicator.UX\Analytics\Communicator.UX.Analytics.csproj" />
     <ProjectReference Include="..\..\src\Communicator.UX\Core\Communicator.UX.Core.csproj" />
     <ProjectReference Include="..\..\src\Communicator.UX\Icons\Communicator.Icons.csproj" />
+    <ProjectReference Include="..\..\src\Communicator.Controller\Communicator.Controller.csproj" />
   </ItemGroup>
 
 </Project>
