@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using Moq;
+using Xunit;
+using Communicator.Controller.RPC;
 using Communicator.UX.Analytics.ViewModels;
 using Communicator.UX.Analytics.Models;
 using Communicator.UX.Analytics.Services;
@@ -49,47 +51,189 @@ namespace AnalyticsApp.Tests
     }
 
     // ------------------------------------------------------------
-    // ScreenShareService Tests (Only check call success)
+    // ScreenShareService Tests (RPC-based)
     // ------------------------------------------------------------
     public class ScreenShareServiceTests
     {
         /// <summary>
-        /// Service should execute without any exception.
+        /// Service with default constructor creates instance (for testing without RPC).
         /// </summary>
         [Fact]
-        public async Task ScreenShareDatasAsync_ShouldExecuteWithoutError()
+        public void ScreenShareService_DefaultConstructor_CreatesInstance()
         {
+            // Arrange & Act
             var service = new ScreenShareService();
 
-            var exception = await Record.ExceptionAsync(() => service.ScreenShareDatasAsync());
-
-            Assert.Null(exception); // Means method ran successfully
+            // Assert
+            Assert.NotNull(service);
         }
 
         /// <summary>
-        /// Service must not return null (empty list is allowed).
+        /// Service with RPC parameter creates instance.
         /// </summary>
         [Fact]
-        public async Task ScreenShareDatasAsync_ShouldNotReturnNull()
+        public void ScreenShareService_WithRpc_CreatesInstance()
         {
-            var service = new ScreenShareService();
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
 
-            var result = await service.ScreenShareDatasAsync();
+            // Act
+            var service = new ScreenShareService(mockRpc.Object);
 
-            Assert.NotNull(result); // OK if this is empty
+            // Assert
+            Assert.NotNull(service);
         }
 
         /// <summary>
-        /// Service must return List type, even if empty.
+        /// GetAllTelemetry returns empty list initially.
         /// </summary>
         [Fact]
-        public async Task ScreenShareDatasAsync_ShouldReturnListType()
+        public void GetAllTelemetry_Initially_ReturnsEmptyList()
         {
+            // Arrange
             var service = new ScreenShareService();
 
-            var result = await service.ScreenShareDatasAsync();
+            // Act
+            var telemetry = service.GetAllTelemetry();
 
-            Assert.IsAssignableFrom<IEnumerable<ScreenShareData>>(result);
+            // Assert
+            Assert.NotNull(telemetry);
+            Assert.Empty(telemetry);
+        }
+
+        /// <summary>
+        /// FetchTelemetryAsync without RPC returns empty list.
+        /// </summary>
+        [Fact]
+        public async Task FetchTelemetryAsync_WithoutRpc_ReturnsEmptyList()
+        {
+            // Arrange
+            var service = new ScreenShareService();
+
+            // Act
+            var result = await service.FetchTelemetryAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// FetchTelemetryAsync with null response returns empty list.
+        /// </summary>
+        [Fact]
+        public async Task FetchTelemetryAsync_WithNullResponse_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/ScreenTelemetry", It.IsAny<byte[]>()))
+                   .ReturnsAsync((byte[])null!);
+
+            var service = new ScreenShareService(mockRpc.Object);
+
+            // Act
+            var result = await service.FetchTelemetryAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// FetchTelemetryAsync with empty response returns empty list.
+        /// </summary>
+        [Fact]
+        public async Task FetchTelemetryAsync_WithEmptyResponse_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/ScreenTelemetry", It.IsAny<byte[]>()))
+                   .ReturnsAsync(Array.Empty<byte>());
+
+            var service = new ScreenShareService(mockRpc.Object);
+
+            // Act
+            var result = await service.FetchTelemetryAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// FetchTelemetryAsync calls the correct RPC endpoint.
+        /// </summary>
+        [Fact]
+        public async Task FetchTelemetryAsync_CallsCorrectRpcEndpoint()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/ScreenTelemetry", It.IsAny<byte[]>()))
+                   .ReturnsAsync(Array.Empty<byte>());
+
+            var service = new ScreenShareService(mockRpc.Object);
+
+            // Act
+            await service.FetchTelemetryAsync();
+
+            // Assert
+            mockRpc.Verify(r => r.Call("core/ScreenTelemetry", It.IsAny<byte[]>()), Times.Once);
+        }
+
+        /// <summary>
+        /// FetchTelemetryAsync handles exceptions gracefully.
+        /// </summary>
+        [Fact]
+        public async Task FetchTelemetryAsync_WithException_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            mockRpc.Setup(r => r.Call("core/ScreenTelemetry", It.IsAny<byte[]>()))
+                   .ThrowsAsync(new InvalidOperationException("RPC error"));
+
+            var service = new ScreenShareService(mockRpc.Object);
+
+            // Act
+            var result = await service.FetchTelemetryAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        /// <summary>
+        /// GetAllFpsDataPoints returns empty list initially.
+        /// </summary>
+        [Fact]
+        public void GetAllFpsDataPoints_Initially_ReturnsEmptyList()
+        {
+            // Arrange
+            var service = new ScreenShareService();
+
+            // Act
+            var dataPoints = service.GetAllFpsDataPoints();
+
+            // Assert
+            Assert.NotNull(dataPoints);
+            Assert.Empty(dataPoints);
+        }
+
+        /// <summary>
+        /// GetAllTelemetry returns same list instance.
+        /// </summary>
+        [Fact]
+        public void GetAllTelemetry_ReturnsSameListInstance()
+        {
+            // Arrange
+            var mockRpc = new Mock<IRPC>();
+            var service = new ScreenShareService(mockRpc.Object);
+
+            // Act
+            var telemetry1 = service.GetAllTelemetry();
+            var telemetry2 = service.GetAllTelemetry();
+
+            // Assert
+            Assert.Same(telemetry1, telemetry2);
         }
     }
 }
